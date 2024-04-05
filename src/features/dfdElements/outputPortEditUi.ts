@@ -446,8 +446,8 @@ export class OutputPortEditUI extends AbstractUIExtension {
         const clamp = (value: number, range: readonly [number, number]) =>
             Math.min(range[1], Math.max(range[0], value));
 
-        const heightRange = [100, 250] as const;
-        const widthRange = [275, 500] as const;
+        const heightRange = [100, 350] as const;
+        const widthRange = [275, 650] as const;
 
         const cHeight = clamp(height, heightRange);
         const cWidth = clamp(width, widthRange);
