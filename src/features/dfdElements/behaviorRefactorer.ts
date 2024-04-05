@@ -189,7 +189,7 @@ export class DFDBehaviorRefactorer {
         const lines = port.behavior.split("\n");
         const newLines = lines.map((line) => {
             if (line.startsWith("forward")) {
-                const inputString = line.substring("forward ".length);
+                const inputString = line.substring("forward".length);
                 // Update all inputs. Must be surrounded by non-alphanumeric characters to avoid replacing substrings of other inputs.
                 const updatedInputs = inputString.replace(
                     new RegExp(`([^a-zA-Z0-9])${oldInputName}([^a-zA-Z0-9]|$)`, "g"),
