@@ -556,6 +556,7 @@ export class OutputPortEditUI extends AbstractUIExtension {
 
         // Load the current behavior text of the port into the text editor.
         this.editor?.setValue(this.port.behavior);
+        this.editor?.getModel()?.setEOL(monaco.editor.EndOfLineSequence.LF);
         this.resizeEditor();
 
         // Configure editor readonly depending on editor mode
