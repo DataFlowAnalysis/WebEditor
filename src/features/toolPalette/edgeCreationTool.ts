@@ -36,7 +36,7 @@ export class EdgeCreationTool extends CreationTool<SEdge, SEdgeImpl> {
         if (this.edgeTargetElement) {
             // Pseudo edge target element must always be removed
             // regardless of whether the edge creation was successful or cancelled
-            this.element?.root.remove(this.edgeTargetElement);
+            this.edgeTargetElement.parent?.remove(this.edgeTargetElement);
             this.edgeTargetElement = undefined;
         }
 
