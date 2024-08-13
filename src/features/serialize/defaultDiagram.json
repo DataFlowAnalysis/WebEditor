@@ -165,24 +165,6 @@
             },
             {
                 "position": {
-                    "x": 420.76127480457006,
-                    "y": 89.13650030066145
-                },
-                "size": {
-                    "width": -1,
-                    "height": -1
-                },
-                "strokeWidth": 0,
-                "selected": false,
-                "hoverFeedback": false,
-                "opacity": 1,
-                "features": {},
-                "id": "xccftn",
-                "type": "empty-node",
-                "children": []
-            },
-            {
-                "position": {
                     "x": 249,
                     "y": 67
                 },

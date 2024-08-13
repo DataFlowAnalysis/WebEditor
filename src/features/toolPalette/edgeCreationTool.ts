@@ -36,7 +36,7 @@ export class EdgeCreationTool extends CreationTool<SEdge, SEdgeImpl> {
         if (this.edgeTargetElement) {
             // Pseudo edge target element must always be removed
             // regardless of whether the edge creation was successful or cancelled
-            this.element?.root.remove(this.edgeTargetElement);
+            this.edgeTargetElement.parent?.remove(this.edgeTargetElement);
             this.edgeTargetElement = undefined;
         }
 
@@ -91,6 +91,8 @@ export class EdgeCreationTool extends CreationTool<SEdge, SEdgeImpl> {
                 // Add empty node to the graph and as a edge target
                 root.add(this.edgeTargetElement);
                 this.element.targetId = this.edgeTargetElement.id;
+
+                console.log(root);
             }
         }
         return [];
