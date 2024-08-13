@@ -91,8 +91,6 @@ export class EdgeCreationTool extends CreationTool<SEdge, SEdgeImpl> {
                 // Add empty node to the graph and as a edge target
                 root.add(this.edgeTargetElement);
                 this.element.targetId = this.edgeTargetElement.id;
-
-                console.log(root);
             }
         }
         return [];
