@@ -103,7 +103,7 @@ const dfdBehaviorLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = 
         root: [
             // keywords and identifiers
             [
-                /[a-zA-Z_;$][\w$]*/,
+                /[a-zA-Z_\|$][\w$]*/,
                 {
                     cases: {
                         "@keywords": "keyword",

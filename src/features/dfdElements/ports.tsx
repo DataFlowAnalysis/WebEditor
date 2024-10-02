@@ -54,7 +54,7 @@ export class DfdInputPortImpl extends SPortImpl {
         if (edgeNames.length === 0) {
             return undefined;
         } else {
-            return edgeNames.sort().join(";");
+            return edgeNames.sort().join("|");
         }
     }
 
