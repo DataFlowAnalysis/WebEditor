@@ -23,13 +23,13 @@ export class PortBehaviorValidator {
     // Regex that validates a set statement.
     // Has the label type and label value that should be set as capturing groups.
     private static readonly SET_REGEX =
-        /^set +([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*) *= *(?: +|!|TRUE|FALSE|\|\||&&|\(|\)|[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*){2})+$/;
+        /^set +([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*) *= *(?: +|!|TRUE|FALSE|\|\||&&|\(|\)|[A-Za-z][A-Za-z0-9_\|]*(?:\.[A-Za-z][A-Za-z0-9_]*){2})+$/;
     // Regex that is used to extract all inputs, their label types and label values from a set statement.
     // Each input is a match with the input name, label type and label value as capturing groups.
     private static readonly SET_REGEX_EXPRESSION_INPUTS =
-        /([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*)/g;
+        /([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*)/g;
     // Regex matching alphanumeric characters.
-    public static readonly REGEX_ALPHANUMERIC = /[A-Za-z0-9_]+/;
+    public static readonly REGEX_ALPHANUMERIC = /[A-Za-z0-9_\|]+/;
 
     constructor(@inject(LabelTypeRegistry) @optional() private readonly labelTypeRegistry?: LabelTypeRegistry) {}
 
