@@ -1,10 +1,16 @@
 {
     "model": {
-        "scroll": {
+        "canvasBounds": {
             "x": 0,
-            "y": 0
+            "y": 0,
+            "width": 1278,
+            "height": 1324
         },
-        "zoom": 3.854984894259819,
+        "scroll": {
+            "x": 181.68489464915504,
+            "y": -12.838536201820945
+        },
+        "zoom": 6.057478948161569,
         "position": {
             "x": 0,
             "y": 0
@@ -13,6 +19,7 @@
             "width": -1,
             "height": -1
         },
+        "features": {},
         "type": "graph",
         "id": "root",
         "children": [
@@ -39,25 +46,6 @@
                 "ports": [
                     {
                         "position": {
-                            "x": 31,
-                            "y": 38.5
-                        },
-                        "size": {
-                            "width": -1,
-                            "height": -1
-                        },
-                        "strokeWidth": 0,
-                        "selected": false,
-                        "hoverFeedback": false,
-                        "opacity": 1,
-                        "behavior": "set Sensitivity.Personal = TRUE",
-                        "features": {},
-                        "id": "4wbyft",
-                        "type": "port:dfd-output",
-                        "children": []
-                    },
-                    {
-                        "position": {
                             "x": 58.5,
                             "y": 7
                         },
@@ -76,6 +64,25 @@
                     },
                     {
                         "position": {
+                            "x": 31,
+                            "y": 38.5
+                        },
+                        "size": {
+                            "width": -1,
+                            "height": -1
+                        },
+                        "strokeWidth": 0,
+                        "selected": false,
+                        "hoverFeedback": false,
+                        "opacity": 1,
+                        "behavior": "Assignment({};TRUE;{Sensitivity.Personal})",
+                        "features": {},
+                        "id": "4wbyft",
+                        "type": "port:dfd-output",
+                        "children": []
+                    },
+                    {
+                        "position": {
                             "x": 58.5,
                             "y": 25.5
                         },
@@ -87,7 +94,7 @@
                         "selected": false,
                         "hoverFeedback": false,
                         "opacity": 1,
-                        "behavior": "set Sensitivity.Public = TRUE",
+                        "behavior": "Assignment({};TRUE;{Sensitivity.Public})",
                         "features": {},
                         "id": "wksxi8",
                         "type": "port:dfd-output",
@@ -97,70 +104,6 @@
                 "features": {},
                 "id": "7oii5l",
                 "type": "node:input-output",
-                "children": []
-            },
-            {
-                "position": {
-                    "x": 422.5,
-                    "y": 59
-                },
-                "size": {
-                    "width": -1,
-                    "height": -1
-                },
-                "strokeWidth": 0,
-                "selected": false,
-                "hoverFeedback": false,
-                "opacity": 1,
-                "text": "Database",
-                "labels": [
-                    {
-                        "labelTypeId": "gvia09",
-                        "labelTypeValueId": "5hnugm"
-                    }
-                ],
-                "ports": [
-                    {
-                        "position": {
-                            "x": -3.5,
-                            "y": 5
-                        },
-                        "size": {
-                            "width": -1,
-                            "height": -1
-                        },
-                        "strokeWidth": 0,
-                        "selected": false,
-                        "hoverFeedback": false,
-                        "opacity": 1,
-                        "behavior": "set Sensitivity.Public = TRUE",
-                        "features": {},
-                        "id": "1j7bn5",
-                        "type": "port:dfd-output",
-                        "children": []
-                    },
-                    {
-                        "position": {
-                            "x": -3.5,
-                            "y": 28
-                        },
-                        "size": {
-                            "width": -1,
-                            "height": -1
-                        },
-                        "strokeWidth": 0,
-                        "selected": true,
-                        "hoverFeedback": true,
-                        "opacity": 1,
-                        "features": {},
-                        "id": "scljwi",
-                        "type": "port:dfd-input",
-                        "children": []
-                    }
-                ],
-                "features": {},
-                "id": "8j2r1g",
-                "type": "node:storage",
                 "children": []
             },
             {
@@ -181,25 +124,6 @@
                 "ports": [
                     {
                         "position": {
-                            "x": 58.5,
-                            "y": 13
-                        },
-                        "size": {
-                            "width": -1,
-                            "height": -1
-                        },
-                        "strokeWidth": 0,
-                        "selected": false,
-                        "hoverFeedback": false,
-                        "opacity": 1,
-                        "behavior": "forward request",
-                        "features": {},
-                        "id": "bsqjm",
-                        "type": "port:dfd-output",
-                        "children": []
-                    },
-                    {
-                        "position": {
                             "x": -3.5,
                             "y": 13
                         },
@@ -214,6 +138,25 @@
                         "features": {},
                         "id": "ti4ri7",
                         "type": "port:dfd-input",
+                        "children": []
+                    },
+                    {
+                        "position": {
+                            "x": 58.5,
+                            "y": 13
+                        },
+                        "size": {
+                            "width": -1,
+                            "height": -1
+                        },
+                        "strokeWidth": 0,
+                        "selected": false,
+                        "hoverFeedback": false,
+                        "opacity": 1,
+                        "behavior": "Forwarding({request})",
+                        "features": {},
+                        "id": "bsqjm",
+                        "type": "port:dfd-output",
                         "children": []
                     }
                 ],
@@ -266,10 +209,10 @@
                             "height": -1
                         },
                         "strokeWidth": 0,
-                        "selected": false,
+                        "selected": true,
                         "hoverFeedback": false,
                         "opacity": 1,
-                        "behavior": "forward items",
+                        "behavior": "Forwarding({items})",
                         "features": {},
                         "id": "y1p7qq",
                         "type": "port:dfd-output",
@@ -279,32 +222,6 @@
                 "features": {},
                 "id": "4myuyr",
                 "type": "node:function",
-                "children": []
-            },
-            {
-                "routingPoints": [],
-                "selected": false,
-                "hoverFeedback": false,
-                "opacity": 1,
-                "features": {},
-                "id": "n81f3b",
-                "type": "edge:arrow",
-                "sourceId": "1j7bn5",
-                "targetId": "0hfzu",
-                "text": "items",
-                "children": []
-            },
-            {
-                "routingPoints": [],
-                "selected": false,
-                "hoverFeedback": false,
-                "opacity": 1,
-                "features": {},
-                "id": "hi397b",
-                "type": "edge:arrow",
-                "sourceId": "y1p7qq",
-                "targetId": "nhcrad",
-                "text": "items",
                 "children": []
             },
             {
@@ -325,25 +242,6 @@
                 "ports": [
                     {
                         "position": {
-                            "x": 29,
-                            "y": -3.5
-                        },
-                        "size": {
-                            "width": -1,
-                            "height": -1
-                        },
-                        "strokeWidth": 0,
-                        "selected": false,
-                        "hoverFeedback": false,
-                        "opacity": 1,
-                        "behavior": "forward data\nset Encryption.Encrypted = TRUE",
-                        "features": {},
-                        "id": "3wntc",
-                        "type": "port:dfd-output",
-                        "children": []
-                    },
-                    {
-                        "position": {
                             "x": -3.5,
                             "y": 15.5
                         },
@@ -358,6 +256,25 @@
                         "features": {},
                         "id": "kqjy4g",
                         "type": "port:dfd-input",
+                        "children": []
+                    },
+                    {
+                        "position": {
+                            "x": 29,
+                            "y": -3.5
+                        },
+                        "size": {
+                            "width": -1,
+                            "height": -1
+                        },
+                        "strokeWidth": 0,
+                        "selected": false,
+                        "hoverFeedback": false,
+                        "opacity": 1,
+                        "behavior": "Forwarding({data})\nAssignment({};TRUE;{Encryption.Encrypted})",
+                        "features": {},
+                        "id": "3wntc",
+                        "type": "port:dfd-output",
                         "children": []
                     }
                 ],
@@ -413,7 +330,7 @@
                         "selected": false,
                         "hoverFeedback": false,
                         "opacity": 1,
-                        "behavior": "forward data",
+                        "behavior": "Forwarding({data})",
                         "features": {},
                         "id": "vnkg73",
                         "type": "port:dfd-output",
@@ -423,19 +340,6 @@
                 "features": {},
                 "id": "z9v1jp",
                 "type": "node:function",
-                "children": []
-            },
-            {
-                "routingPoints": [],
-                "selected": false,
-                "hoverFeedback": false,
-                "opacity": 1,
-                "features": {},
-                "id": "vq8g3l",
-                "type": "edge:arrow",
-                "sourceId": "4wbyft",
-                "targetId": "2331e8",
-                "text": "data",
                 "children": []
             },
             {
@@ -485,7 +389,7 @@
                         "selected": false,
                         "hoverFeedback": false,
                         "opacity": 1,
-                        "behavior": "forward data",
+                        "behavior": "Forwarding({data})",
                         "features": {},
                         "id": "eedb56",
                         "type": "port:dfd-output",
@@ -495,6 +399,83 @@
                 "features": {},
                 "id": "js61f",
                 "type": "node:function",
+                "children": []
+            },
+            {
+                "position": {
+                    "x": 422.5,
+                    "y": 59
+                },
+                "size": {
+                    "width": -1,
+                    "height": -1
+                },
+                "strokeWidth": 0,
+                "selected": false,
+                "hoverFeedback": false,
+                "opacity": 1,
+                "text": "Database",
+                "labels": [
+                    {
+                        "labelTypeId": "gvia09",
+                        "labelTypeValueId": "5hnugm"
+                    }
+                ],
+                "ports": [
+                    {
+                        "position": {
+                            "x": -3.5,
+                            "y": 23
+                        },
+                        "size": {
+                            "width": -1,
+                            "height": -1
+                        },
+                        "strokeWidth": 0,
+                        "selected": false,
+                        "hoverFeedback": false,
+                        "opacity": 1,
+                        "features": {},
+                        "id": "scljwi",
+                        "type": "port:dfd-input",
+                        "children": []
+                    },
+                    {
+                        "position": {
+                            "x": -3.5,
+                            "y": 0.5
+                        },
+                        "size": {
+                            "width": -1,
+                            "height": -1
+                        },
+                        "strokeWidth": 0,
+                        "selected": false,
+                        "hoverFeedback": false,
+                        "opacity": 1,
+                        "behavior": "Assignment({};TRUE;{Sensitivity.Public})",
+                        "features": {},
+                        "id": "1j7bn5",
+                        "type": "port:dfd-output",
+                        "children": []
+                    }
+                ],
+                "features": {},
+                "id": "8j2r1g",
+                "type": "node:storage",
+                "children": []
+            },
+            {
+                "routingPoints": [],
+                "selected": false,
+                "hoverFeedback": false,
+                "opacity": 1,
+                "features": {},
+                "id": "vq8g3l",
+                "type": "edge:arrow",
+                "sourceId": "4wbyft",
+                "targetId": "2331e8",
+                "text": "data",
                 "children": []
             },
             {
@@ -529,20 +510,6 @@
                 "hoverFeedback": false,
                 "opacity": 1,
                 "features": {},
-                "id": "uflsc",
-                "type": "edge:arrow",
-                "sourceId": "wksxi8",
-                "targetId": "ti4ri7",
-                "text": "request",
-                "routerKind": "polyline",
-                "children": []
-            },
-            {
-                "routingPoints": [],
-                "selected": false,
-                "hoverFeedback": false,
-                "opacity": 1,
-                "features": {},
                 "id": "ojjvtp",
                 "type": "edge:arrow",
                 "sourceId": "3wntc",
@@ -561,6 +528,46 @@
                 "sourceId": "bsqjm",
                 "targetId": "scljwi",
                 "text": "request",
+                "children": []
+            },
+            {
+                "routingPoints": [],
+                "selected": false,
+                "hoverFeedback": false,
+                "opacity": 1,
+                "features": {},
+                "id": "uflsc",
+                "type": "edge:arrow",
+                "sourceId": "wksxi8",
+                "targetId": "ti4ri7",
+                "text": "request",
+                "routerKind": "polyline",
+                "children": []
+            },
+            {
+                "routingPoints": [],
+                "selected": false,
+                "hoverFeedback": false,
+                "opacity": 1,
+                "features": {},
+                "id": "n81f3b",
+                "type": "edge:arrow",
+                "sourceId": "1j7bn5",
+                "targetId": "0hfzu",
+                "text": "items",
+                "children": []
+            },
+            {
+                "routingPoints": [],
+                "selected": false,
+                "hoverFeedback": false,
+                "opacity": 1,
+                "features": {},
+                "id": "hi397b",
+                "type": "edge:arrow",
+                "sourceId": "y1p7qq",
+                "targetId": "nhcrad",
+                "text": "items",
                 "children": []
             }
         ]
