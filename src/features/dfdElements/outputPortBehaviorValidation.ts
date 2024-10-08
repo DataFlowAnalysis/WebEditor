@@ -20,14 +20,17 @@ interface PortBehaviorValidationError {
  */
 @injectable()
 export class PortBehaviorValidator {
+    private static readonly ASSIGNMENT_REGEX =
+        /^Assignment\(\{(([A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*)?)\};(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z][A-Za-z0-9_]*\.[A-Za-z][A-Za-z0-9_]*))+;\{(((([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_\|]*))+(,\s*(([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_\|]*)))*)?)\}\)+$/;
+    private static readonly FORWARDING_REGEX = /^Forwarding\(\{[A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*\}\)$/;
+
     // Regex that validates a set statement.
     // Has the label type and label value that should be set as capturing groups.
-    private static readonly SET_REGEX =
-        /^set +([A-Za-z][A-Za-z0-9_]*)\.([A-Za-z][A-Za-z0-9_]*) *= *(?: +|!|TRUE|FALSE|\|\||&&|\(|\)|[A-Za-z][A-Za-z0-9_\|]*(?:\.[A-Za-z][A-Za-z0-9_\|]*){2})+$/;
+    private static readonly TERM_REGEX =
+        /^(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z][A-Za-z0-9_]*\.[A-Za-z][A-Za-z0-9_]*))+$/;
     // Regex that is used to extract all inputs, their label types and label values from a set statement.
     // Each input is a match with the input name, label type and label value as capturing groups.
-    private static readonly SET_REGEX_EXPRESSION_INPUTS =
-        /([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_\|]*)/g;
+    private static readonly SET_REGEX_EXPRESSION_INPUTS = /([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_\|]*)/g;
     // Regex matching alphanumeric characters.
     public static readonly REGEX_ALPHANUMERIC = /[A-Za-z0-9_\|]+/;
 
@@ -74,11 +77,11 @@ export class PortBehaviorValidator {
             return;
         }
 
-        if (line.startsWith("forward")) {
+        if (line.startsWith("Forwarding")) {
             return this.validateForwardStatement(line, lineNumber, port);
         }
 
-        if (line.startsWith("set")) {
+        if (line.startsWith("Assignment")) {
             return this.validateSetStatement(line, lineNumber, port);
         }
 
@@ -95,7 +98,17 @@ export class PortBehaviorValidator {
         lineNumber: number,
         port: DfdOutputPortImpl,
     ): PortBehaviorValidationError[] | undefined {
-        const inputsString = line.substring("forward".length);
+        const match = line.match(PortBehaviorValidator.FORWARDING_REGEX);
+        if (!match) {
+            return [
+                {
+                    line: lineNumber,
+                    message: "invalid forwarding(Template:Forwarding({in_ports})",
+                },
+            ];
+        }
+
+        const inputsString = line.substring("Forwarding({".length, line.length - 2);
         const inputs = inputsString.split(",").map((input) => input.trim());
         if (inputs.filter((input) => input !== "").length === 0) {
             return [
@@ -197,37 +210,12 @@ export class PortBehaviorValidator {
         lineNumber: number,
         port: DfdOutputPortImpl,
     ): PortBehaviorValidationError[] | undefined {
-        const match = line.match(PortBehaviorValidator.SET_REGEX);
+        const match = line.match(PortBehaviorValidator.ASSIGNMENT_REGEX);
         if (!match) {
             return [
                 {
                     line: lineNumber,
-                    message: "invalid set statement",
-                },
-            ];
-        }
-
-        // Check that the label type and value that this statement tries to set are valid.
-        const setLabelType = match[1];
-        const setLabelValue = match[2];
-        const labelType = this.labelTypeRegistry?.getLabelTypes().find((type) => type.name === setLabelType);
-        if (!labelType) {
-            return [
-                {
-                    line: lineNumber,
-                    message: `unknown label type: ${setLabelType}`,
-                    colStart: line.indexOf(setLabelType),
-                    colEnd: line.indexOf(setLabelType) + setLabelType.length,
-                },
-            ];
-        }
-        if (!labelType.values.find((value) => value.text === setLabelValue)) {
-            return [
-                {
-                    line: lineNumber,
-                    message: `unknown label value of label type ${setLabelType}: ${setLabelValue}`,
-                    colStart: line.indexOf(setLabelValue),
-                    colEnd: line.indexOf(setLabelValue) + setLabelValue.length,
+                    message: "invalid assignment(Template:Assignment({in_ports}; term; {out_label})",
                 },
             ];
         }
@@ -246,7 +234,7 @@ export class PortBehaviorValidator {
                 return [
                     {
                         line: lineNumber,
-                        message: "invalid set statement: missing opening parenthesis",
+                        message: "invalid assignment: missing opening parenthesis",
                         colStart: strIdx,
                         colEnd: strIdx + 1,
                     },
@@ -258,23 +246,31 @@ export class PortBehaviorValidator {
             return [
                 {
                     line: lineNumber,
-                    message: "invalid set statement: missing closing parenthesis",
+                    message: "invalid assignment: missing closing parenthesis",
                 },
             ];
         }
 
         // Extract all used inputs, label types and the corresponding label values.
-        const expression = line.split("=")[1].trim(); // get everything after the =
-        if (expression.length === 0) {
+        const term = line.split(";")[1].trim(); // get everything after the =
+        if (term.length === 0) {
             return [
                 {
                     line: lineNumber,
-                    message: "invalid set statement: missing expression",
+                    message: "invalid assignment: missing term",
                 },
             ];
         }
 
-        const matches = [...expression.matchAll(PortBehaviorValidator.SET_REGEX_EXPRESSION_INPUTS)];
+        const termMatch = term.match(PortBehaviorValidator.TERM_REGEX);
+        if (!termMatch) {
+            return [
+                {
+                    line: lineNumber,
+                    message: "invalid term",
+                },
+            ];
+        }
 
         const node = port.parent;
         if (!(node instanceof DfdNodeImpl)) {
@@ -282,37 +278,42 @@ export class PortBehaviorValidator {
         }
         const availableInputs = node.getAvailableInputs();
 
+        const innerContent = line.substring("Assignment(".length, line.length - 1);
+
+        // Step 2: Split by the semicolons to separate the blocks
+        const parts = innerContent.split(";").map((part) => part.trim());
+
+        const inPorts = parts[0]
+            .substring(1, parts[0].length - 1)
+            .split(",")
+            .map((variable) => variable.trim());
+        const outLabel = parts[2]
+            .substring(1, parts[2].length - 1)
+            .split(",")
+            .map((variable) => variable.trim());
+
         // Check for each input access that the input exists and that the label type and value are valid.
         const inputAccessErrors = [];
-        for (const inputMatch of matches) {
-            const inputName = inputMatch[1];
-            const inputLabelType = inputMatch[2];
-            const inputLabelValue = inputMatch[3];
 
-            if (!availableInputs.includes(inputName)) {
+        for (const inPortName of inPorts) {
+            if (!availableInputs.includes(inPortName) && inPortName !== "") {
                 // Find all occurrences of the unavailable input.
-                let idx = line.indexOf(inputName);
-                while (idx !== -1) {
-                    // Check that this is not a substring of another input.
-                    if (
-                        // before must not be alphanumeric => start of this string must be the beginning of the input name
-                        line[idx - 1]?.match(PortBehaviorValidator.REGEX_ALPHANUMERIC) &&
-                        line[idx + inputName.length] === "." // must be followed by a dot to access the label type of the input
-                    ) {
-                        inputAccessErrors.push({
-                            line: lineNumber,
-                            message: `invalid/unknown input: ${inputName}`,
-                            colStart: idx,
-                            colEnd: idx + inputName.length,
-                        });
-                    }
-
-                    idx = line.indexOf(inputName, idx + 1);
-                }
+                let idx = line.indexOf(inPortName);
+                inputAccessErrors.push({
+                    line: lineNumber,
+                    message: `invalid/unknown input: ${inPortName}`,
+                    colStart: idx,
+                    colEnd: idx + inPortName.length,
+                });
 
                 continue;
             }
+        }
 
+        for (const typeValuePair of outLabel) {
+            if (typeValuePair === "") continue;
+
+            const inputLabelType = typeValuePair.split(".")[0].trim();
             const inputLabelTypeObject = this.labelTypeRegistry
                 ?.getLabelTypes()
                 .find((type) => type.name === inputLabelType);
@@ -335,30 +336,58 @@ export class PortBehaviorValidator {
 
                     idx = line.indexOf(inputLabelType, idx + 1);
                 }
-            } else if (!inputLabelTypeObject.values.find((value) => value.text === inputLabelValue)) {
-                let idx = line.indexOf(inputLabelValue);
-                while (idx !== -1) {
-                    // Check that this is not a substring of another label value.
-                    if (
-                        // must start after a dot and end at the end of the alphanumeric text
-                        line[idx - 1] === "." &&
-                        // Might be at the end of the line
-                        (!line[idx + inputLabelValue.length] ||
-                            !line[idx + inputLabelValue.length].match(PortBehaviorValidator.REGEX_ALPHANUMERIC))
-                    ) {
-                        inputAccessErrors.push({
-                            line: lineNumber,
-                            message: `unknown label value of label type ${inputLabelType}: ${inputLabelValue}`,
-                            colStart: idx,
-                            colEnd: idx + inputLabelValue.length,
-                        });
-                    }
+            }
 
-                    idx = line.indexOf(inputLabelValue, idx + 1);
+            if (typeValuePair.indexOf(".") !== -1) {
+                const inputLabelValue = typeValuePair.split(".")[1].trim();
+
+                const inputLabelTypeObject = this.labelTypeRegistry
+                    ?.getLabelTypes()
+                    .find((type) => type.name === inputLabelType);
+                if (!inputLabelTypeObject) {
+                    let idx = line.indexOf(inputLabelType);
+                    while (idx !== -1) {
+                        // Check that this is not a substring of another label type.
+                        if (
+                            // must start after a dot and end before a dot
+                            line[idx - 1] === "." &&
+                            line[idx + inputLabelType.length] === "."
+                        ) {
+                            inputAccessErrors.push({
+                                line: lineNumber,
+                                message: `unknown label type: ${inputLabelType}`,
+                                colStart: idx,
+                                colEnd: idx + inputLabelType.length,
+                            });
+                        }
+
+                        idx = line.indexOf(inputLabelType, idx + 1);
+                    }
+                } else if (!inputLabelTypeObject.values.find((value) => value.text === inputLabelValue)) {
+                    let idx = line.indexOf(inputLabelValue);
+                    while (idx !== -1) {
+                        // Check that this is not a substring of another label value.
+                        if (
+                            // must start after a dot and end at the end of the alphanumeric text
+                            line[idx - 1] === "." &&
+                            // Might be at the end of the line
+                            (!line[idx + inputLabelValue.length] ||
+                                !line[idx + inputLabelValue.length].match(PortBehaviorValidator.REGEX_ALPHANUMERIC))
+                        ) {
+                            inputAccessErrors.push({
+                                line: lineNumber,
+                                message: `unknown label value of label type ${inputLabelType}: ${inputLabelValue}`,
+                                colStart: idx,
+                                colEnd: idx + inputLabelValue.length,
+                            });
+                        }
+
+                        idx = line.indexOf(inputLabelValue, idx + 1);
+                    }
                 }
             }
         }
 
-        return inputAccessErrors.length > 0 ? inputAccessErrors : undefined;
+        return inputAccessErrors.length > 0 ? inputAccessErrors : [];
     }
 }
