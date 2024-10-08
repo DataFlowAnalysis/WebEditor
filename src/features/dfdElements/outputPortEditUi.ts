@@ -224,7 +224,6 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
         availableInputs: string[],
     ): monaco.languages.CompletionItem[] {
         const line = model.getLineContent(position.lineNumber);
-        const currentWord = model.getWordUntilPosition(position);
         const column = position.column;
 
         // Check if we're inside the input list (i.e., inside first curly braces `{}`)
@@ -282,7 +281,6 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
         availableInputs: string[],
     ): monaco.languages.CompletionItem[] {
         const line = model.getLineContent(position.lineNumber);
-        const currentWord = model.getWordUntilPosition(position);
         const column = position.column;
 
         // Check if we're inside the input list (i.e., inside first curly braces `{}`)
