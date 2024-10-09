@@ -21,13 +21,13 @@ interface PortBehaviorValidationError {
 @injectable()
 export class PortBehaviorValidator {
     // Regex that validates assignments
-    // Matches "Assignment({input_Pins};Term;{out_Label})"
+    // Matches "Assignment({input_Pins};TERM_REGEX;{out_Label})"
     private static readonly ASSIGNMENT_REGEX =
-        /^Assignment\(\{(([A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*)?)\};(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]*\.[A-Za-z0-9_]*))+;\{(((([A-Za-z0-9_]*)\.[A-Za-z0-9_]*)+(,\s*([A-Za-z0-9_]*\.[A-Za-z0-9_]*))*)?)\}\)+$/;
+        /^Assignment\(\{(([A-Za-z0-9_][A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*)?)\};(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]*\.[A-Za-z0-9_]*))+;\{(((([A-Za-z0-9_]*)\.[A-Za-z0-9_]*)+(,\s*([A-Za-z0-9_]*\.[A-Za-z0-9_]*))*)?)\}\)+$/;
 
     // Regex that validates forwarding
     // Matches "Forwarding({input_pins})"
-    private static readonly FORWARDING_REGEX = /^Forwarding\(\{[A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*\}\)$/;
+    private static readonly FORWARDING_REGEX = /^Forwarding\(\{[A-Za-z0-9_][A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_][A-Za-z0-9_\|]+)*\}\)$/;
 
     // Regex that validates a term
     // Has the label type and label value that should be set as capturing groups.
