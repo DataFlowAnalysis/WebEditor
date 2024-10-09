@@ -341,6 +341,7 @@ export class PortBehaviorValidator {
             }
 
             if (typeValuePair.indexOf(".") !== -1) {
+                if (typeValuePair.split(".")[1] === null || typeValuePair.split(".")[1] === "") continue;
                 const inputLabelValue = typeValuePair.split(".")[1].trim();
 
                 const inputLabelTypeObject = this.labelTypeRegistry
