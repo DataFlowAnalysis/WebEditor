@@ -233,10 +233,6 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
         const openBraceIndex = line.indexOf("{");
         const closingBraceIndex = line.indexOf("}");
 
-        console.log("Moin" + column);
-        console.log("Moin" + openBraceIndex);
-        console.log("Moin" + closingBraceIndex);
-        console.log("Moin" + (openBraceIndex !== -1 && (closingBraceIndex === -1 || column <= closingBraceIndex)));
         // If the first semicolon hasn't been typed yet, assume we're inside the input list
         if (openBraceIndex !== -1 && (closingBraceIndex === -1 || column <= closingBraceIndex + 1)) {
             // Inside `{List of available inputs}` section
