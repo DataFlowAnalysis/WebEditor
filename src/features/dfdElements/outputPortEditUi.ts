@@ -193,7 +193,10 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
         if (
             model.getValueInRange(
                 new monaco.Range(position.lineNumber, position.column - 1, position.lineNumber, position.column),
-            ) === "{"
+            ) === "{" &&
+            model.getValueInRange(
+                new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column + 1),
+            ) !== "}"
         ) {
             return {
                 suggestions: [curlyBracketCompletion],
@@ -228,19 +231,24 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
 
         // Check if we're inside the input list (i.e., inside first curly braces `{}`)
         const openBraceIndex = line.indexOf("{");
-        const firstSemicolonIndex = line.indexOf(";");
+        const closingBraceIndex = line.indexOf("}");
 
+        console.log("Moin" + column);
+        console.log("Moin" + openBraceIndex);
+        console.log("Moin" + closingBraceIndex);
+        console.log("Moin" + (openBraceIndex !== -1 && (closingBraceIndex === -1 || column <= closingBraceIndex)));
         // If the first semicolon hasn't been typed yet, assume we're inside the input list
-        if (openBraceIndex !== -1 && (firstSemicolonIndex === -1 || column < firstSemicolonIndex)) {
+        if (openBraceIndex !== -1 && (closingBraceIndex === -1 || column <= closingBraceIndex + 1)) {
             // Inside `{List of available inputs}` section
             return this.getInputCompletions(model, position, availableInputs);
         }
 
         // If the second semicolon hasn't been typed yet, assume we're typing in the term section or outPorts list
+        const firstSemicolonIndex = line.indexOf(";");
         const secondSemicolonIndex = line.indexOf(";", firstSemicolonIndex + 1);
         const secondOpenBraceIndex = line.indexOf("{", openBraceIndex + 1);
 
-        if (secondSemicolonIndex !== -1 && column > secondSemicolonIndex) {
+        if (secondSemicolonIndex !== -1 && column > secondSemicolonIndex + 1) {
             // If the second semicolon hasn't been typed but we're inside the second curly brace, assume it's outPorts
             if (secondOpenBraceIndex !== -1 && column > secondOpenBraceIndex) {
                 // We're inside the `{List of outPorts}` section
