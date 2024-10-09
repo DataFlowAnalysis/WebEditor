@@ -23,7 +23,7 @@ export class PortBehaviorValidator {
     // Regex that validates assignments
     // Matches "Assignment({input_Pins};Term;{out_Label})"
     private static readonly ASSIGNMENT_REGEX =
-        /^Assignment\(\{(([A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*)?)\};(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]*\.[A-Za-z0-9_]*))+;\{(((([A-Za-z0-9_\|]*)\.[A-Za-z0-9_\|]*)+(,\s*([A-Za-z0-9_\|]*\.[A-Za-z0-9_\|]*))*)?)\}\)+$/;
+        /^Assignment\(\{(([A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*)?)\};(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]*\.[A-Za-z0-9_]*))+;\{(((([A-Za-z0-9_]*)\.[A-Za-z0-9_]*)+(,\s*([A-Za-z0-9_]*\.[A-Za-z0-9_]*))*)?)\}\)+$/;
 
     // Regex that validates forwarding
     // Matches "Forwarding({input_pins})"
