@@ -82,7 +82,7 @@ export class OutputPortEditUIMouseListener extends MouseListener {
 }
 
 // More information and playground website for testing: https://microsoft.github.io/monaco-editor/monarch.html
-const statementKeywords = ["forward", "set"];
+const statementKeywords = ["Forwarding({})", "Assignment({})"];
 const constantsKeywords = ["TRUE", "FALSE"];
 const dfdBehaviorLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = {
     keywords: [...statementKeywords, ...constantsKeywords],
@@ -140,7 +140,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
 
     // Auto open completions after typing a dot. Useful for the set statement where
     // components are delimited by dots.
-    triggerCharacters = ["."];
+    triggerCharacters = [".", ";", "{"];
 
     provideCompletionItems(
         model: monaco.editor.ITextModel,
@@ -159,7 +159,8 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
                 suggestions: statementKeywords.map((keyword) => ({
                     label: keyword,
                     kind: monaco.languages.CompletionItemKind.Keyword,
-                    insertText: keyword,
+                    insertText: keyword.slice(0, -2) + "$0" + keyword.slice(-2),
+                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, // Treat insertText as a snippet
                     // Replace full line with new statement start keyword
                     range: new monaco.Range(
                         position.lineNumber,
@@ -180,15 +181,37 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
 
         const availableInputs = parent.getAvailableInputs().filter((input) => input !== undefined) as string[];
 
+        const curlyBracketCompletion = {
+            label: "{",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "$0}", // Automatically add closing curly bracket and position cursor inside
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+        };
+
+        // Add the curly bracket completion when the user types a curly bracket
+        if (
+            model.getValueInRange(
+                new monaco.Range(position.lineNumber, position.column - 1, position.lineNumber, position.column),
+            ) === "{" &&
+            model.getValueInRange(
+                new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column + 1),
+            ) !== "}"
+        ) {
+            return {
+                suggestions: [curlyBracketCompletion],
+            };
+        }
+
         // Suggestions per statement type
         switch (statementType?.word) {
-            case "set":
+            case "Assignment":
                 return {
-                    suggestions: this.getSetStatementCompletions(model, position, availableInputs),
+                    suggestions: this.getAssignmentCompletions(model, position, availableInputs),
                 };
-            case "forward":
+            case "Forwarding":
                 return {
-                    suggestions: this.getInputCompletions(model, position, availableInputs),
+                    suggestions: this.getForwardingCompletions(model, position, availableInputs),
                 };
         }
 
@@ -198,53 +221,111 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
         };
     }
 
-    private getSetStatementCompletions(
+    private getAssignmentCompletions(
         model: monaco.editor.ITextModel,
         position: monaco.Position,
         availableInputs: string[],
     ): monaco.languages.CompletionItem[] {
         const line = model.getLineContent(position.lineNumber);
+        const column = position.column;
 
-        // Find the start of the current expression
-        // -1 because the column is to the right of the last char => last filled column is -1
+        // Check if we're inside the input list (i.e., inside first curly braces `{}`)
+        const openBraceIndex = line.indexOf("{");
+        const closingBraceIndex = line.indexOf("}");
+
+        // If the first semicolon hasn't been typed yet, assume we're inside the input list
+        if (openBraceIndex !== -1 && (closingBraceIndex === -1 || column <= closingBraceIndex + 1)) {
+            // Inside `{List of available inputs}` section
+            return this.getInputCompletions(model, position, availableInputs);
+        }
+
+        // If the second semicolon hasn't been typed yet, assume we're typing in the term section or outPorts list
+        const firstSemicolonIndex = line.indexOf(";");
+        const secondSemicolonIndex = line.indexOf(";", firstSemicolonIndex + 1);
+        const secondOpenBraceIndex = line.indexOf("{", openBraceIndex + 1);
+
+        if (secondSemicolonIndex !== -1 && column > secondSemicolonIndex + 1) {
+            // If the second semicolon hasn't been typed but we're inside the second curly brace, assume it's outPorts
+            if (secondOpenBraceIndex !== -1 && column > secondOpenBraceIndex) {
+                // We're inside the `{List of outPorts}` section
+                return this.getOutLabelCompletions(model, position);
+            } else {
+                return [
+                    {
+                        label: "{",
+                        kind: monaco.languages.CompletionItemKind.Snippet,
+                        insertText: "{$0}", // Automatically add closing curly bracket and position cursor inside
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        range: new monaco.Range(
+                            position.lineNumber,
+                            position.column,
+                            position.lineNumber,
+                            position.column,
+                        ),
+                    },
+                ];
+            }
+        }
+
+        if (line.charAt(column - 2) === ".") {
+            // If the last character is a ".", return only getOutLabelCompletions
+            return this.getOutLabelCompletions(model, position);
+        }
+
+        const constantsCompletions = this.getConstantsCompletions(model, position);
+        const outLabelCompletions = this.getOutLabelCompletions(model, position);
+
+        // Return combined completions
+        return [...constantsCompletions, ...outLabelCompletions];
+    }
+
+    private getForwardingCompletions(
+        model: monaco.editor.ITextModel,
+        position: monaco.Position,
+        availableInputs: string[],
+    ): monaco.languages.CompletionItem[] {
+        const line = model.getLineContent(position.lineNumber);
+        const column = position.column;
+
+        // Check if we're inside the input list (i.e., inside first curly braces `{}`)
+        const openBraceIndex = line.indexOf("{");
+
+        // If the first semicolon hasn't been typed yet, assume we're inside the input list
+        if (openBraceIndex !== -1 && column > openBraceIndex) {
+            // Inside `{List of available inputs}` section
+            return this.getInputCompletions(model, position, availableInputs);
+        } else {
+            return [];
+        }
+    }
+
+    private getOutLabelCompletions(
+        model: monaco.editor.ITextModel,
+        position: monaco.Position,
+    ): monaco.languages.CompletionItem[] {
+        const line = model.getLineContent(position.lineNumber);
+
+        // Find the start of the current expression (Type or value)
         let currentExpressionStart = position.column - 1;
         while (currentExpressionStart > 0) {
-            const currentChar = line[currentExpressionStart - 1]; // column is 1-based but array is 0-based => -1
-
-            if (currentChar !== "." && !currentChar.match(PortBehaviorValidator.REGEX_ALPHANUMERIC)) {
+            const currentChar = line[currentExpressionStart - 1]; // column is 1-based, array is 0-based
+            if (currentChar !== "." && !currentChar.match(/[A-Za-z0-9_]/)) {
                 break;
             }
-
             currentExpressionStart--;
         }
 
-        const currentExpression = line.substring(currentExpressionStart - 1, position.column);
+        const currentExpression = line.substring(currentExpressionStart, position.column);
         const expressionParts = currentExpression.split(".");
-        // Check whether the position is the assignment target (aka the left side of the "=" or missing equals)
-        const equalsIdx = line.indexOf("=");
-        const isTargetLabel = equalsIdx == -1 || equalsIdx > currentExpressionStart;
 
-        if (isTargetLabel) {
-            // Left hand side: labelType.labelValue (is for the target node, so we don't need to specify)
-            if (expressionParts.length === 1) {
+        switch (expressionParts.length) {
+            case 1:
+                // If there's only one part, we're completing the `Type`
                 return this.getLabelTypeCompletions(model, position);
-            } else {
-                return this.getLabelValueCompletions(model, position, expressionParts[0]);
-            }
-        } else {
-            // Right hand side: input.labelType.labelValue or constant
-            switch (expressionParts.length) {
-                case 1:
-                    return [
-                        ...this.getInputCompletions(model, position, availableInputs),
-                        ...this.getConstantsCompletions(model, position),
-                    ];
-                case 2:
-                    return this.getLabelTypeCompletions(model, position);
-                case 3:
-                    const labelTypeName = expressionParts[1];
-                    return this.getLabelValueCompletions(model, position, labelTypeName);
-            }
+            case 2:
+                // If there's already a dot, we complete the `value` for the specific `Type`
+                const labelTypeName = expressionParts[0];
+                return this.getLabelValueCompletions(model, position, labelTypeName);
         }
 
         return [];
