@@ -20,14 +20,20 @@ interface PortBehaviorValidationError {
  */
 @injectable()
 export class PortBehaviorValidator {
+    // Regex that validates assignments
+    // Matches "Assignment({input_Pins};Term;{out_Label})"
     private static readonly ASSIGNMENT_REGEX =
         /^Assignment\(\{(([A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*)?)\};(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z][A-Za-z0-9_]*\.[A-Za-z][A-Za-z0-9_]*))+;\{(((([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_\|]*))+(,\s*(([A-Za-z][A-Za-z0-9_\|]*)\.([A-Za-z][A-Za-z0-9_\|]*)))*)?)\}\)+$/;
+
+    // Regex that validates forwarding
+    // Matches "Forwarding({input_pins})"
     private static readonly FORWARDING_REGEX = /^Forwarding\(\{[A-Za-z0-9_\|]+(,\s*[A-Za-z0-9_\|]+)*\}\)$/;
 
-    // Regex that validates a set statement.
-    // Has the label type and label value that should be set as capturing groups.
+    // Regex that validates a term
+    // Matches Constants, Operants and Label References
     private static readonly TERM_REGEX =
         /^(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z][A-Za-z0-9_]*\.[A-Za-z][A-Za-z0-9_]*))+$/;
+
     // Regex matching alphanumeric characters.
     public static readonly REGEX_ALPHANUMERIC = /[A-Za-z0-9_\|]+/;
 
