@@ -32,7 +32,7 @@ export class PortBehaviorValidator {
 
     // Regex that validates a term
     // Has the label type and label value that should be set as capturing groups.
-    private static readonly TERM_REGEX = /^(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]*\.[A-Za-z0-9_]*))+$/;
+    private static readonly TERM_REGEX = /^(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]+\.[A-Za-z0-9_]+))+$/;
 
     private static readonly LABEL_REGEX = /([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)/g;
 
