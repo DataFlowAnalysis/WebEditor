@@ -162,8 +162,21 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
         // because the cursor is going a bit over the model and then the popup would re-show
         // with the new position after the timeout.
         const mousePosition = this.mouseListener.getMousePosition();
-        containerElement.style.left = `${mousePosition.x - 2}px`;
-        containerElement.style.top = `${mousePosition.y - 2}px`;
+        const annotationPosition = {
+            x: mousePosition.x - 2,
+            y: mousePosition.y - 2,
+        };
+        containerElement.style.left = `${annotationPosition.x}px`;
+        containerElement.style.top = `${annotationPosition.y}px`;
+
+        // Set tooltip size and scroll to prevent them from growing out of the screen
+        containerElement.style.overflowY = "auto";
+        this.annotationParagraph.style.textWrap = "wrap";
+        this.annotationParagraph.style.overflowWrap = "anywhere";
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        containerElement.style.maxWidth = `${Math.max(screenWidth - annotationPosition.x - 50, 100)}px`;
+        containerElement.style.maxHeight = `${Math.max(screenHeight - annotationPosition.y - 50, 50)}px`;
 
         // Set content
         if (!node.annotation) {
