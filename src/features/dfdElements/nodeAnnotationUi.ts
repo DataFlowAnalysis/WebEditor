@@ -172,7 +172,7 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
         }
 
         const { message, icon } = node.annotation;
-        this.annotationParagraph.innerText = message;
+        this.annotationParagraph.innerHTML = message;
 
         if (icon) {
             const iconI = document.createElement("i");
