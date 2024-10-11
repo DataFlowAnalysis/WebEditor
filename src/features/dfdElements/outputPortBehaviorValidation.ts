@@ -32,7 +32,8 @@ export class PortBehaviorValidator {
 
     // Regex that validates a term
     // Has the label type and label value that should be set as capturing groups.
-    private static readonly TERM_REGEX = /^(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]+\.[A-Za-z0-9_]+))+$/;
+    private static readonly TERM_REGEX =
+        /^(\s*|!|TRUE|FALSE|\|\||&&|\(|\)|([A-Za-z0-9_]+\.[A-Za-z0-9_]+(?![A-Za-z0-9_]*\.[A-Za-z0-9_]*)))+$/g;
 
     private static readonly LABEL_REGEX = /([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)/g;
 
@@ -335,6 +336,15 @@ export class PortBehaviorValidator {
                     idx = line.indexOf(inputLabelValue, idx + 1);
                 }
             }
+
+            console.log(inputMatch);
+
+            if (inputMatch[3] !== undefined) {
+                inputAccessErrors.push({
+                    line: lineNumber,
+                    message: `invalid label definition`,
+                });
+            }
         }
 
         const node = port.parent;
@@ -450,6 +460,13 @@ export class PortBehaviorValidator {
                         idx = line.indexOf(inputLabelValue, idx + 1);
                     }
                 }
+            }
+
+            if (typeValuePair.split(".")[2] !== undefined) {
+                inputAccessErrors.push({
+                    line: lineNumber,
+                    message: `invalid label definition`,
+                });
             }
         }
 
