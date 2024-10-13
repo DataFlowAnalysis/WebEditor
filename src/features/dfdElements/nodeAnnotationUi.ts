@@ -171,8 +171,8 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
 
         // Set tooltip size and scroll to prevent them from growing out of the screen
         containerElement.style.overflowY = "auto";
-        this.annotationParagraph.style.textWrap = "wrap";
-        this.annotationParagraph.style.overflowWrap = "anywhere";
+        this.annotationParagraph.style.whiteSpace = "normal";
+        this.annotationParagraph.style.wordBreak = "break-word";
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
         containerElement.style.maxWidth = `${Math.max(screenWidth - annotationPosition.x - 50, 100)}px`;
