@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import "./lightDarkSwitch.css";
-import { AbstractUIExtension, contextMenuModule } from "sprotty";
+import { AbstractUIExtension } from "sprotty";
 
 @injectable()
 export class LightDarkSwitch extends AbstractUIExtension {
