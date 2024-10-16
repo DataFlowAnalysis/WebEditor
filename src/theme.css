@@ -9,19 +9,17 @@
     --dark-mode: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --color-foreground: #fff;
-        --color-background: #000;
-        --color-primary: #222;
-        --color-valid: #0f0;
-        --color-tool-palette-hover: #444;
-        --color-tool-palette-selected: #555;
-        --dark-mode: 1;
-    }
+:root[data-theme="dark"] {
+    --color-foreground: #fff;
+    --color-background: #000;
+    --color-primary: #222;
+    --color-valid: #0f0;
+    --color-tool-palette-hover: #444;
+    --color-tool-palette-selected: #555;
+    --dark-mode: 1;
+}
 
-    #sprotty div {
-        /* Use default dark theme browser styles for scrollbars etc. inside all UI extensions */
-        color-scheme: dark;
-    }
+#sprotty[data-theme="dark"] div {
+    /* Use default dark theme browser styles for scrollbars etc. inside all UI extensions */
+    color-scheme: dark;
 }
