@@ -16,9 +16,13 @@ export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
         // Elk settings. See https://eclipse.dev/elk/reference.html for available options.
         return {
             "org.eclipse.elk.algorithm": "org.eclipse.elk.layered",
-            "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "30.0",
-            "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "20.0",
+            "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "10.0",
+            "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "05.0",
+            "org.eclipse.elk.aspectRatio": "1.8",
             "org.eclipse.elk.port.borderOffset": "14.0",
+            "org.eclipse.elk.layered.compaction.postCompaction.strategy": "LEFT_RIGHT_CONSTRAINT_LOCKING",
+            "org.eclipse.elk.layered.wrapping.strategy": "MULTI_EDGE",
+            "org.eclipse.elk.layered.wrapping.correctionFactor": "2.0",
             // Do not do micro layout for nodes, which includes the node dimensions etc.
             // These are all automatically determined by our dfd node views
             "org.eclipse.elk.omitNodeMicroLayout": "true",
@@ -30,7 +34,7 @@ export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
 
 export const elkFactory = () =>
     new ElkConstructor({
-        algorithms: ["layered"],
+        algorithms: ["layered", "force", "radial", "mrtree"],
     });
 
 /**
