@@ -82,20 +82,13 @@ export class OutputPortEditUIMouseListener extends MouseListener {
 }
 
 // More information and playground website for testing: https://microsoft.github.io/monaco-editor/monarch.html
-const statementKeywords = ["Forwarding({})", "Assignment({})"];
+const startOfLineKeywords = ["forward", "assign", "set", "unset"];
+const statementKeywords = ["forward", "assign", "set", "unset", "if", "from"];
 const constantsKeywords = ["TRUE", "FALSE"];
 const dfdBehaviorLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = {
     keywords: [...statementKeywords, ...constantsKeywords],
 
     operators: ["=", "||", "&&", "!"],
-
-    brackets: [
-        {
-            open: "(",
-            close: ")",
-            token: "delimiter.parenthesis",
-        },
-    ],
 
     symbols: /[=><!~?:&|+\-*\/\^%]+/,
 
@@ -117,8 +110,6 @@ const dfdBehaviorLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = 
             [/\/\/.*$/, "comment"],
             [/#.*$/, "comment"],
 
-            // delimiters and operators
-            [/[()]/, "@brackets"],
             [
                 /@symbols/,
                 {
@@ -140,7 +131,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
 
     // Auto open completions after typing a dot. Useful for the set statement where
     // components are delimited by dots.
-    triggerCharacters = [".", ";", "{"];
+    triggerCharacters = [".", ";", " ", ","];
 
     provideCompletionItems(
         model: monaco.editor.ITextModel,
@@ -156,19 +147,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
         if (isAtFirstWord) {
             // Start of line: suggest statement start keywords
             return {
-                suggestions: statementKeywords.map((keyword) => ({
-                    label: keyword,
-                    kind: monaco.languages.CompletionItemKind.Keyword,
-                    insertText: keyword.slice(0, -2) + "$0" + keyword.slice(-2),
-                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, // Treat insertText as a snippet
-                    // Replace full line with new statement start keyword
-                    range: new monaco.Range(
-                        position.lineNumber,
-                        1,
-                        position.lineNumber,
-                        model.getLineMaxColumn(position.lineNumber),
-                    ),
-                })),
+                suggestions: this.getKeywordCompletions(model, position, startOfLineKeywords, true),
             };
         }
 
@@ -179,46 +158,70 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
             };
         }
 
+        const lastWord = model.getLineContent(position.lineNumber).trimEnd().split(" ").pop() || "";
         const availableInputs = parent.getAvailableInputs().filter((input) => input !== undefined) as string[];
-
-        const curlyBracketCompletion = {
-            label: "{",
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            insertText: "$0}", // Automatically add closing curly bracket and position cursor inside
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-        };
-
-        // Add the curly bracket completion when the user types a curly bracket
-        if (
-            model.getValueInRange(
-                new monaco.Range(position.lineNumber, position.column - 1, position.lineNumber, position.column),
-            ) === "{" &&
-            model.getValueInRange(
-                new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column + 1),
-            ) !== "}"
-        ) {
-            return {
-                suggestions: [curlyBracketCompletion],
-            };
-        }
-
-        // Suggestions per statement type
-        switch (statementType?.word) {
-            case "Assignment":
+        console.log("lastWord", lastWord);
+        if (lastWord.endsWith(",") || lastWord.endsWith(".") || lastWord == statementType?.word) {
+            // Suggestions per statement type
+            switch (statementType?.word) {
+                case "assign":
+                    return {
+                        suggestions: this.getAssignmentCompletions(model, position, availableInputs),
+                    };
+                case "forward":
+                    return {
+                        suggestions: this.getInputCompletions(model, position, availableInputs),
+                    };
+                case "set":
+                    return {
+                        suggestions: this.getOutLabelCompletions(model, position),
+                    };
+                case "unset":
+                    return {
+                        suggestions: this.getOutLabelCompletions(model, position),
+                    };
+            }
+        } else if (statementType?.word === "assign") {
+            if (lastWord == "from") {
+                console.log(1);
                 return {
-                    suggestions: this.getAssignmentCompletions(model, position, availableInputs),
+                    suggestions: this.getInputCompletions(model, position, availableInputs),
                 };
-            case "Forwarding":
+            } else if (lastWord == "if") {
+                console.log(2);
                 return {
-                    suggestions: this.getForwardingCompletions(model, position, availableInputs),
+                    suggestions: this.getConstantsCompletions(model, position),
                 };
+            } else {
+                console.log(3);
+                return {
+                    suggestions: this.getKeywordCompletions(model, position, ["from", "if"]),
+                };
+            }
         }
 
         // Unknown statement type, cannot suggest anything
         return {
             suggestions: [],
         };
+    }
+
+    private getKeywordCompletions(
+        model: monaco.editor.ITextModel,
+        position: monaco.Position,
+        keywords: string[],
+        replaceLine: boolean = false,
+    ): monaco.languages.CompletionItem[] {
+        const range = replaceLine
+            ? new monaco.Range(position.lineNumber, 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber))
+            : new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+        return keywords.map((keyword) => ({
+            label: keyword,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: keyword,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, // Treat insertText as a snippet
+            range: range,
+        }));
     }
 
     private getAssignmentCompletions(
@@ -277,26 +280,6 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
 
         // Return combined completions
         return [...constantsCompletions, ...outLabelCompletions];
-    }
-
-    private getForwardingCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-        availableInputs: string[],
-    ): monaco.languages.CompletionItem[] {
-        const line = model.getLineContent(position.lineNumber);
-        const column = position.column;
-
-        // Check if we're inside the input list (i.e., inside first curly braces `{}`)
-        const openBraceIndex = line.indexOf("{");
-
-        // If the first semicolon hasn't been typed yet, assume we're inside the input list
-        if (openBraceIndex !== -1 && column > openBraceIndex) {
-            // Inside `{List of available inputs}` section
-            return this.getInputCompletions(model, position, availableInputs);
-        } else {
-            return [];
-        }
     }
 
     private getOutLabelCompletions(
