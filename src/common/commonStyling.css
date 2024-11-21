@@ -70,6 +70,14 @@ kbd {
        the text would be selected otherwise due to a double click. */
     -webkit-user-select: none;
     user-select: none;
+
+    /* Default orientation of the arrow: pointing down */
+    --arrow-scale: 1;
+}
+
+.accordion-button.flip-arrow {
+    /* Default orientation of the arrow: pointing up */
+    --arrow-scale: -1;
 }
 
 .accordion-button::after {
@@ -88,10 +96,10 @@ kbd {
 
     vertical-align: text-top;
     transition: transform 500ms ease;
-    transform: scaleY(1);
+    transform: scaleY(var(--arrow-scale));
 }
 
 .accordion-state:checked ~ label .accordion-button::after {
     /* flip arrow in y direction */
-    transform: scaleY(-1);
+    transform: scaleY(calc(var(--arrow-scale) * -1));
 }
