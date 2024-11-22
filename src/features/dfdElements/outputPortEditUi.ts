@@ -160,13 +160,12 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
 
         const lastWord = model.getLineContent(position.lineNumber).trimEnd().split(" ").pop() || "";
         const availableInputs = parent.getAvailableInputs().filter((input) => input !== undefined) as string[];
-        console.log("lastWord", lastWord);
         if (lastWord.endsWith(",") || lastWord.endsWith(".") || lastWord == statementType?.word) {
             // Suggestions per statement type
             switch (statementType?.word) {
                 case "assign":
                     return {
-                        suggestions: this.getAssignmentCompletions(model, position, availableInputs),
+                        suggestions: this.getOutLabelCompletions(model, position),
                     };
                 case "forward":
                     return {
@@ -182,20 +181,27 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
                     };
             }
         } else if (statementType?.word === "assign") {
+            const line = model.getLineContent(position.lineNumber);
+            const hasFromKeyword = line.includes("from");
+            const hasIfKeyword = line.includes("if");
             if (lastWord == "from") {
-                console.log(1);
                 return {
                     suggestions: this.getInputCompletions(model, position, availableInputs),
                 };
-            } else if (lastWord == "if") {
-                console.log(2);
+            } else if (lastWord == "if" || (hasIfKeyword && !hasFromKeyword && !line.endsWith(" "))) {
                 return {
-                    suggestions: this.getConstantsCompletions(model, position),
+                    suggestions: [
+                        ...this.getConstantsCompletions(model, position),
+                        ...this.getOutLabelCompletions(model, position),
+                    ],
                 };
-            } else {
-                console.log(3);
+            } else if (!hasIfKeyword) {
                 return {
-                    suggestions: this.getKeywordCompletions(model, position, ["from", "if"]),
+                    suggestions: this.getKeywordCompletions(model, position, ["if"]),
+                };
+            } else if (!hasFromKeyword && hasIfKeyword) {
+                return {
+                    suggestions: this.getKeywordCompletions(model, position, ["from"]),
                 };
             }
         }
@@ -222,64 +228,6 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, // Treat insertText as a snippet
             range: range,
         }));
-    }
-
-    private getAssignmentCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-        availableInputs: string[],
-    ): monaco.languages.CompletionItem[] {
-        const line = model.getLineContent(position.lineNumber);
-        const column = position.column;
-
-        // Check if we're inside the input list (i.e., inside first curly braces `{}`)
-        const openBraceIndex = line.indexOf("{");
-        const closingBraceIndex = line.indexOf("}");
-
-        // If the first semicolon hasn't been typed yet, assume we're inside the input list
-        if (openBraceIndex !== -1 && (closingBraceIndex === -1 || column <= closingBraceIndex + 1)) {
-            // Inside `{List of available inputs}` section
-            return this.getInputCompletions(model, position, availableInputs);
-        }
-
-        // If the second semicolon hasn't been typed yet, assume we're typing in the term section or outPorts list
-        const firstSemicolonIndex = line.indexOf(";");
-        const secondSemicolonIndex = line.indexOf(";", firstSemicolonIndex + 1);
-        const secondOpenBraceIndex = line.indexOf("{", openBraceIndex + 1);
-
-        if (secondSemicolonIndex !== -1 && column > secondSemicolonIndex + 1) {
-            // If the second semicolon hasn't been typed but we're inside the second curly brace, assume it's outPorts
-            if (secondOpenBraceIndex !== -1 && column > secondOpenBraceIndex) {
-                // We're inside the `{List of outPorts}` section
-                return this.getOutLabelCompletions(model, position);
-            } else {
-                return [
-                    {
-                        label: "{",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "{$0}", // Automatically add closing curly bracket and position cursor inside
-                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                        range: new monaco.Range(
-                            position.lineNumber,
-                            position.column,
-                            position.lineNumber,
-                            position.column,
-                        ),
-                    },
-                ];
-            }
-        }
-
-        if (line.charAt(column - 2) === ".") {
-            // If the last character is a ".", return only getOutLabelCompletions
-            return this.getOutLabelCompletions(model, position);
-        }
-
-        const constantsCompletions = this.getConstantsCompletions(model, position);
-        const outLabelCompletions = this.getOutLabelCompletions(model, position);
-
-        // Return combined completions
-        return [...constantsCompletions, ...outLabelCompletions];
     }
 
     private getOutLabelCompletions(
