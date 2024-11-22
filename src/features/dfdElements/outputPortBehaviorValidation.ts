@@ -20,11 +20,11 @@ interface PortBehaviorValidationError {
  */
 @injectable()
 export class PortBehaviorValidator {
+    // RegEx validating names of input pins
     private static readonly INPUT_LABEL_REGEX = /[A-Za-z0-9_][A-Za-z0-9_\|]+/;
 
+    // RegEx validating names of output labels
     private static readonly OUTPUT_LABEL_REGEX = /[A-Za-z0-9_]+\.[A-Za-z0-9_]+/;
-
-    private static readonly LABEL_REGEX = /([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)/g;
 
     // Regex that validates a term
     // Has the label type and label value that should be set as capturing groups.
@@ -32,7 +32,7 @@ export class PortBehaviorValidator {
         /(?:\s*|!|TRUE|FALSE|\|\||&&|\(|\)|(?:[A-Za-z0-9_]+\.[A-Za-z0-9_]+(?![A-Za-z0-9_]*\.[A-Za-z0-9_]*)))+/g;
 
     // Regex that validates assignments
-    // Matches "Assignment({input_Pins};TERM_REGEX;{out_Label})"
+    // Matches "assign out_labels if term from in_pins" where out_labels is a comma separated list of output labels, in_pins is a comma separated list of input pins and the from part is optional.
     private static readonly ASSIGNMENT_REGEX = new RegExp(
         "^assign (" +
             PortBehaviorValidator.BUILD_COMMA_SEPARATED_LIST_REGEX(PortBehaviorValidator.OUTPUT_LABEL_REGEX).source +
@@ -374,7 +374,9 @@ export class PortBehaviorValidator {
             ];
         }
 
-        const matches = [...term.matchAll(PortBehaviorValidator.LABEL_REGEX)];
+        const matches = [
+            ...term.matchAll(new RegExp("(" + PortBehaviorValidator.OUTPUT_LABEL_REGEX.source + ")", "g")),
+        ];
         const inputAccessErrors = [];
 
         console.log(matches);
@@ -558,6 +560,6 @@ export class PortBehaviorValidator {
     }
 
     private static BUILD_COMMA_SEPARATED_LIST_REGEX(regex: RegExp): RegExp {
-        return new RegExp(regex.source + "(?:, " + regex.source + ")*");
+        return new RegExp(regex.source + "(?:, *" + regex.source + ")*");
     }
 }
