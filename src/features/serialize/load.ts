@@ -18,6 +18,7 @@ import { SavedDiagram } from "./save";
 import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { LayoutModelAction } from "../autoLayout/command";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
+import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 
 export interface LoadDiagramAction extends Action {
     kind: typeof LoadDiagramAction.KIND;
@@ -67,6 +68,9 @@ export class LoadDiagramCommand extends Command {
     @inject(EditorModeController)
     @optional()
     private editorModeController?: EditorModeController;
+    @inject(ConstraintRegistry)
+    @optional()
+    private readonly constraintRegistry?: ConstraintRegistry;
 
     private oldRoot: SModelRootImpl | undefined;
     private newRoot: SModelRootImpl | undefined;
@@ -76,6 +80,8 @@ export class LoadDiagramCommand extends Command {
     private newEditorMode: EditorMode | undefined;
     private oldFileName: string | undefined;
     private newFileName: string | undefined;
+    private oldConstrains: Constraint[] | undefined;
+    private newConstrains: Constraint[] | undefined;
 
     /**
      * Gets the model file from the action or opens a file picker dialog if no file is provided.
@@ -198,6 +204,20 @@ export class LoadDiagramCommand extends Command {
                 this.logger.info(this, "Editor mode loaded successfully");
             }
 
+            if (this.constraintRegistry) {
+                // Load label types
+                this.oldConstrains = this.constraintRegistry.getConstraints();
+                this.newConstrains = newDiagram?.constraints;
+                this.constraintRegistry.clearConstraints();
+                if (newDiagram?.constraints) {
+                    newDiagram.constraints.forEach((constraint) => {
+                        this.constraintRegistry?.registerConstraint(constraint);
+                    });
+
+                    this.logger.info(this, "Constraints loaded successfully");
+                }
+            }
+
             postLoadActions(this.newRoot, this.actionDispatcher);
 
             this.oldFileName = currentFileName;
@@ -246,6 +266,8 @@ export class LoadDiagramCommand extends Command {
         if (this.oldEditorMode) {
             this.editorModeController?.setMode(this.oldEditorMode);
         }
+        this.constraintRegistry?.clearConstraints();
+        this.oldConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
         setFileNameInPageTitle(this.oldFileName);
 
         return this.oldRoot ?? context.modelFactory.createRoot(EMPTY_ROOT);

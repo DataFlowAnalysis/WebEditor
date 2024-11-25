@@ -11,7 +11,7 @@ div.constraint-menu {
 }
 
 div.constraint-menu:has(> input:checked) {
-    grid-template-rows: 1fr auto 1fr;
+    grid-template-rows: 1fr 200px 1fr;
 }
 
 div.constraint-menu > * {
@@ -130,9 +130,23 @@ div.constraint-menu > * {
     margin: 4px;
 }
 
+.constrain-label.selected input {
+    border: 1px solid var(--color-foreground);
+}
+
 .constrain-label button {
     background-color: transparent;
     border: none;
     cursor: pointer;
     padding: 0;
+}
+
+.constraint-add {
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }

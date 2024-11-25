@@ -1,11 +1,18 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import "./constraintMenu.css";
 import { AbstractUIExtension } from "sprotty";
-import { calculateTextSize } from "../../utils";
+import { calculateTextSize, generateRandomSprottyId } from "../../utils";
+import { Constraint, ConstraintRegistry } from "./constraintRegistry";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension {
     static readonly ID = "constraint-menu";
+    private selectedConstraint: Constraint | undefined;
+
+    constructor(@inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry) {
+        super();
+        this.constraintRegistry = constraintRegistry;
+    }
 
     id(): string {
         return ConstraintMenu.ID;
@@ -24,11 +31,8 @@ export class ConstraintMenu extends AbstractUIExtension {
             </label>
         `;
         containerElement.appendChild(this.buildConstraintInputWrapper());
-        containerElement.appendChild(this.buildConstraintListWrapper(["Test123", "Test456", "Test789"]));
+        containerElement.appendChild(this.buildConstraintListWrapper());
         containerElement.appendChild(this.buildRunButton());
-
-        // Set the first item as selected
-        setTimeout(() => this.selectConstraintListItem("Test123"), 0);
     }
 
     private buildConstraintInputWrapper(): HTMLElement {
@@ -40,18 +44,16 @@ export class ConstraintMenu extends AbstractUIExtension {
         return wrapper;
     }
 
-    private buildConstraintListWrapper(constrains: string[]): HTMLElement {
+    private buildConstraintListWrapper(): HTMLElement {
         const wrapper = document.createElement("div");
         wrapper.id = "constraint-menu-list";
 
-        constrains.forEach((constraint) => {
-            wrapper.appendChild(this.buildConstraintListItem(constraint));
-        });
+        this.rerenderConstraintList(wrapper);
 
         return wrapper;
     }
 
-    private buildConstraintListItem(constraint: string): HTMLElement {
+    private buildConstraintListItem(constraint: Constraint): HTMLElement {
         const valueElement = document.createElement("div");
         valueElement.classList.add("constrain-label");
 
@@ -65,24 +67,70 @@ export class ConstraintMenu extends AbstractUIExtension {
         };
 
         const valueInput = document.createElement("input");
-        valueInput.value = constraint;
+        valueInput.value = constraint.name;
         valueInput.placeholder = "Name";
         this.dynamicallySetInputSize(valueInput);
+        valueInput.onchange = () => {
+            constraint.name = valueInput.value;
+            this.constraintRegistry.constraintChanged();
+        };
 
         valueElement.appendChild(valueInput);
 
         const deleteButton = document.createElement("button");
         deleteButton.innerHTML = '<span class="codicon codicon-trash"></span>';
         deleteButton.onclick = () => {
-            console.log("Delete button clicked");
+            this.constraintRegistry.unregisterConstraint(constraint);
+            this.rerenderConstraintList();
+            if (this.selectedConstraint === constraint) {
+                this.selectConstraintListItem(undefined);
+            }
         };
         valueElement.appendChild(deleteButton);
         return valueElement;
     }
 
-    private selectConstraintListItem(constraint: string): void {
+    private selectConstraintListItem(constraint?: Constraint): void {
+        this.selectedConstraint = constraint;
         const input = document.getElementById("constraint-input") as HTMLInputElement;
-        input.value = constraint;
+        input.value = constraint?.constraint ?? "";
+    }
+
+    private rerenderConstraintList(list?: HTMLElement): void {
+        if (!list) {
+            list = document.getElementById("constraint-menu-list") ?? undefined;
+        }
+        console.info(list);
+        if (!list) return;
+        list.innerHTML = "";
+        this.constraintRegistry.getConstraints().forEach((constraint) => {
+            list.appendChild(this.buildConstraintListItem(constraint));
+        });
+
+        const addButton = document.createElement("button");
+        addButton.classList.add("constraint-add");
+        addButton.innerHTML = '<span class="codicon codicon-add"></span> Constraint';
+        addButton.onclick = () => {
+            /*if (this.editorModeController?.isReadOnly()) {
+                return;
+            }*/
+
+            const constraint: Constraint = {
+                id: generateRandomSprottyId(),
+                name: "",
+                constraint: "" + Math.floor(Math.random() * 100),
+            };
+            this.constraintRegistry.registerConstraint(constraint);
+
+            // Insert label type last but before the button
+            const newValueElement = this.buildConstraintListItem(constraint);
+            list.insertBefore(newValueElement, list.lastChild);
+            this.selectConstraintListItem(constraint);
+
+            // Select the text input element of the new value to allow entering the value
+            newValueElement.querySelector("input")?.focus();
+        };
+        list.appendChild(addButton);
     }
 
     /**
