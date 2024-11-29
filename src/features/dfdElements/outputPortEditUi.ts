@@ -188,7 +188,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
                 return {
                     suggestions: this.getInputCompletions(model, position, availableInputs),
                 };
-            } else if (lastWord == "if" || (hasIfKeyword && !hasFromKeyword && !line.endsWith(" "))) {
+            } else if (lastWord == "if" || ["|", "&", "(", "!"].includes(lastWord[lastWord.length - 1])) {
                 return {
                     suggestions: [
                         ...this.getConstantsCompletions(model, position),
