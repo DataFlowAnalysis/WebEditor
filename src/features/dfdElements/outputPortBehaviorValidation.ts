@@ -21,7 +21,7 @@ interface PortBehaviorValidationError {
 @injectable()
 export class PortBehaviorValidator {
     // RegEx validating names of input pins
-    private static readonly INPUT_LABEL_REGEX = /[A-Za-z0-9_][A-Za-z0-9_\|]+/;
+    private static readonly INPUT_LABEL_REGEX = /[A-Za-z0-9_~][A-Za-z0-9_~\|]+/;
 
     // RegEx validating names of output labels
     private static readonly OUTPUT_LABEL_REGEX = /[A-Za-z0-9_]+\.[A-Za-z0-9_]+/;
