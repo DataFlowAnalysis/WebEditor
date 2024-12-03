@@ -27,13 +27,18 @@ export class DfdEditLabelValidator implements IEditLabelValidator {
         }
 
         const labelParent = label.parent;
-        if (!(labelParent instanceof SEdgeImpl) || !value) {
+        if (!(labelParent instanceof SEdgeImpl)) {
             return { severity: "ok" };
         }
 
         // Labels on edges are not allowed to have spaces in them
         if (value.includes(" ")) {
             return { severity: "error", message: "Input name cannot contain spaces" };
+        }
+
+        // Labels on edges are not allowed to be empty
+        if (value.length == 0) {
+            return { severity: "error", message: "Input name cannot be empty" };
         }
 
         // Get node and edge names that are in use
