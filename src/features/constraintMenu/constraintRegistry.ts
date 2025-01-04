@@ -13,13 +13,11 @@ export class ConstraintRegistry {
 
     public registerConstraint(constraint: Constraint): void {
         this.constraints.push(constraint);
-        console.log("add", this.constraints);
         this.constraintChanged();
     }
 
     public unregisterConstraint(constraint: Constraint): void {
         this.constraints = this.constraints.filter((c) => c.id !== constraint.id);
-        console.log("rem", this.constraints);
         this.constraintChanged();
     }
 
@@ -37,7 +35,6 @@ export class ConstraintRegistry {
     }
 
     public getConstraints(): Constraint[] {
-        console.log("get", this.constraints);
         return this.constraints;
     }
 

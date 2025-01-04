@@ -4,10 +4,25 @@ import { AbstractUIExtension } from "sprotty";
 import { calculateTextSize, generateRandomSprottyId } from "../../utils";
 import { Constraint, ConstraintRegistry } from "./constraintRegistry";
 
+// Enable hover feature that is used to show validation errors.
+// Inline completions are enabled to allow autocompletion of keywords and inputs/label types/label values.
+import "monaco-editor/esm/vs/editor/contrib/hover/browser/hover";
+import "monaco-editor/esm/vs/editor/contrib/inlineCompletions/browser/inlineCompletions.contribution.js";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import {
+    constraintDslLanguageMonarchDefinition,
+    DSL_LANGUAGE_ID,
+    MonacoEditorConstraintDslCompletionProvider,
+} from "./DslLanguage";
+import { AutoCompleteTree, TreeBuilder } from "./AutoCompletion";
+
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension {
     static readonly ID = "constraint-menu";
     private selectedConstraint: Constraint | undefined;
+    private editorContainer: HTMLDivElement = document.createElement("div") as HTMLDivElement;
+    private validationLabel: HTMLDivElement = document.createElement("div") as HTMLDivElement;
+    private editor?: monaco.editor.IStandaloneCodeEditor;
 
     constructor(@inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry) {
         super();
@@ -38,9 +53,57 @@ export class ConstraintMenu extends AbstractUIExtension {
     private buildConstraintInputWrapper(): HTMLElement {
         const wrapper = document.createElement("div");
         wrapper.id = "constraint-menu-input";
-        wrapper.innerHTML = `
-            <input type="text" id="constraint-input" placeholder="Enter constraint here">
-        `;
+        wrapper.appendChild(this.editorContainer);
+        wrapper.appendChild(this.validationLabel);
+
+        monaco.languages.register({ id: DSL_LANGUAGE_ID });
+        monaco.languages.setMonarchTokensProvider(DSL_LANGUAGE_ID, constraintDslLanguageMonarchDefinition);
+        monaco.languages.registerCompletionItemProvider(
+            DSL_LANGUAGE_ID,
+            new MonacoEditorConstraintDslCompletionProvider(new AutoCompleteTree(TreeBuilder.buildTree())),
+        );
+
+        const monacoTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "vs-dark" : "vs";
+        this.editor = monaco.editor.create(this.editorContainer, {
+            minimap: {
+                // takes too much space, not useful for our use case
+                enabled: false,
+            },
+            folding: false, // Not supported by our language definition
+            wordBasedSuggestions: "off", // Does not really work for our use case
+            scrollBeyondLastLine: false, // Not needed
+            theme: monacoTheme,
+            wordWrap: "on",
+            language: DSL_LANGUAGE_ID,
+            scrollBeyondLastColumn: 0,
+            scrollbar: {
+                horizontal: "hidden",
+                vertical: "hidden",
+                // avoid can not scroll page when hover monaco
+                alwaysConsumeMouseWheel: false,
+            },
+            lineNumbers: "off",
+        });
+
+        this.editor?.onDidChangeModelContent(() => {
+            //this.validateBehavior();
+        });
+
+        this.editor.onDidChangeCursorPosition((e) => {
+            // Monaco tells us the line number after cursor position changed
+            if (e.position.lineNumber > 1) {
+                // Trim editor value
+                this.editor?.setValue(this.editor.getValue().trim());
+                // Bring back the cursor to the end of the first line
+                this.editor?.setPosition({
+                    ...e.position,
+                    // Setting column to Infinity would mean the end of the line
+                    column: Infinity,
+                    lineNumber: 1,
+                });
+            }
+        });
+
         return wrapper;
     }
 
@@ -100,7 +163,6 @@ export class ConstraintMenu extends AbstractUIExtension {
         if (!list) {
             list = document.getElementById("constraint-menu-list") ?? undefined;
         }
-        console.info(list);
         if (!list) return;
         list.innerHTML = "";
         this.constraintRegistry.getConstraints().forEach((constraint) => {
@@ -171,5 +233,43 @@ export class ConstraintMenu extends AbstractUIExtension {
 
         wrapper.appendChild(button);
         return wrapper;
+    }
+
+    protected onBeforeShow(): void {
+        this.resizeEditor();
+    }
+
+    private resizeEditor(): void {
+        // Resize editor to fit content.
+        // Has ranges for height and width to prevent the editor from getting too small or too large.
+        const e = this.editor;
+        if (!e) {
+            return;
+        }
+
+        // For the height we can use the content height from the editor.
+        const height = e.getContentHeight();
+
+        // For the width we cannot really do this.
+        // Monaco needs about 500ms to figure out the correct width when initially showing the editor.
+        // In the mean time the width will be too small and after the update
+        // the window size will jump visibly.
+        // So for the width we use this calculation to approximate the width.
+        const maxLineLength = e
+            .getValue()
+            .split("\n")
+            .reduce((max, line) => Math.max(max, line.length), 0);
+        const width = 100 + maxLineLength * 8;
+
+        const clamp = (value: number, range: readonly [number, number]) =>
+            Math.min(range[1], Math.max(range[0], value));
+
+        const heightRange = [100, 350] as const;
+        const widthRange = [300, 1000] as const;
+
+        const cHeight = clamp(height, heightRange);
+        const cWidth = clamp(width, widthRange);
+
+        e.layout({ height: cHeight, width: cWidth });
     }
 }
