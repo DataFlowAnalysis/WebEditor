@@ -11,7 +11,7 @@ interface AbstractWord {
     verifyWord(word: string): boolean;
 }
 
-class ConstantWord implements AbstractWord {
+export class ConstantWord implements AbstractWord {
     constructor(protected word: string) {}
 
     verifyWord(word: string): boolean {
@@ -19,7 +19,6 @@ class ConstantWord implements AbstractWord {
     }
 
     completionOptions(part: string): WordCompletion[] {
-        console.log(this.word, part, this.word.startsWith(part));
         if (this.word.startsWith(part)) {
             return [
                 {
@@ -32,12 +31,30 @@ class ConstantWord implements AbstractWord {
     }
 }
 
-class EmptyWord implements AbstractWord {
-    completionOptions(word: string): WordCompletion[] {
+export class AnyWord implements AbstractWord {
+    completionOptions(_: string): WordCompletion[] {
         return [];
     }
-    verifyWord(word: string): boolean {
+    verifyWord(_: string): boolean {
         return true;
+    }
+}
+
+export class NegatableWord implements AbstractWord {
+    constructor(protected word: AbstractWord) {}
+
+    verifyWord(word: string): boolean {
+        if (word.startsWith("!")) {
+            return this.word.verifyWord(word.substring(1));
+        }
+        return this.word.verifyWord(word);
+    }
+
+    completionOptions(part: string): WordCompletion[] {
+        if (part.startsWith("!")) {
+            return this.word.completionOptions(part.substring(1));
+        }
+        return this.word.completionOptions(part);
     }
 }
 
@@ -58,16 +75,15 @@ export class AutoCompleteTree {
         }
         this.content = line.split(" ");
         this.length = line.length;
-        console.log(this.content);
     }
 
     public verify(): boolean {
-        return this.verifyNode(this.roots, 0);
+        return this.verifyNode(this.roots, 0, false);
     }
 
-    private verifyNode(nodes: AutoCompleteNode[], index: number): boolean {
+    private verifyNode(nodes: AutoCompleteNode[], index: number, comesFromFinal: boolean): boolean {
         if (index >= this.content.length) {
-            return nodes.length == 0;
+            return nodes.length == 0 || comesFromFinal;
         }
 
         for (const n of nodes) {
@@ -75,7 +91,7 @@ export class AutoCompleteTree {
                 continue;
             }
 
-            const childResult = this.verifyNode(n.children, index + 1);
+            const childResult = this.verifyNode(n.children, index + 1, n.canBeFinal || false);
             if (childResult) {
                 return true;
             }
@@ -132,38 +148,8 @@ export class AutoCompleteTree {
     }
 }
 
-interface AutoCompleteNode {
+export interface AutoCompleteNode {
     word: AbstractWord;
     children: AutoCompleteNode[];
-}
-
-export namespace TreeBuilder {
-    export function buildTree(): AutoCompleteNode[] {
-        const destinationSelector: AutoCompleteNode = {
-            word: new ConstantWord("to"),
-            children: [
-                {
-                    word: new ConstantWord("placeholder"),
-                    children: [],
-                },
-            ],
-        };
-
-        const neverFlows: AutoCompleteNode = {
-            word: new ConstantWord("neverFlows"),
-            children: [destinationSelector],
-        };
-
-        const nodeSourceSelector: AutoCompleteNode = {
-            word: new ConstantWord("node"),
-            children: [neverFlows],
-        };
-        const dataSourceSelector: AutoCompleteNode = {
-            word: new ConstantWord("data"),
-            children: [neverFlows, nodeSourceSelector],
-        };
-        nodeSourceSelector.children.push(dataSourceSelector);
-
-        return [nodeSourceSelector, dataSourceSelector];
-    }
+    canBeFinal?: boolean;
 }

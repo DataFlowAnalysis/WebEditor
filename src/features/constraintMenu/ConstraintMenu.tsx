@@ -14,7 +14,8 @@ import {
     DSL_LANGUAGE_ID,
     MonacoEditorConstraintDslCompletionProvider,
 } from "./DslLanguage";
-import { AutoCompleteTree, TreeBuilder } from "./AutoCompletion";
+import { AutoCompleteTree } from "./AutoCompletion";
+import { TreeBuilder } from "./DslLanguage";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension {
@@ -23,6 +24,7 @@ export class ConstraintMenu extends AbstractUIExtension {
     private editorContainer: HTMLDivElement = document.createElement("div") as HTMLDivElement;
     private validationLabel: HTMLDivElement = document.createElement("div") as HTMLDivElement;
     private editor?: monaco.editor.IStandaloneCodeEditor;
+    private tree = new AutoCompleteTree(TreeBuilder.buildTree());
 
     constructor(@inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry) {
         super();
@@ -60,7 +62,7 @@ export class ConstraintMenu extends AbstractUIExtension {
         monaco.languages.setMonarchTokensProvider(DSL_LANGUAGE_ID, constraintDslLanguageMonarchDefinition);
         monaco.languages.registerCompletionItemProvider(
             DSL_LANGUAGE_ID,
-            new MonacoEditorConstraintDslCompletionProvider(new AutoCompleteTree(TreeBuilder.buildTree())),
+            new MonacoEditorConstraintDslCompletionProvider(this.tree),
         );
 
         const monacoTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "vs-dark" : "vs";
@@ -86,6 +88,9 @@ export class ConstraintMenu extends AbstractUIExtension {
         });
 
         this.editor?.onDidChangeModelContent(() => {
+            this.tree.setContent(this.editor?.getValue() ?? "");
+            const result = this.tree.verify();
+            this.validationLabel.innerText = result ? "Valid" : "Invalid";
             //this.validateBehavior();
         });
 
