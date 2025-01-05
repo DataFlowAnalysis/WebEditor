@@ -1,11 +1,14 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
-interface WordCompletion {
+export interface RequiredCompletionParts {
     kind: monaco.languages.CompletionItemKind;
     insertText: string;
+    startOffset?: number;
 }
 
-interface AbstractWord {
+export type WordCompletion = RequiredCompletionParts & Partial<monaco.languages.CompletionItem>;
+
+export interface AbstractWord {
     completionOptions(word: string): WordCompletion[];
 
     verifyWord(word: string): boolean;
@@ -18,16 +21,13 @@ export class ConstantWord implements AbstractWord {
         return word == this.word;
     }
 
-    completionOptions(part: string): WordCompletion[] {
-        if (this.word.startsWith(part)) {
-            return [
-                {
-                    insertText: this.word,
-                    kind: monaco.languages.CompletionItemKind.Keyword,
-                },
-            ];
-        }
-        return [];
+    completionOptions(_: string): WordCompletion[] {
+        return [
+            {
+                insertText: this.word,
+                kind: monaco.languages.CompletionItemKind.Keyword,
+            },
+        ];
     }
 }
 
@@ -35,8 +35,8 @@ export class AnyWord implements AbstractWord {
     completionOptions(_: string): WordCompletion[] {
         return [];
     }
-    verifyWord(_: string): boolean {
-        return true;
+    verifyWord(word: string): boolean {
+        return word.length > 0;
     }
 }
 
@@ -52,7 +52,11 @@ export class NegatableWord implements AbstractWord {
 
     completionOptions(part: string): WordCompletion[] {
         if (part.startsWith("!")) {
-            return this.word.completionOptions(part.substring(1));
+            const options = this.word.completionOptions(part.substring(1));
+            return options.map((o) => ({
+                ...o,
+                startOffset: (o.startOffset ?? 0) + 1,
+            }));
         }
         return this.word.completionOptions(part);
     }
@@ -109,6 +113,7 @@ export class AutoCompleteTree {
         } else {
             result = this.completeNode(this.roots, 0);
         }
+        console.log(result);
         return this.transformResults(result);
     }
 
@@ -131,7 +136,10 @@ export class AutoCompleteTree {
 
     private transformResults(comp: WordCompletion[]): monaco.languages.CompletionItem[] {
         const result: monaco.languages.CompletionItem[] = [];
-        for (const c of comp) {
+        const filtered = comp.filter(
+            (c, idx) => comp.findIndex((c2) => c2.insertText === c.insertText && c2.kind === c.kind) === idx,
+        );
+        for (const c of filtered) {
             const r = this.transformResult(c);
             result.push(r);
         }
@@ -141,9 +149,10 @@ export class AutoCompleteTree {
     private transformResult(comp: WordCompletion): monaco.languages.CompletionItem {
         const wordStart = this.content.length == 0 ? 1 : this.length - this.content[this.content.length - 1].length + 1;
         return {
-            ...comp,
-            label: comp.insertText,
-            range: new monaco.Range(1, wordStart, 1, this.length + 1),
+            insertText: comp.insertText,
+            kind: comp.kind,
+            label: comp.label ?? comp.insertText,
+            range: new monaco.Range(1, wordStart + (comp.startOffset ?? 0), 1, this.length + 1),
         };
     }
 }
@@ -152,4 +161,5 @@ export interface AutoCompleteNode {
     word: AbstractWord;
     children: AutoCompleteNode[];
     canBeFinal?: boolean;
+    viewAsLeaf?: boolean;
 }

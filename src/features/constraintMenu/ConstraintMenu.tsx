@@ -16,6 +16,7 @@ import {
 } from "./DslLanguage";
 import { AutoCompleteTree } from "./AutoCompletion";
 import { TreeBuilder } from "./DslLanguage";
+import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension {
@@ -24,11 +25,15 @@ export class ConstraintMenu extends AbstractUIExtension {
     private editorContainer: HTMLDivElement = document.createElement("div") as HTMLDivElement;
     private validationLabel: HTMLDivElement = document.createElement("div") as HTMLDivElement;
     private editor?: monaco.editor.IStandaloneCodeEditor;
-    private tree = new AutoCompleteTree(TreeBuilder.buildTree());
+    private tree: AutoCompleteTree;
 
-    constructor(@inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry) {
+    constructor(
+        @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
+        @inject(LabelTypeRegistry) labelTypeRegistry: LabelTypeRegistry,
+    ) {
         super();
         this.constraintRegistry = constraintRegistry;
+        this.tree = new AutoCompleteTree(TreeBuilder.buildTree(labelTypeRegistry));
     }
 
     id(): string {
@@ -80,7 +85,7 @@ export class ConstraintMenu extends AbstractUIExtension {
             scrollBeyondLastColumn: 0,
             scrollbar: {
                 horizontal: "hidden",
-                vertical: "hidden",
+                vertical: "auto",
                 // avoid can not scroll page when hover monaco
                 alwaysConsumeMouseWheel: false,
             },
@@ -269,8 +274,8 @@ export class ConstraintMenu extends AbstractUIExtension {
         const clamp = (value: number, range: readonly [number, number]) =>
             Math.min(range[1], Math.max(range[0], value));
 
-        const heightRange = [100, 350] as const;
-        const widthRange = [300, 1000] as const;
+        const heightRange = [200, 200] as const;
+        const widthRange = [500, 750] as const;
 
         const cHeight = clamp(height, heightRange);
         const cWidth = clamp(width, widthRange);
