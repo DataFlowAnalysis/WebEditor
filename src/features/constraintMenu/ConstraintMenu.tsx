@@ -176,7 +176,7 @@ export class ConstraintMenu extends AbstractUIExtension {
         if (!list) return;
         list.innerHTML = "";
         this.constraintRegistry.getConstraints().forEach((constraint) => {
-            list.appendChild(this.buildConstraintListItem(constraint));
+            list!.appendChild(this.buildConstraintListItem(constraint));
         });
 
         const addButton = document.createElement("button");
@@ -186,6 +186,9 @@ export class ConstraintMenu extends AbstractUIExtension {
             /*if (this.editorModeController?.isReadOnly()) {
                 return;
             }*/
+            if (!list) {
+                return;
+            }
 
             const constraint: Constraint = {
                 id: generateRandomSprottyId(),
@@ -196,7 +199,7 @@ export class ConstraintMenu extends AbstractUIExtension {
 
             // Insert label type last but before the button
             const newValueElement = this.buildConstraintListItem(constraint);
-            list.insertBefore(newValueElement, list.lastChild);
+            list!.insertBefore(newValueElement, list.lastChild);
             this.selectConstraintListItem(constraint);
 
             // Select the text input element of the new value to allow entering the value

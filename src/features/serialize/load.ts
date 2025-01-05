@@ -283,6 +283,8 @@ export class LoadDiagramCommand extends Command {
                 this.editorModeController.setDefaultMode();
             }
         }
+        this.constraintRegistry?.clearConstraints();
+        this.newConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
         setFileNameInPageTitle(this.newFileName);
 
         return this.newRoot ?? this.oldRoot ?? context.modelFactory.createRoot(EMPTY_ROOT);
