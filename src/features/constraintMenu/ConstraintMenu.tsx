@@ -1,4 +1,4 @@
-import { inject, injectable } from "inversify";
+import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
 import { AbstractUIExtension } from "sprotty";
 import { calculateTextSize, generateRandomSprottyId } from "../../utils";
@@ -17,6 +17,7 @@ import {
 import { AutoCompleteTree } from "./AutoCompletion";
 import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
+import { EditorModeController } from "../editorMode/editorModeController";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension {
@@ -26,14 +27,22 @@ export class ConstraintMenu extends AbstractUIExtension {
     private validationLabel: HTMLDivElement = document.createElement("div") as HTMLDivElement;
     private editor?: monaco.editor.IStandaloneCodeEditor;
     private tree: AutoCompleteTree;
+    private forceReadOnly: boolean;
 
     constructor(
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
         @inject(LabelTypeRegistry) labelTypeRegistry: LabelTypeRegistry,
+        @inject(EditorModeController)
+        @optional()
+        editorModeController?: EditorModeController,
     ) {
         super();
         this.constraintRegistry = constraintRegistry;
         this.tree = new AutoCompleteTree(TreeBuilder.buildTree(labelTypeRegistry));
+        this.forceReadOnly = editorModeController?.getCurrentMode() !== "edit";
+        editorModeController?.onModeChange((mode) => {
+            this.forceReadOnly = mode !== "edit";
+        });
     }
 
     id(): string {
@@ -90,9 +99,15 @@ export class ConstraintMenu extends AbstractUIExtension {
                 alwaysConsumeMouseWheel: false,
             },
             lineNumbers: "off",
+            readOnly: this.constraintRegistry.getConstraints().length === 0 || this.forceReadOnly,
         });
 
         this.editor?.onDidChangeModelContent(() => {
+            if (this.selectedConstraint) {
+                this.selectedConstraint.constraint = this.editor?.getValue() ?? "";
+                this.constraintRegistry.constraintChanged();
+            }
+
             this.tree.setContent(this.editor?.getValue() ?? "");
             const result = this.tree.verify();
             this.validationLabel.innerText = result ? "Valid" : "Invalid";
@@ -140,6 +155,7 @@ export class ConstraintMenu extends AbstractUIExtension {
         };
 
         const valueInput = document.createElement("input");
+        valueInput.id = "constraint-input-" + constraint.id;
         valueInput.value = constraint.name;
         valueInput.placeholder = "Name";
         this.dynamicallySetInputSize(valueInput);
@@ -165,8 +181,8 @@ export class ConstraintMenu extends AbstractUIExtension {
 
     private selectConstraintListItem(constraint?: Constraint): void {
         this.selectedConstraint = constraint;
-        const input = document.getElementById("constraint-input") as HTMLInputElement;
-        input.value = constraint?.constraint ?? "";
+        this.editor?.setValue(constraint?.constraint ?? "");
+        this.editor?.updateOptions({ readOnly: constraint === undefined || this.forceReadOnly });
     }
 
     private rerenderConstraintList(list?: HTMLElement): void {
@@ -193,7 +209,7 @@ export class ConstraintMenu extends AbstractUIExtension {
             const constraint: Constraint = {
                 id: generateRandomSprottyId(),
                 name: "",
-                constraint: "" + Math.floor(Math.random() * 100),
+                constraint: "",
             };
             this.constraintRegistry.registerConstraint(constraint);
 
@@ -203,7 +219,8 @@ export class ConstraintMenu extends AbstractUIExtension {
             this.selectConstraintListItem(constraint);
 
             // Select the text input element of the new value to allow entering the value
-            newValueElement.querySelector("input")?.focus();
+            const input = document.getElementById("constraint-input-" + constraint.id) as HTMLInputElement;
+            input.focus();
         };
         list.appendChild(addButton);
     }
