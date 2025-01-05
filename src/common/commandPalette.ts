@@ -1,4 +1,4 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { ICommandPaletteActionProvider, LabeledAction, SModelRootImpl, CommitModelAction } from "sprotty";
 import { Point } from "sprotty-protocol";
 import { LoadDiagramAction } from "../features/serialize/load";
@@ -10,12 +10,15 @@ import { LayoutModelAction } from "../features/autoLayout/command";
 import "@vscode/codicons/dist/codicon.css";
 import "sprotty/css/command-palette.css";
 import "./commandPalette.css";
+import { SettingsManager } from "./settingsMenu";
 
 /**
  * Provides possible actions for the command palette.
  */
 @injectable()
 export class ServerCommandPaletteActionProvider implements ICommandPaletteActionProvider {
+    constructor(@inject(SettingsManager) protected readonly settings: SettingsManager) {}
+
     async getActions(
         root: Readonly<SModelRootImpl>,
         _text: string,
@@ -31,7 +34,7 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
             new LabeledAction("Load diagram from JSON", [LoadDiagramAction.create(), commitAction], "go-to-file"),
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
             new LabeledAction(
-                "Layout diagram",
+                "Layout diagram (Method: " + this.settings.layoutMethod + ")",
                 [LayoutModelAction.create(), commitAction, fitToScreenAction],
                 "layout",
             ),

@@ -10,27 +10,58 @@ import {
 import { SChildElementImpl, SShapeElementImpl, isBoundsAware } from "sprotty";
 import { SShapeElement, SGraph, SModelIndex } from "sprotty-protocol";
 import { ElkShape, LayoutOptions } from "elkjs";
+import { LayoutMethod, SettingsManager } from "../../common/settingsMenu";
 
 export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
+    constructor(@inject(SettingsManager) protected readonly settings: SettingsManager) {
+        super();
+    }
+
     protected override graphOptions(_sgraph: SGraph, _index: SModelIndex): LayoutOptions {
         // Elk settings. See https://eclipse.dev/elk/reference.html for available options.
         return {
-            "org.eclipse.elk.algorithm": "org.eclipse.elk.layered",
-            "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "30.0",
-            "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "20.0",
-            "org.eclipse.elk.port.borderOffset": "14.0",
-            // Do not do micro layout for nodes, which includes the node dimensions etc.
-            // These are all automatically determined by our dfd node views
-            "org.eclipse.elk.omitNodeMicroLayout": "true",
-            // Balanced graph > straight edges
-            "org.eclipse.elk.layered.nodePlacement.favorStraightEdges": "false",
-        };
+            [LayoutMethod.LINES]: {
+                "org.eclipse.elk.algorithm": "org.eclipse.elk.layered",
+                "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "30.0",
+                "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "20.0",
+                "org.eclipse.elk.port.borderOffset": "14.0",
+                // Do not do micro layout for nodes, which includes the node dimensions etc.
+                // These are all automatically determined by our dfd node views
+                "org.eclipse.elk.omitNodeMicroLayout": "true",
+                // Balanced graph > straight edges
+                "org.eclipse.elk.layered.nodePlacement.favorStraightEdges": "false",
+            },
+            [LayoutMethod.WRAPPING]: {
+                "org.eclipse.elk.algorithm": "org.eclipse.elk.layered",
+                "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "10.0", //Save more space between layers (long names might break this!)
+                "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "5.0", //Save more space between layers (long names might break this!)
+                "org.eclipse.elk.edgeRouting": "ORTHOGONAL", //Edges should be routed orthogonal to each another
+                "org.eclipse.elk.layered.layering.strategy": "COFFMAN_GRAHAM",
+                "org.eclipse.elk.layered.compaction.postCompaction.strategy": "LEFT_RIGHT_CONSTRAINT_LOCKING", //Compact the resulting graph horizontally
+                "org.eclipse.elk.layered.wrapping.strategy": "MULTI_EDGE", //Allow wrapping of multiple edges
+                "org.eclipse.elk.layered.wrapping.correctionFactor": "2.0", //Allow the wrapping to occur earlier
+                // Do not do micro layout for nodes, which includes the node dimensions etc.
+                // These are all automatically determined by our dfd node views
+                "org.eclipse.elk.omitNodeMicroLayout": "true",
+            },
+            [LayoutMethod.CIRCLES]: {
+                "org.eclipse.elk.algorithm": "org.eclipse.elk.stress",
+                "org.eclipse.elk.force.repulsion": "5.0",
+                "org.eclipse.elk.force.iterations": "100", //Reduce iterations for faster formatting, did not notice differences with more iterations
+                "org.eclipse.elk.force.repulsivePower": "1", //Edges should repel vertices as well
+                "org.eclipse.elk.port.borderOffset": "14.0",
+                // Do not do micro layout for nodes, which includes the node dimensions etc.
+                // These are all automatically determined by our dfd node views
+                "org.eclipse.elk.omitNodeMicroLayout": "true",
+                // Balanced graph > straight edges
+            },
+        }[this.settings.layoutMethod];
     }
 }
 
 export const elkFactory = () =>
     new ElkConstructor({
-        algorithms: ["layered"],
+        algorithms: ["layered", "stress"],
     });
 
 /**

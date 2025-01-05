@@ -20,6 +20,7 @@ import { DiagramModificationCommandStack } from "./customCommandStack";
 
 import "./commonStyling.css";
 import { LightDarkSwitch } from "./lightDarkSwitch";
+import { SettingsManager, SettingsUI } from "./settingsMenu";
 
 export const commonModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(ServerCommandPaletteActionProvider).toSelf().inSingletonScope();
@@ -33,6 +34,11 @@ export const commonModule = new ContainerModule((bind, unbind, isBound, rebind) 
     bind(HelpUI).toSelf().inSingletonScope();
     bind(TYPES.IUIExtension).toService(HelpUI);
     bind(EDITOR_TYPES.DefaultUIElement).toService(HelpUI);
+
+    bind(SettingsManager).toSelf().inSingletonScope();
+    bind(SettingsUI).toSelf().inSingletonScope();
+    bind(TYPES.IUIExtension).toService(SettingsUI);
+    bind(EDITOR_TYPES.DefaultUIElement).toService(SettingsUI);
 
     bind(LightDarkSwitch).toSelf().inSingletonScope();
     bind(TYPES.IUIExtension).toService(LightDarkSwitch);

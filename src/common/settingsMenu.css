@@ -1,0 +1,30 @@
+div.settings-ui {
+    left: 20px;
+    bottom: 70px;
+    padding: 10px 10px;
+    min-width: 190px;
+}
+
+#settings-ui-accordion-label .accordion-button::before {
+    content: "";
+    background-image: url("@fortawesome/fontawesome-free/svgs/solid/gear.svg");
+    display: inline-block;
+    filter: invert(var(--dark-mode));
+    height: 16px;
+    width: 16px;
+    background-size: 16px 16px;
+    vertical-align: text-top;
+}
+
+#settings-content {
+    display: grid;
+}
+
+#settings-content > label {
+    grid-column-start: 1;
+}
+
+#settings-content > input,
+#settings-content > select {
+    grid-column-start: 2;
+}
