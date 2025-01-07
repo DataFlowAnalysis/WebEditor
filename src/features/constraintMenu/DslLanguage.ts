@@ -280,6 +280,10 @@ export namespace TreeBuilder {
                 return false;
             }
 
+            if (parts[1].startsWith("$") && parts[1].length >= 2) {
+                return true;
+            }
+
             const label = type.values.find((l) => l.text === parts[1]);
             if (!label) {
                 return false;
