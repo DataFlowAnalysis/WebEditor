@@ -113,7 +113,6 @@ export class AutoCompleteTree {
         } else {
             result = this.completeNode(this.roots, 0);
         }
-        console.log(result);
         return this.transformResults(result);
     }
 
@@ -152,6 +151,7 @@ export class AutoCompleteTree {
             insertText: comp.insertText,
             kind: comp.kind,
             label: comp.label ?? comp.insertText,
+            insertTextRules: comp.insertTextRules,
             range: new monaco.Range(1, wordStart + (comp.startOffset ?? 0), 1, this.length + 1),
         };
     }

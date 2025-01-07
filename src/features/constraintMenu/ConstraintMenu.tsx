@@ -1,6 +1,6 @@
 import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
-import { AbstractUIExtension } from "sprotty";
+import { AbstractUIExtension, LocalModelSource, TYPES } from "sprotty";
 import { calculateTextSize, generateRandomSprottyId } from "../../utils";
 import { Constraint, ConstraintRegistry } from "./constraintRegistry";
 
@@ -32,13 +32,14 @@ export class ConstraintMenu extends AbstractUIExtension {
     constructor(
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
         @inject(LabelTypeRegistry) labelTypeRegistry: LabelTypeRegistry,
+        @inject(TYPES.ModelSource) modelSource: LocalModelSource,
         @inject(EditorModeController)
         @optional()
         editorModeController?: EditorModeController,
     ) {
         super();
         this.constraintRegistry = constraintRegistry;
-        this.tree = new AutoCompleteTree(TreeBuilder.buildTree(labelTypeRegistry));
+        this.tree = new AutoCompleteTree(TreeBuilder.buildTree(modelSource, labelTypeRegistry));
         this.forceReadOnly = editorModeController?.getCurrentMode() !== "edit";
         editorModeController?.onModeChange((mode) => {
             this.forceReadOnly = mode !== "edit";

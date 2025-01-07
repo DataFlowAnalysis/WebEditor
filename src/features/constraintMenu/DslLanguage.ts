@@ -9,6 +9,9 @@ import {
     WordCompletion,
 } from "./AutoCompletion";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
+import { SModelRoot } from "sprotty-protocol";
+import { ArrowEdge } from "../dfdElements/edges";
+import { LocalModelSource } from "sprotty";
 
 export const DSL_LANGUAGE_ID = "constraint-dsl";
 
@@ -30,9 +33,17 @@ export class MonacoEditorConstraintDslCompletionProvider implements monaco.langu
 }
 
 export const constraintDslLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = {
-    keywords: ["data", "node", "neverFlows", "to", "where"],
+    keywords: ["data", "node", "neverFlows", "to", "where", "named", "present", "empty", "type"],
 
     symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+    brackets: [
+        {
+            open: "(",
+            close: ")",
+            token: "delimiter.parenthesis",
+        },
+    ],
 
     tokenizer: {
         root: [
@@ -65,14 +76,14 @@ export const constraintDslLanguageMonarchDefinition: monaco.languages.IMonarchLa
 };
 
 export namespace TreeBuilder {
-    export function buildTree(labelTypeRegistry: LabelTypeRegistry): AutoCompleteNode[] {
+    export function buildTree(modelSource: LocalModelSource, labelTypeRegistry: LabelTypeRegistry): AutoCompleteNode[] {
         const conditions = getConditionalSelectors();
         const conditionalSelector: AutoCompleteNode = {
             word: new ConstantWord("where"),
             children: conditions,
         };
 
-        const destinationSelectors = getAbstractSelectors(labelTypeRegistry);
+        const destinationSelectors = getAbstractSelectors(modelSource, labelTypeRegistry);
         destinationSelectors.forEach((destinationSelector) => {
             getLeaves(destinationSelector).forEach((n) => {
                 n.canBeFinal = true;
@@ -95,7 +106,7 @@ export namespace TreeBuilder {
             children: [],
         };
 
-        const nodeSelectors = getAbstractSelectors(labelTypeRegistry);
+        const nodeSelectors = getAbstractSelectors(modelSource, labelTypeRegistry);
         nodeSelectors.forEach((nodeSelector) => {
             getLeaves(nodeSelector).forEach((n) => {
                 n.children.push(dataSourceSelector);
@@ -107,7 +118,7 @@ export namespace TreeBuilder {
             children: nodeSelectors,
         };
 
-        const dataSelectors = getAbstractSelectors(labelTypeRegistry);
+        const dataSelectors = getAbstractSelectors(modelSource, labelTypeRegistry);
         dataSelectors.forEach((dataSelector) => {
             getLeaves(dataSelector).forEach((n) => {
                 n.children.push(nodeSourceSelector);
@@ -130,25 +141,22 @@ export namespace TreeBuilder {
         return result;
     }
 
-    function getAbstractSelectors(labelTypeRegistry: LabelTypeRegistry): AutoCompleteNode[] {
+    function getAbstractSelectors(
+        modelSource: LocalModelSource,
+        labelTypeRegistry: LabelTypeRegistry,
+    ): AutoCompleteNode[] {
         const vertexTypeSelector: AutoCompleteNode = {
             word: new ConstantWord("type"),
             children: [
-                {
-                    word: new NegatableWord(new AnyWord()),
-                    children: [],
-                },
-            ],
+                new NegatableWord(new ConstantWord("EXTERNAL")),
+                new NegatableWord(new ConstantWord("PROCESS")),
+                new NegatableWord(new ConstantWord("STORE")),
+            ].map((w) => ({ word: w, children: [] })),
         };
-        const vertexCharacteristicsSelector = {
-            word: new NegatableWord(new CharacteristicSelectorDate(labelTypeRegistry)),
+        const characteristicsSelector = {
+            word: new NegatableWord(new CharacteristicSelectorData(labelTypeRegistry)),
             children: [],
         };
-        // Equal to vertexCharacteristicsSelector?
-        /*const dataCharacteristicSelector = {
-            word: new NegatableWord(new AnyWord()),
-            children: [],
-        };*/
         const dataCharacteristicListSelector = {
             word: new NegatableWord(new CharacteristicSelectorDataList(labelTypeRegistry)),
             children: [],
@@ -157,18 +165,12 @@ export namespace TreeBuilder {
             word: new ConstantWord("named"),
             children: [
                 {
-                    word: new AnyWord(),
+                    word: new VariableName(modelSource),
                     children: [],
                 },
             ],
         };
-        return [
-            vertexTypeSelector,
-            vertexCharacteristicsSelector,
-            //dataCharacteristicSelector,
-            dataCharacteristicListSelector,
-            variableNameSelector,
-        ];
+        return [vertexTypeSelector, characteristicsSelector, dataCharacteristicListSelector, variableNameSelector];
     }
 
     function getConditionalSelectors(): AutoCompleteNode[] {
@@ -209,13 +211,18 @@ export namespace TreeBuilder {
                 }
                 return [
                     {
+                        label: "intersection()",
                         insertText: "intersection($0)",
                         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                        kind: monaco.languages.CompletionItemKind.Snippet,
+                        kind: monaco.languages.CompletionItemKind.Function,
                     },
                 ];
             }
-            return [];
+            const attributes = word.substring("intersection(".length, word.length - 1).split(",");
+            if (attributes.length > 2) {
+                return [];
+            }
+            return this.constraintVariableReference.completionOptions(attributes[attributes.length - 1]);
         }
         verifyWord(word: string): boolean {
             const match = /intersection\((.*),(.*)\)/.exec(word);
@@ -231,7 +238,7 @@ export namespace TreeBuilder {
 
     class ConstraintVariableReference extends AnyWord {}
 
-    class CharacteristicSelectorDate implements AbstractWord {
+    class CharacteristicSelectorData implements AbstractWord {
         constructor(private readonly labelTypeRegistry: LabelTypeRegistry) {}
 
         completionOptions(word: string): WordCompletion[] {
@@ -244,7 +251,6 @@ export namespace TreeBuilder {
                 }));
             } else if (parts.length == 2) {
                 const type = this.labelTypeRegistry.getLabelTypes().find((l) => l.name === parts[0]);
-                console.log(type?.values, parts);
                 if (!type) {
                     return [];
                 }
@@ -256,7 +262,7 @@ export namespace TreeBuilder {
                 }));
                 possibleValues.push({
                     insertText: "$" + type.name,
-                    kind: monaco.languages.CompletionItemKind.Enum,
+                    kind: monaco.languages.CompletionItemKind.Variable,
                     startOffset: parts[0].length + 1,
                 });
                 return possibleValues;
@@ -293,11 +299,47 @@ export namespace TreeBuilder {
         }
     }
 
+    class VariableName implements AbstractWord {
+        constructor(private readonly modelSource: LocalModelSource) {}
+
+        completionOptions(_: string): WordCompletion[] {
+            return this.getAllPortNames().map((n) => ({
+                insertText: n,
+                kind: monaco.languages.CompletionItemKind.Variable,
+            }));
+        }
+        verifyWord(word: string): boolean {
+            return this.getAllPortNames().includes(word);
+        }
+
+        private getAllPortNames(): string[] {
+            const portEdgeNameMap: Map<string, string[]> = new Map();
+            const graph = this.modelSource.model as SModelRoot;
+            if (graph.children === undefined) {
+                return [];
+            }
+            for (const element of graph.children) {
+                const edge = element as ArrowEdge;
+                if (edge.text !== undefined && edge.targetId !== undefined) {
+                    const edgeName = edge.text!;
+                    const target = edge.targetId;
+                    if (portEdgeNameMap.has(target)) {
+                        portEdgeNameMap.get(target)?.push(edgeName);
+                    } else {
+                        portEdgeNameMap.set(target, [edgeName]);
+                    }
+                }
+            }
+
+            return Array.from(portEdgeNameMap.keys()).map((key) => portEdgeNameMap.get(key)!.sort().join("|"));
+        }
+    }
+
     class CharacteristicSelectorDataList implements AbstractWord {
-        private characteristicSelectorData: CharacteristicSelectorDate;
+        private characteristicSelectorData: CharacteristicSelectorData;
 
         constructor(labelTypeRegistry: LabelTypeRegistry) {
-            this.characteristicSelectorData = new CharacteristicSelectorDate(labelTypeRegistry);
+            this.characteristicSelectorData = new CharacteristicSelectorData(labelTypeRegistry);
         }
 
         completionOptions(word: string): WordCompletion[] {
