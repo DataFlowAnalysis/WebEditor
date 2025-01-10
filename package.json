@@ -11,7 +11,7 @@
         "@vscode/codicons": "^0.0.33",
         "husky": "^8.0.3",
         "inversify": "^6.0.2",
-        "lint-staged": "^15.0.2",
+        "lint-staged": "^15.3.0",
         "monaco-editor": "^0.45.0",
         "prettier": "^3.0.3",
         "reflect-metadata": "^0.1.13",
