@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    target-branch: "main"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "11:00"
+      timezone: "Europe/Berlin"
+    commit-message:
+      prefix: "Dependency"
+      include: "scope"
+    labels:
+      - "dependencies"
+  - package-ecosystem: "npm"
+    target-branch: "main"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "11:00"
+      timezone: "Europe/Berlin"
+    commit-message:
+      prefix: "Dependency"
+      include: "scope"
+    labels:
+      - "dependencies"
+
+
