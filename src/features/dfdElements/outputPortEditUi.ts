@@ -158,7 +158,8 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
             };
         }
 
-        const lastWord = model.getLineContent(position.lineNumber).trimEnd().split(" ").pop() || "";
+        const lastWord =
+            model.getLineContent(position.lineNumber).substring(0, position.column).trimEnd().split(" ").pop() || "";
         const availableInputs = parent.getAvailableInputs().filter((input) => input !== undefined) as string[];
         if (lastWord.endsWith(",") || lastWord.endsWith(".") || lastWord == statementType?.word) {
             // Suggestions per statement type
@@ -181,7 +182,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
                     };
             }
         } else if (statementType?.word === "assign") {
-            const line = model.getLineContent(position.lineNumber);
+            const line = model.getLineContent(position.lineNumber).substring(0, position.column);
             const hasFromKeyword = line.includes("from");
             const hasIfKeyword = line.includes("if");
             if (lastWord == "from") {
