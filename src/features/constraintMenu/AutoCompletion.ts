@@ -6,19 +6,34 @@ export interface RequiredCompletionParts {
     startOffset?: number;
 }
 
+export interface ValidationError {
+    message: string;
+    startColumn: number;
+    endColumn: number;
+}
+
 export type WordCompletion = RequiredCompletionParts & Partial<monaco.languages.CompletionItem>;
 
 export interface AbstractWord {
     completionOptions(word: string): WordCompletion[];
 
-    verifyWord(word: string): boolean;
+    /**
+     *
+     * @param word
+     * @returns Array of all error messages
+     */
+    verifyWord(word: string): string[];
 }
 
 export class ConstantWord implements AbstractWord {
     constructor(protected word: string) {}
 
-    verifyWord(word: string): boolean {
-        return word == this.word;
+    verifyWord(word: string): string[] {
+        if (word == this.word) {
+            return [];
+        } else {
+            return [`Expected keyword "${this.word}"`];
+        }
     }
 
     completionOptions(_: string): WordCompletion[] {
@@ -35,15 +50,19 @@ export class AnyWord implements AbstractWord {
     completionOptions(_: string): WordCompletion[] {
         return [];
     }
-    verifyWord(word: string): boolean {
-        return word.length > 0;
+    verifyWord(word: string): string[] {
+        if (word.length > 0) {
+            return [];
+        } else {
+            return ["Expected a word"];
+        }
     }
 }
 
 export class NegatableWord implements AbstractWord {
     constructor(protected word: AbstractWord) {}
 
-    verifyWord(word: string): boolean {
+    verifyWord(word: string): string[] {
         if (word.startsWith("!")) {
             return this.word.verifyWord(word.substring(1));
         }
@@ -64,10 +83,13 @@ export class NegatableWord implements AbstractWord {
 
 export class AutoCompleteTree {
     private content: string[];
+    /** value matches the start column of the value at the same index in content */
+    private startColumns: number[];
     private length: number;
 
     constructor(private roots: AutoCompleteNode[]) {
         this.content = [];
+        this.startColumns = [];
         this.length = 0;
     }
 
@@ -78,30 +100,43 @@ export class AutoCompleteTree {
             return;
         }
         this.content = line.split(" ");
+        this.startColumns = this.content.map((_) => 0);
+        for (let i = 1; i < this.content.length; i++) {
+            this.startColumns[i] = this.startColumns[i - 1] + this.content[i - 1].length + 1;
+        }
         this.length = line.length;
     }
 
-    public verify(): boolean {
+    public verify(): ValidationError[] {
         return this.verifyNode(this.roots, 0, false);
     }
 
-    private verifyNode(nodes: AutoCompleteNode[], index: number, comesFromFinal: boolean): boolean {
+    private verifyNode(nodes: AutoCompleteNode[], index: number, comesFromFinal: boolean): ValidationError[] {
         if (index >= this.content.length) {
-            return nodes.length == 0 || comesFromFinal;
+            if (nodes.length == 0 || comesFromFinal) {
+                return [];
+            }
         }
 
+        let foundErrors: ValidationError[] = [];
         for (const n of nodes) {
-            if (!n.word.verifyWord(this.content[index])) {
+            const v = n.word.verifyWord(this.content[index]);
+            if (v.length > 0) {
+                foundErrors.push({
+                    message: v[0],
+                    startColumn: this.startColumns[index],
+                    endColumn: this.startColumns[index] + this.content[index].length,
+                });
                 continue;
             }
 
             const childResult = this.verifyNode(n.children, index + 1, n.canBeFinal || false);
             if (childResult) {
-                return true;
+                return [];
             }
         }
 
-        return false;
+        return foundErrors;
     }
 
     public getCompletion(): monaco.languages.CompletionItem[] {

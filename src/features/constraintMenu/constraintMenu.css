@@ -6,7 +6,7 @@ div.constraint-menu {
     grid-template-columns: auto 1fr;
     grid-template-rows: 1fr;
     grid-auto-rows: 0;
-    overflow: hidden;
+    overflow: visible;
     gap: 8px;
 }
 

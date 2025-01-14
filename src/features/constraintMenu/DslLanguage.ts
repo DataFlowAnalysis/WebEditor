@@ -224,15 +224,15 @@ export namespace TreeBuilder {
             }
             return this.constraintVariableReference.completionOptions(attributes[attributes.length - 1]);
         }
-        verifyWord(word: string): boolean {
-            const match = /intersection\((.*),(.*)\)/.exec(word);
-            if (!match) {
-                return false;
+        verifyWord(word: string): string[] {
+            if (!word.startsWith("intersection(")) {
+                return ['Expected keyword "intersection"'];
             }
-            return (
-                this.constraintVariableReference.verifyWord(match[1]) &&
-                this.constraintVariableReference.verifyWord(match[2])
-            );
+            const attributes = word.substring("intersection(".length, word.length - 1).split(",");
+            if (attributes.length > 2) {
+                return ['Expected at most 2 attributes in "intersection"'];
+            }
+            return attributes.flatMap((a) => this.constraintVariableReference.verifyWord(a));
         }
     }
 
@@ -271,31 +271,32 @@ export namespace TreeBuilder {
             return [];
         }
 
-        verifyWord(word: string): boolean {
+        verifyWord(word: string): string[] {
             const parts = word.split(".");
 
             if (parts.length > 2) {
-                return false;
-            }
-            if (parts.length < 2) {
-                return false;
+                return ["Expected at most 2 parts in characteristic selector"];
             }
 
             const type = this.labelTypeRegistry.getLabelTypes().find((l) => l.name === parts[0]);
             if (!type) {
-                return false;
+                return ['Unknown label type "' + parts[0] + '"'];
+            }
+
+            if (parts.length < 2) {
+                return ["Expected characteristic to have value"];
             }
 
             if (parts[1].startsWith("$") && parts[1].length >= 2) {
-                return true;
+                return [];
             }
 
             const label = type.values.find((l) => l.text === parts[1]);
             if (!label) {
-                return false;
+                return ['Unknown label value "' + parts[1] + '" for type "' + parts[0] + '"'];
             }
 
-            return true;
+            return [];
         }
     }
 
@@ -308,8 +309,11 @@ export namespace TreeBuilder {
                 kind: monaco.languages.CompletionItemKind.Variable,
             }));
         }
-        verifyWord(word: string): boolean {
-            return this.getAllPortNames().includes(word);
+        verifyWord(word: string): string[] {
+            if (this.getAllPortNames().includes(word)) {
+                return [];
+            }
+            return ['Unknown variable name "' + word + '"'];
         }
 
         private getAllPortNames(): string[] {
@@ -348,15 +352,16 @@ export namespace TreeBuilder {
 
             return this.characteristicSelectorData.completionOptions(last);
         }
-        verifyWord(word: string): boolean {
+        verifyWord(word: string): string[] {
             const parts = word.split(",");
             for (let i = 0; i < parts.length; i++) {
-                if (!this.characteristicSelectorData.verifyWord(parts[i])) {
-                    return false;
+                const r = this.characteristicSelectorData.verifyWord(parts[i]);
+                if (r.length > 0) {
+                    return r;
                 }
             }
 
-            return true;
+            return [];
         }
     }
 }

@@ -111,8 +111,21 @@ export class ConstraintMenu extends AbstractUIExtension {
 
             this.tree.setContent(this.editor?.getValue() ?? "");
             const result = this.tree.verify();
-            this.validationLabel.innerText = result ? "Valid" : "Invalid";
-            //this.validateBehavior();
+            this.validationLabel.innerText = result.length == 0 ? "Valid" : "Invalid";
+
+            const model = this.editor?.getModel();
+            if (!model) {
+                return;
+            }
+            const marker: monaco.editor.IMarkerData[] = result.map((e) => ({
+                severity: monaco.MarkerSeverity.Error,
+                startLineNumber: 1,
+                startColumn: e.startColumn + 1,
+                endLineNumber: 1,
+                endColumn: e.endColumn + 1,
+                message: e.message,
+            }));
+            monaco.editor.setModelMarkers(model, "constraint", marker);
         });
 
         this.editor.onDidChangeCursorPosition((e) => {
