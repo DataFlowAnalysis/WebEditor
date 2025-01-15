@@ -28,6 +28,8 @@ import "sprotty/css/sprotty.css";
 import "sprotty/css/edit-label.css";
 import "./theme.css";
 import "./page.css";
+import { LoadDiagramAction } from "./features/serialize/load";
+import { Action } from "sprotty-protocol";
 
 const container = new Container();
 
@@ -57,6 +59,50 @@ container.load(
 const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
 const defaultUIElements = container.getAll<AbstractUIExtension>(EDITOR_TYPES.DefaultUIElement);
 const modelSource = container.get<LocalModelSource>(TYPES.ModelSource);
+
+export var modelFileName = "diagram";
+
+export function setModelFileName(name: string): void {
+    modelFileName = name;
+}
+
+export function executeAction(action: Action) {
+    dispatcher.dispatch(action);
+}
+
+export function setModelSource(file: File): void {
+    modelSource
+        .setModel({
+            type: "graph",
+            id: "root",
+            children: [],
+        })
+        .then(() =>
+            dispatcher.dispatchAll([
+                // Show the default uis after startup
+                ...defaultUIElements.map((uiElement) => {
+                    return SetUIExtensionVisibilityAction.create({
+                        extensionId: uiElement.id(),
+                        visible: true,
+                    });
+                }),
+                // Then load the default diagram and commit the temporary model to the model source
+                LoadDiagramAction.create(file),
+                CommitModelAction.create(),
+            ]),
+        )
+        .then(() => {
+            // Focus the sprotty svg container to enable keyboard shortcuts
+            // because those only work if the svg container is focused.
+            // Allows to e.g. use the file open shortcut without having to click
+            // on the sprotty svg container first.
+            const sprottySvgContainer = document.getElementById("sprotty_root");
+            sprottySvgContainer?.focus();
+        })
+        .catch((error) => {
+            console.error("Failed to show default UIs and load default diagram", error);
+        });
+}
 
 // Set empty model as starting point.
 // In contrast to the default diagram later this is not undoable which would bring the editor
