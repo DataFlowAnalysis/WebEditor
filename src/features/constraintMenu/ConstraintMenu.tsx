@@ -18,6 +18,8 @@ import { AutoCompleteTree } from "./AutoCompletion";
 import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
+import { AnalyzeDiagramAction } from "../serialize/analyze";
+import { executeAction } from "../../index";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension {
@@ -272,7 +274,7 @@ export class ConstraintMenu extends AbstractUIExtension {
         button.id = "run-button";
         button.innerHTML = "Run";
         button.onclick = () => {
-            console.log("Run button clicked");
+            executeAction(AnalyzeDiagramAction.create());
         };
 
         wrapper.appendChild(button);
