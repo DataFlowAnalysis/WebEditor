@@ -129,6 +129,8 @@ export class AutoCompleteTree {
         if (index >= this.content.length) {
             if (nodes.length == 0 || comesFromFinal) {
                 return [];
+            } else {
+                return [{ message: "Unexpected end of line", startColumn: this.length, endColumn: this.length }];
             }
         }
 

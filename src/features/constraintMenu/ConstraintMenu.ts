@@ -42,8 +42,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         this.constraintRegistry = constraintRegistry;
         this.tree = new AutoCompleteTree(TreeBuilder.buildTree(modelSource, labelTypeRegistry));
         this.forceReadOnly = editorModeController?.getCurrentMode() !== "edit";
-        editorModeController?.onModeChange((mode) => {
-            this.forceReadOnly = mode !== "edit";
+        editorModeController?.onModeChange((_) => {
+            this.forceReadOnly = editorModeController!.isReadOnly();
         });
     }
 
@@ -58,7 +58,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         containerElement.innerHTML = `
             <input type="checkbox" id="expand-state-constraint" class="accordion-state" hidden>
             <label id="constraint-menu-expand-label" for="expand-state-constraint">
-                <div class="accordion-button cevron-left" id="constraint-menu-expand-title">
+                <div class="accordion-button cevron-left flip-arrow" id="constraint-menu-expand-title">
                     Constraints
                 </div>
             </label>
@@ -109,6 +109,10 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             lineNumbers: "off",
             readOnly: this.constraintRegistry.getConstraints().length === 0 || this.forceReadOnly,
         });
+
+        this.editor?.setValue(
+            this.constraintRegistry.getConstraints()[0]?.constraint ?? "Select or create a constraint to edit",
+        );
 
         this.editor?.onDidChangeModelContent(() => {
             if (this.selectedConstraint) {
@@ -189,12 +193,13 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
         const deleteButton = document.createElement("button");
         deleteButton.innerHTML = '<span class="codicon codicon-trash"></span>';
-        deleteButton.onclick = () => {
-            this.constraintRegistry.unregisterConstraint(constraint);
-            this.rerenderConstraintList();
-            if (this.selectedConstraint === constraint) {
+        deleteButton.onclick = (e) => {
+            e.stopPropagation();
+            if (this.selectedConstraint?.id === constraint.id) {
                 this.selectConstraintListItem(undefined);
             }
+            this.constraintRegistry.unregisterConstraint(constraint);
+            this.rerenderConstraintList();
         };
         valueElement.appendChild(deleteButton);
         return valueElement;
@@ -202,7 +207,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
     private selectConstraintListItem(constraint?: Constraint): void {
         this.selectedConstraint = constraint;
-        this.editor?.setValue(constraint?.constraint ?? "");
+        this.editor?.setValue(constraint?.constraint ?? "Select or create a constraint to edit");
         this.editor?.updateOptions({ readOnly: constraint === undefined || this.forceReadOnly });
     }
 
@@ -220,9 +225,9 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         addButton.classList.add("constraint-add");
         addButton.innerHTML = '<span class="codicon codicon-add"></span> Constraint';
         addButton.onclick = () => {
-            /*if (this.editorModeController?.isReadOnly()) {
+            if (this.forceReadOnly) {
                 return;
-            }*/
+            }
             if (!list) {
                 return;
             }

@@ -60,10 +60,6 @@ div.constraint-menu {
     grid-column-start: 2;
 }
 
-#constraint-menu-expand-label {
-    /*padding-right: 2em;*/
-}
-
 .constrain-label input {
     background-color: var(--color-background);
     text-align: center;
