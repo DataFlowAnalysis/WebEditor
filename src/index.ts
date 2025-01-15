@@ -23,6 +23,7 @@ import { dfdElementsModule } from "./features/dfdElements/di.config";
 import { copyPasteModule } from "./features/copyPaste/di.config";
 import { EDITOR_TYPES } from "./utils";
 import { editorModeModule } from "./features/editorMode/di.config";
+import { constraintMenuModule } from "./features/constraintMenu/di.config";
 
 import "sprotty/css/sprotty.css";
 import "sprotty/css/edit-label.css";
@@ -54,6 +55,7 @@ container.load(
     editorModeModule,
     toolPaletteModule,
     copyPasteModule,
+    constraintMenuModule,
 );
 
 const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
