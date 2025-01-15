@@ -18,9 +18,10 @@ import { AutoCompleteTree } from "./AutoCompletion";
 import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
+import { Switchable } from "../../common/lightDarkSwitch";
 
 @injectable()
-export class ConstraintMenu extends AbstractUIExtension {
+export class ConstraintMenu extends AbstractUIExtension implements Switchable {
     static readonly ID = "constraint-menu";
     private selectedConstraint: Constraint | undefined;
     private editorContainer: HTMLDivElement = document.createElement("div") as HTMLDivElement;
@@ -55,16 +56,22 @@ export class ConstraintMenu extends AbstractUIExtension {
     protected initializeContents(containerElement: HTMLElement): void {
         containerElement.classList.add("ui-float");
         containerElement.innerHTML = `
-            <input type="checkbox" id="expand-state-constraint" hidden>
+            <input type="checkbox" id="expand-state-constraint" class="accordion-state" hidden>
             <label id="constraint-menu-expand-label" for="expand-state-constraint">
-                <div class="expand-button">
+                <div class="accordion-button cevron-left" id="constraint-menu-expand-title">
                     Constraints
                 </div>
             </label>
         `;
-        containerElement.appendChild(this.buildConstraintInputWrapper());
-        containerElement.appendChild(this.buildConstraintListWrapper());
+        const accordionContent = document.createElement("div");
+        accordionContent.classList.add("accordion-content");
+        const contentDiv = document.createElement("div");
+        contentDiv.id = "constraint-menu-content";
+        accordionContent.appendChild(contentDiv);
+        contentDiv.appendChild(this.buildConstraintInputWrapper());
+        contentDiv.appendChild(this.buildConstraintListWrapper());
         containerElement.appendChild(this.buildRunButton());
+        containerElement.appendChild(accordionContent);
     }
 
     private buildConstraintInputWrapper(): HTMLElement {
@@ -315,5 +322,9 @@ export class ConstraintMenu extends AbstractUIExtension {
         const cWidth = clamp(width, widthRange);
 
         e.layout({ height: cHeight, width: cWidth });
+    }
+
+    switchTheme(useDark: boolean): void {
+        this.editor?.updateOptions({ theme: useDark ? "vs-dark" : "vs" });
     }
 }

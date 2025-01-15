@@ -2,23 +2,25 @@ div.constraint-menu {
     right: 20px;
     bottom: 20px;
     padding: 10px 10px;
+}
+
+#constraint-menu-expand-title {
+    padding-right: 85px;
+}
+
+#constraint-menu-content {
     display: grid;
     grid-template-columns: auto 1fr;
-    grid-template-rows: 1fr;
-    grid-auto-rows: 0;
-    overflow: visible;
-    gap: 8px;
+    grid-template-rows: auto 16px;
+    gap: 10px;
 }
 
-div.constraint-menu:has(> input:checked) {
-    grid-template-rows: 1fr 200px 1fr;
-}
-
-div.constraint-menu > * {
-    grid-column-start: 1;
-    grid-column-end: 2;
-    grid-row-start: 1;
-    grid-row-end: 2;
+#run-button-container {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 80px;
+    z-index: 50;
 }
 
 #run-button {
@@ -30,25 +32,8 @@ div.constraint-menu > * {
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    width: fit-content;
-}
-
-#run-button-container {
-    grid-column-start: 2;
-    grid-column-end: 3;
-    grid-row-start: 1;
-    grid-row-end: 2;
-}
-
-#expand-state-constraint:checked ~ #run-button-container {
-    grid-column-start: 2;
-    grid-column-end: 3;
-    grid-row-start: 3;
-    grid-row-end: 4;
-}
-
-#expand-state-constraint:checked ~ #run-button-container > #run-button {
     width: 100%;
+    cursor: pointer;
 }
 
 #run-button::before {
@@ -63,63 +48,20 @@ div.constraint-menu > * {
 }
 
 #constraint-menu-input {
-    min-width: 300px;
-    grid-row-start: 2;
-    grid-row-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 3;
     grid-column-start: 1;
-    grid-column-end: 2;
-    display: none;
-}
-
-#expand-state-constraint:checked ~ #constraint-menu-input {
-    display: block;
+    min-width: 300px;
 }
 
 #constraint-menu-list {
-    grid-row-start: 2;
-    grid-row-end: 3;
+    grid-row-start: 1;
+    grid-row-end: 2;
     grid-column-start: 2;
-    grid-column-end: 3;
-    display: none;
-}
-
-#expand-state-constraint:checked ~ #constraint-menu-list {
-    display: block;
 }
 
 #constraint-menu-expand-label {
-    padding-right: 2em;
-    position: relative;
-    display: flex;
-    grid-column-start: 1;
-    grid-column-end: 2;
-    align-items: center;
-}
-
-#expand-state-constraint:checked ~ #constraint-menu-expand-label {
-    grid-column-end: 3;
-}
-
-#constraint-menu-expand-label::after {
-    content: "";
-    background-image: url("@fortawesome/fontawesome-free/svgs/solid/chevron-up.svg");
-    right: 0.5em;
-    position: absolute;
-    display: inline-block;
-
-    /* only filter=invert(1) if dark mode is enabled aka --dark-mode is set to 1 */
-    filter: invert(var(--dark-mode));
-
-    width: 16px;
-    height: 16px;
-    background-size: 16px 16px;
-
-    transition: transform 500ms ease;
-    transform: scaleY(1);
-}
-
-#expand-state-constraint:checked ~ #constraint-menu-expand-label::after {
-    transform: scaleY(-1);
+    /*padding-right: 2em;*/
 }
 
 .constrain-label input {
@@ -132,7 +74,7 @@ div.constraint-menu > * {
 }
 
 .constrain-label.selected input {
-    border: 1px solid var(--color-foreground);
+    border: 2px solid var(--color-foreground);
 }
 
 .constrain-label button {
