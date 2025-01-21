@@ -14,7 +14,7 @@ import { WebSocket } from 'ws';
     if (typeof address === 'object' && address !== null) {
         console.log(`Vite server is running on http://localhost:${address.port}/`);
     }
-};
+
 
 
 })();
