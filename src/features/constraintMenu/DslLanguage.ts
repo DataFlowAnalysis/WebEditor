@@ -33,7 +33,7 @@ export class MonacoEditorConstraintDslCompletionProvider implements monaco.langu
 }
 
 export const constraintDslLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = {
-    keywords: ["data", "node", "neverFlows", "to", "where", "named", "present", "empty", "type"],
+    keywords: ["data", "vertex", "neverFlows", "to", "where", "named", "present", "empty", "type"],
 
     symbols: /[=><!~?:&|+\-*\/\^%]+/,
 
@@ -91,7 +91,7 @@ export namespace TreeBuilder {
             });
         });
         const nodeDestinationSelector: AutoCompleteNode = {
-            word: new ConstantWord("node"),
+            word: new ConstantWord("vertex"),
             children: destinationSelectors,
         };
 
@@ -114,7 +114,7 @@ export namespace TreeBuilder {
             });
         });
         const nodeSourceSelector: AutoCompleteNode = {
-            word: new ConstantWord("node"),
+            word: new ConstantWord("vertex"),
             children: nodeSelectors,
         };
 

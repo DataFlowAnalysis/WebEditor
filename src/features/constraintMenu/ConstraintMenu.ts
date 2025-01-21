@@ -18,11 +18,10 @@ import { AutoCompleteTree } from "./AutoCompletion";
 import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
-import { AnalyzeDiagramAction } from "../serialize/analyze";
-import { executeAction } from "../../index";
+import { Switchable } from "../../common/lightDarkSwitch";
 
 @injectable()
-export class ConstraintMenu extends AbstractUIExtension {
+export class ConstraintMenu extends AbstractUIExtension implements Switchable {
     static readonly ID = "constraint-menu";
     private selectedConstraint: Constraint | undefined;
     private editorContainer: HTMLDivElement = document.createElement("div") as HTMLDivElement;
@@ -43,8 +42,8 @@ export class ConstraintMenu extends AbstractUIExtension {
         this.constraintRegistry = constraintRegistry;
         this.tree = new AutoCompleteTree(TreeBuilder.buildTree(modelSource, labelTypeRegistry));
         this.forceReadOnly = editorModeController?.getCurrentMode() !== "edit";
-        editorModeController?.onModeChange((mode) => {
-            this.forceReadOnly = mode !== "edit";
+        editorModeController?.onModeChange((_) => {
+            this.forceReadOnly = editorModeController!.isReadOnly();
         });
     }
 
@@ -57,16 +56,22 @@ export class ConstraintMenu extends AbstractUIExtension {
     protected initializeContents(containerElement: HTMLElement): void {
         containerElement.classList.add("ui-float");
         containerElement.innerHTML = `
-            <input type="checkbox" id="expand-state-constraint" hidden>
+            <input type="checkbox" id="expand-state-constraint" class="accordion-state" hidden>
             <label id="constraint-menu-expand-label" for="expand-state-constraint">
-                <div class="expand-button">
+                <div class="accordion-button cevron-left flip-arrow" id="constraint-menu-expand-title">
                     Constraints
                 </div>
             </label>
         `;
-        containerElement.appendChild(this.buildConstraintInputWrapper());
-        containerElement.appendChild(this.buildConstraintListWrapper());
+        const accordionContent = document.createElement("div");
+        accordionContent.classList.add("accordion-content");
+        const contentDiv = document.createElement("div");
+        contentDiv.id = "constraint-menu-content";
+        accordionContent.appendChild(contentDiv);
+        contentDiv.appendChild(this.buildConstraintInputWrapper());
+        contentDiv.appendChild(this.buildConstraintListWrapper());
         containerElement.appendChild(this.buildRunButton());
+        containerElement.appendChild(accordionContent);
     }
 
     private buildConstraintInputWrapper(): HTMLElement {
@@ -104,6 +109,10 @@ export class ConstraintMenu extends AbstractUIExtension {
             lineNumbers: "off",
             readOnly: this.constraintRegistry.getConstraints().length === 0 || this.forceReadOnly,
         });
+
+        this.editor?.setValue(
+            this.constraintRegistry.getConstraints()[0]?.constraint ?? "Select or create a constraint to edit",
+        );
 
         this.editor?.onDidChangeModelContent(() => {
             if (this.selectedConstraint) {
@@ -184,12 +193,13 @@ export class ConstraintMenu extends AbstractUIExtension {
 
         const deleteButton = document.createElement("button");
         deleteButton.innerHTML = '<span class="codicon codicon-trash"></span>';
-        deleteButton.onclick = () => {
-            this.constraintRegistry.unregisterConstraint(constraint);
-            this.rerenderConstraintList();
-            if (this.selectedConstraint === constraint) {
+        deleteButton.onclick = (e) => {
+            e.stopPropagation();
+            if (this.selectedConstraint?.id === constraint.id) {
                 this.selectConstraintListItem(undefined);
             }
+            this.constraintRegistry.unregisterConstraint(constraint);
+            this.rerenderConstraintList();
         };
         valueElement.appendChild(deleteButton);
         return valueElement;
@@ -197,7 +207,7 @@ export class ConstraintMenu extends AbstractUIExtension {
 
     private selectConstraintListItem(constraint?: Constraint): void {
         this.selectedConstraint = constraint;
-        this.editor?.setValue(constraint?.constraint ?? "");
+        this.editor?.setValue(constraint?.constraint ?? "Select or create a constraint to edit");
         this.editor?.updateOptions({ readOnly: constraint === undefined || this.forceReadOnly });
     }
 
@@ -215,9 +225,9 @@ export class ConstraintMenu extends AbstractUIExtension {
         addButton.classList.add("constraint-add");
         addButton.innerHTML = '<span class="codicon codicon-add"></span> Constraint';
         addButton.onclick = () => {
-            /*if (this.editorModeController?.isReadOnly()) {
+            if (this.forceReadOnly) {
                 return;
-            }*/
+            }
             if (!list) {
                 return;
             }
@@ -274,7 +284,7 @@ export class ConstraintMenu extends AbstractUIExtension {
         button.id = "run-button";
         button.innerHTML = "Run";
         button.onclick = () => {
-            executeAction(AnalyzeDiagramAction.create());
+            console.log("Run button clicked");
         };
 
         wrapper.appendChild(button);
@@ -317,5 +327,9 @@ export class ConstraintMenu extends AbstractUIExtension {
         const cWidth = clamp(width, widthRange);
 
         e.layout({ height: cHeight, width: cWidth });
+    }
+
+    switchTheme(useDark: boolean): void {
+        this.editor?.updateOptions({ theme: useDark ? "vs-dark" : "vs" });
     }
 }

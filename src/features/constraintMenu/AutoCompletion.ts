@@ -15,11 +15,18 @@ export interface ValidationError {
 export type WordCompletion = RequiredCompletionParts & Partial<monaco.languages.CompletionItem>;
 
 export interface AbstractWord {
+    /**
+     * Calculates the completion options for the given word
+     * @param word Can be taken into account for returning completion options
+     * @returns Array of completion options. Can contain all options from @link{monaco.languages.CompletionItem}
+     */
     completionOptions(word: string): WordCompletion[];
 
     /**
-     *
-     * @param word
+     * Verifies if the given word is valid
+     * An empty array means that the word is valid
+     * The strings in the array are error messages
+     * @param word The word to verify
      * @returns Array of all error messages
      */
     verifyWord(word: string): string[];
@@ -93,6 +100,9 @@ export class AutoCompleteTree {
         this.length = 0;
     }
 
+    /**
+     * Sets the content of the tree for the next analyzing cycle
+     */
     public setContent(line: string) {
         if (line.length == 0) {
             this.content = [];
@@ -107,6 +117,10 @@ export class AutoCompleteTree {
         this.length = line.length;
     }
 
+    /**
+     * Checks the set content for errors
+     * @returns An array of errors. An empty array means that the content is valid
+     */
     public verify(): ValidationError[] {
         return this.verifyNode(this.roots, 0, false);
     }
@@ -115,6 +129,8 @@ export class AutoCompleteTree {
         if (index >= this.content.length) {
             if (nodes.length == 0 || comesFromFinal) {
                 return [];
+            } else {
+                return [{ message: "Unexpected end of line", startColumn: this.length, endColumn: this.length }];
             }
         }
 
@@ -139,6 +155,9 @@ export class AutoCompleteTree {
         return foundErrors;
     }
 
+    /**
+     * Calculates the completion options for the current content
+     */
     public getCompletion(): monaco.languages.CompletionItem[] {
         let result: WordCompletion[] = [];
         if (this.content.length == 0) {
