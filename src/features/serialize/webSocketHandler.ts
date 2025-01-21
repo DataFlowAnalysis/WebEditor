@@ -1,7 +1,7 @@
 import { modelFileName, setModelSource } from "../..";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
-export const ws = new WebSocket(`ws://${window.location.hostname}:3000/events/`); // Change to the dynamic WebSocket port
+export const ws = new WebSocket(`wss://webeditor.t-hueller.de/events/`); // Change to the dynamic WebSocket port
 export var wsId = 0;
 
 ws.onmessage = (event) => {
