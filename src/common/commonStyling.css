@@ -106,16 +106,6 @@ kbd {
     transform: scaleY(var(--arrow-scale));
 }
 
-.accordion-state:checked ~ label .accordion-button::after {
-    /* flip arrow in y direction */
-    transform: scaleY(calc(var(--arrow-scale) * -1));
-}
-
-.accordion-state:checked ~ label .accordion-button::before {
-    /* flip arrow in y direction */
-    transform: scaleY(-1);
-}
-
 .accordion-button.cevron-left::before {
     content: "";
     background-image: url("@fortawesome/fontawesome-free/svgs/solid/chevron-down.svg");
@@ -132,5 +122,15 @@ kbd {
 
     vertical-align: text-top;
     transition: transform 500ms ease;
-    transform: scaleY(1);
+    transform: scaleY(var(--arrow-scale));
+}
+
+.accordion-state:checked ~ label .accordion-button::after {
+    /* flip arrow in y direction */
+    transform: scaleY(calc(var(--arrow-scale) * -1));
+}
+
+.accordion-state:checked ~ label .accordion-button::before {
+    /* flip arrow in y direction */
+    transform: scaleY(calc(var(--arrow-scale) * -1));
 }
