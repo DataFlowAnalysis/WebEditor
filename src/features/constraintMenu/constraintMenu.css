@@ -54,6 +54,10 @@ div.constraint-menu {
     min-width: 300px;
 }
 
+#constraint-menu-input * {
+    overflow: visible;
+}
+
 #constraint-menu-list {
     grid-row-start: 1;
     grid-row-end: 2;
