@@ -1,14 +1,5 @@
 import { inject, injectable, optional } from "inversify";
-import {
-    Command,
-    CommandExecutionContext,
-    LocalModelSource,
-    SModelRootImpl,
-    TYPES,
-    IActionHandler,
-    IActionHandlerInitializer,
-    ActionHandlerRegistry,
-} from "sprotty";
+import { Command, CommandExecutionContext, LocalModelSource, SModelRootImpl, TYPES } from "sprotty";
 import { Action, SModelRoot } from "sprotty-protocol";
 import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
@@ -51,7 +42,7 @@ export class SaveDFDandDDCommand extends Command {
     @optional()
     private editorModeController?: EditorModeController;
 
-    constructor(@inject(TYPES.Action) private action: SaveDFDandDDAction) {
+    constructor() {
         super();
     }
 

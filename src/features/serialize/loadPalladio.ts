@@ -1,17 +1,5 @@
-import {
-    ActionDispatcher,
-    Command,
-    CommandExecutionContext,
-    EMPTY_ROOT,
-    ILogger,
-    NullLogger,
-    SModelRootImpl,
-    SNodeImpl,
-    TYPES,
-    isLocateable,
-} from "sprotty";
-import { Action, SModelRoot } from "sprotty-protocol";
-import { inject, optional } from "inversify";
+import { Command, CommandExecutionContext, SModelRootImpl } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { setModelFileName } from "../../index";
 import { ws, wsId } from "./webSocketHandler";
 
@@ -33,7 +21,7 @@ export namespace LoadPalladioAction {
 export class LoadPalladioCommand extends Command {
     static readonly KIND = LoadPalladioAction.KIND;
 
-    constructor(@inject(TYPES.Action) private action: LoadPalladioAction) {
+    constructor() {
         super();
     }
 
@@ -90,7 +78,7 @@ export class LoadPalladioCommand extends Command {
     async execute(context: CommandExecutionContext): Promise<SModelRootImpl> {
         try {
             // Fetch all required files
-            const files = await this.getModelFiles(); // Ensure getModelFiles() returns exactly seven files
+            const files = (await this.getModelFiles()) ?? []; // Ensure getModelFiles() returns exactly seven files
 
             // Read the content of each file and structure them
             const fileContents = await Promise.all(

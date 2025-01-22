@@ -1,17 +1,5 @@
-import {
-    ActionDispatcher,
-    Command,
-    CommandExecutionContext,
-    EMPTY_ROOT,
-    ILogger,
-    NullLogger,
-    SModelRootImpl,
-    SNodeImpl,
-    TYPES,
-    isLocateable,
-} from "sprotty";
-import { Action, SModelRoot } from "sprotty-protocol";
-import { inject, optional } from "inversify";
+import { Command, CommandExecutionContext, SModelRootImpl } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { ws, wsId } from "./webSocketHandler";
 import { setModelFileName } from "../..";
 import { setFileNameInPageTitle } from "./load";
@@ -34,7 +22,7 @@ export namespace LoadDFDandDDAction {
 export class LoadDFDandDDCommand extends Command {
     static readonly KIND = LoadDFDandDDAction.KIND;
 
-    constructor(@inject(TYPES.Action) private action: LoadDFDandDDAction) {
+    constructor() {
         super();
     }
 
@@ -77,7 +65,7 @@ export class LoadDFDandDDCommand extends Command {
 
     async execute(context: CommandExecutionContext): Promise<SModelRootImpl> {
         try {
-            const [dataflowFile, dictionaryFile] = await this.getModelFiles();
+            const [dataflowFile, dictionaryFile] = (await this.getModelFiles()) ?? [];
 
             // Read the content of both files
             const dataflowFileContent = await this.readFileContent(dataflowFile);
