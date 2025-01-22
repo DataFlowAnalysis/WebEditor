@@ -1,11 +1,21 @@
-import { injectable } from "inversify";
+import { injectable, multiInject } from "inversify";
 import "./lightDarkSwitch.css";
 import { AbstractUIExtension } from "sprotty";
+
+export const SWITCHABLE = Symbol("Switchable");
+
+export interface Switchable {
+    switchTheme(useDark: boolean): void;
+}
 
 @injectable()
 export class LightDarkSwitch extends AbstractUIExtension {
     static readonly ID = "light-dark-switch";
     static useDarkMode = false;
+
+    constructor(@multiInject(SWITCHABLE) protected switchables: Switchable[]) {
+        super();
+    }
 
     id(): string {
         return LightDarkSwitch.ID;
@@ -41,5 +51,6 @@ export class LightDarkSwitch extends AbstractUIExtension {
         const value = useDark ? "dark" : "light";
         rootElement.setAttribute("data-theme", value);
         sprottyElement.setAttribute("data-theme", value);
+        this.switchables.forEach((s) => s.switchTheme(useDark));
     }
 }

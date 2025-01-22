@@ -23,6 +23,7 @@ import { DfdNodeAnnotationUI, DfdNodeAnnotationUIMouseListener } from "./nodeAnn
 import { DFDBehaviorRefactorer, RefactorInputNameInDFDBehaviorCommand } from "./behaviorRefactorer";
 
 import "./elementStyles.css";
+import { SWITCHABLE } from "../../common/lightDarkSwitch";
 
 export const dfdElementsModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     const context = { bind, unbind, isBound, rebind };
@@ -32,7 +33,11 @@ export const dfdElementsModule = new ContainerModule((bind, unbind, isBound, reb
     configureCommand(context, ReSnapPortsAfterLabelChangeCommand);
 
     bind(PortBehaviorValidator).toSelf().inSingletonScope();
-    bind(TYPES.IUIExtension).to(OutputPortEditUI).inSingletonScope();
+
+    bind(OutputPortEditUI).toSelf().inSingletonScope();
+    bind(TYPES.IUIExtension).toService(OutputPortEditUI);
+    bind(SWITCHABLE).toService(OutputPortEditUI);
+
     bind(TYPES.MouseListener).to(OutputPortEditUIMouseListener).inSingletonScope();
     configureCommand(context, SetDfdOutputPortBehaviorCommand);
 
