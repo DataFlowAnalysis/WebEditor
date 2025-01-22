@@ -130,11 +130,12 @@ export class AutoCompleteTree {
             if (nodes.length == 0 || comesFromFinal) {
                 return [];
             } else {
-                return [{ message: "Unexpected end of line", startColumn: this.length, endColumn: this.length }];
+                return [{ message: "Unexpected end of line", startColumn: this.length - 1, endColumn: this.length }];
             }
         }
 
         let foundErrors: ValidationError[] = [];
+        let childErrors: ValidationError[] = [];
         for (const n of nodes) {
             const v = n.word.verifyWord(this.content[index]);
             if (v.length > 0) {
@@ -147,11 +148,15 @@ export class AutoCompleteTree {
             }
 
             const childResult = this.verifyNode(n.children, index + 1, n.canBeFinal || false);
-            if (childResult) {
+            if (childResult.length == 0) {
                 return [];
+            } else {
+                childErrors = childErrors.concat(childResult);
             }
         }
-
+        if (childErrors.length > 0) {
+            return childErrors;
+        }
         return foundErrors;
     }
 
