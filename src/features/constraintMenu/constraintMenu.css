@@ -4,6 +4,10 @@ div.constraint-menu {
     padding: 10px 10px;
 }
 
+.accordion-content:has(.monaco-editor.focused) * {
+    overflow: visible;
+}
+
 #constraint-menu-expand-title {
     padding-right: 85px;
 }
