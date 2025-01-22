@@ -58,6 +58,15 @@ div.constraint-menu {
     overflow: visible;
 }
 
+#validation-label {
+    height: 1rem;
+    color: var(--color-error);
+}
+
+#validation-label.valid {
+    color: var(--color-valid);
+}
+
 #constraint-menu-list {
     grid-row-start: 1;
     grid-row-end: 2;
