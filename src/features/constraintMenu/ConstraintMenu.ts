@@ -80,7 +80,11 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         const wrapper = document.createElement("div");
         wrapper.id = "constraint-menu-input";
         wrapper.appendChild(this.editorContainer);
+        this.validationLabel.id = "validation-label";
         wrapper.appendChild(this.validationLabel);
+        const keyboardShortcutLabel = document.createElement("div");
+        keyboardShortcutLabel.innerHTML = "Press <kbd>CTRL</kbd>+<kbd>Space</kbd> for autocompletion";
+        wrapper.appendChild(keyboardShortcutLabel);
 
         monaco.languages.register({ id: DSL_LANGUAGE_ID });
         monaco.languages.setMonarchTokensProvider(DSL_LANGUAGE_ID, constraintDslLanguageMonarchDefinition);
@@ -124,7 +128,9 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
             this.tree.setContent(this.editor?.getValue() ?? "");
             const result = this.tree.verify();
-            this.validationLabel.innerText = result.length == 0 ? "Valid" : "Invalid";
+            this.validationLabel.innerText =
+                result.length == 0 ? "Valid constraint" : `Invalid constraint: ${result.length} errors`;
+            this.validationLabel.classList.toggle("valid", result.length == 0);
 
             const model = this.editor?.getModel();
             if (!model) {
@@ -175,9 +181,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         valueElement.onclick = () => {
             const elements = document.getElementsByClassName("constraint-label");
             for (let i = 0; i < elements.length; i++) {
-                elements[i].classList.remove("selected");
+                elements[i].classList.toggle("selected", elements[i] === valueElement);
             }
-            valueElement.classList.add("selected");
             this.selectConstraintListItem(constraint);
         };
 
@@ -189,6 +194,14 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         valueInput.onchange = () => {
             constraint.name = valueInput.value;
             this.constraintRegistry.constraintChanged();
+        };
+        valueInput.onkeydown = (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                valueInput.blur();
+                this.selectConstraintListItem(constraint);
+                this.editor?.focus();
+            }
         };
 
         valueElement.appendChild(valueInput);
@@ -211,6 +224,9 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         this.selectedConstraint = constraint;
         this.editor?.setValue(constraint?.constraint ?? "Select or create a constraint to edit");
         this.editor?.updateOptions({ readOnly: constraint === undefined || this.forceReadOnly });
+        if (!constraint) {
+            this.validationLabel.innerText = "";
+        }
     }
 
     private rerenderConstraintList(list?: HTMLElement): void {

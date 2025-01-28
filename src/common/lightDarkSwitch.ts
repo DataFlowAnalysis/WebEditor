@@ -51,7 +51,6 @@ export class LightDarkSwitch extends AbstractUIExtension {
         const value = useDark ? "dark" : "light";
         rootElement.setAttribute("data-theme", value);
         sprottyElement.setAttribute("data-theme", value);
-        console.debug(this.switchables);
         this.switchables.forEach((s) => s.switchTheme(useDark));
     }
 }

@@ -7,25 +7,22 @@
         "url": "https://github.com/DataFlowAnalysis/WebEditor.git"
     },
     "devDependencies": {
-        "@fortawesome/fontawesome-free": "^6.4.2",
-        "@types/express": "^4.17.21",
-        "@types/node": "^22.7.0",
-        "@vscode/codicons": "^0.0.33",
-        "cross-env": "^7.0.3",
-        "husky": "^8.0.3",
+        "@fortawesome/fontawesome-free": "^6.7.2",
+        "@vscode/codicons": "^0.0.36",
+        "husky": "^9.1.7",
         "inversify": "^6.0.2",
-        "lint-staged": "^15.0.2",
+        "lint-staged": "^15.4.3",
         "monaco-editor": "^0.45.0",
         "prettier": "^3.0.3",
         "reflect-metadata": "^0.1.13",
         "sprotty": "^1.0.0",
         "sprotty-elk": "^1.0.0",
         "sprotty-protocol": "^1.0.0",
-        "typescript": "^5.6.2",
-        "vite": "^4.5.5"
+        "typescript": "^5.7.3",
+        "vite": "^4.5.0"
     },
     "scripts": {
-        "dev": "node vite-server-with-shutdown.mjs",
+        "dev": "vite",
         "build": "tsc && vite build",
         "preview": "vite preview",
         "format": "prettier --write \"./**/*.{html,css,ts,tsx,json,yaml,md}\"",
@@ -33,10 +30,5 @@
     },
     "lint-staged": {
         "*.{html,css,ts,tsx,json,yaml,md}": "prettier --write"
-    },
-    "dependencies": {
-        "cors": "^2.8.5",
-        "express": "^4.21.0",
-        "ws": "^8.18.0"
     }
 }

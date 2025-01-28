@@ -4,6 +4,10 @@ div.constraint-menu {
     padding: 10px 10px;
 }
 
+.accordion-content:has(.monaco-editor.focused) * {
+    overflow: visible;
+}
+
 #constraint-menu-expand-title {
     padding-right: 85px;
 }
@@ -54,10 +58,25 @@ div.constraint-menu {
     min-width: 300px;
 }
 
+#constraint-menu-input * {
+    overflow: visible;
+}
+
+#validation-label {
+    height: 1rem;
+    color: var(--color-error);
+}
+
+#validation-label.valid {
+    color: var(--color-valid);
+}
+
 #constraint-menu-list {
     grid-row-start: 1;
     grid-row-end: 2;
     grid-column-start: 2;
+    overflow: scroll;
+    max-height: 210px;
 }
 
 .constrain-label input {
