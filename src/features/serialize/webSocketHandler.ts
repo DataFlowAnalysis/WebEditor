@@ -1,15 +1,17 @@
 import { modelFileName, setModelSource } from "../..";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
-export var ws = new WebSocket(`wss://webeditor.t-hueller.de/events/`); // Change to the dynamic WebSocket port
+const webSocketAdress = `wss://webeditor.t-hueller.de/events/`;
+
+export var ws = new WebSocket(webSocketAdress); // Change to the dynamic WebSocket port
 export var wsId = 0;
 
 ws.onclose = () => {
-    ws = new WebSocket(`wss://webeditor.t-hueller.de/events/`);
+    ws = new WebSocket(webSocketAdress);
 };
 
 ws.onerror = () => {
-    ws = new WebSocket(`wss://webeditor.t-hueller.de/events/`);
+    ws = new WebSocket(webSocketAdress);
 };
 
 ws.onmessage = (event) => {
