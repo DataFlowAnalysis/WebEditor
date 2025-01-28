@@ -22,7 +22,7 @@
         "vite": "^4.5.0"
     },
     "scripts": {
-        "dev": "node vite-server-with-shutdown.mjs",
+        "dev": "vite",
         "build": "tsc && vite build",
         "preview": "vite preview",
         "format": "prettier --write \"./**/*.{html,css,ts,tsx,json,yaml,md}\"",
