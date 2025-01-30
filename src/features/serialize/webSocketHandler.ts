@@ -1,7 +1,7 @@
 import { modelFileName, setModelSource } from "../..";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
-const webSocketAdress = `wss://webeditor.t-hueller.de/events/`;
+const webSocketAdress = `wss://websocket.dataflowanalysis.org/events/`;
 
 export var ws = new WebSocket(webSocketAdress); // Change to the dynamic WebSocket port
 export var wsId = 0;
