@@ -5,6 +5,7 @@ import { matchesKeystroke } from "sprotty/lib/utils/keyboard";
 import { LoadDefaultDiagramAction } from "./loadDefaultDiagram";
 import { LoadDiagramAction } from "./load";
 import { SaveDiagramAction } from "./save";
+import { AnalyzeDiagramAction } from "./analyze";
 
 @injectable()
 export class SerializeKeyListener extends KeyListener {
@@ -20,6 +21,9 @@ export class SerializeKeyListener extends KeyListener {
         } else if (matchesKeystroke(event, "KeyS", "ctrlCmd")) {
             event.preventDefault();
             return [SaveDiagramAction.create()];
+        } else if (matchesKeystroke(event, "KeyA", "ctrlCmd", "shift")) {
+            event.preventDefault();
+            return [AnalyzeDiagramAction.create()];
         }
 
         return [];
