@@ -5,13 +5,13 @@
 To work on this project you need some knowledge about the following
 used technologies:
 
--   [TypeScript](https://www.typescriptlang.org/)
+- [TypeScript](https://www.typescriptlang.org/)
 
     Used as the programming language for the project.
     All used libraries have good typings and this project is big enough
     to benefit from the type safety TypeScript provides compared to plain JavaScript.
 
--   [vite](https://vitejs.dev/)
+- [vite](https://vitejs.dev/)
 
     Used as the ts/css bundler and dev server.
     It has a fast development server which automatically reloads the page on
@@ -31,7 +31,7 @@ used technologies:
     For testing the statically built site any HTTP server will do, e.g. `python3 -m http.server`.
     For hosting the application in production you should use a proper HTTP server like nginx or apache2 with proper configuration.
 
--   [sprotty](https://sprotty.org/)
+- [sprotty](https://sprotty.org/)
 
     sprotty is used as the core diagramming framework.
     It provides the diagram canvas, is responsible for rendering the diagram,
@@ -42,7 +42,7 @@ used technologies:
 
     Additionally, sprotty requires some knowledge about the following technologies:
 
-    -   [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial)
+    - [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial)
 
         Used to display the diagram elements.
         Sprotty requires all elements of a diagram to be converted
@@ -62,7 +62,7 @@ used technologies:
         Sprotty uses [snabbdom](https://github.com/snabbdom/snabbdom) as the virtual DOM library.
         Refer to their documentation/README for more information on more complex SVG usage.
 
-    -   [inversify.js](https://github.com/inversify/InversifyJS)
+    - [inversify.js](https://github.com/inversify/InversifyJS)
 
         Used as a dependency injection framework by sprotty.
         sprotty uses this both for internal and external stuff.
@@ -76,7 +76,7 @@ used technologies:
         as well as the [Multi-injection guide](https://github.com/inversify/InversifyJS/blob/master/wiki/multi_injection.md).
         More in-depth features of inversify.js are not required for this project.
 
--   [Font Awesome](https://fontawesome.com/)
+- [Font Awesome](https://fontawesome.com/)
 
     Used for the icons in some UIs.
     The free version is used and sufficient for this project.
@@ -113,12 +113,12 @@ interact with other feature modules optionally, if they are present.
 This common module contains some code adapting sprotty to our needs.
 This includes:
 
--   Adding our own custom commands to the sprotty command palette and styling it.
--   General styling for UI elements
--   Deleting selected elements when pressing the delete key
--   Adding a "fit to screen" shortcut
--   Adding the help/keyboard shortcut UI with usage instructions on the bottom left of the screen
--   Fixing the browser viewport to be always at the origin, even if elements outside the viewport are focused
+- Adding our own custom commands to the sprotty command palette and styling it.
+- General styling for UI elements
+- Deleting selected elements when pressing the delete key
+- Adding a "fit to screen" shortcut
+- Adding the help/keyboard shortcut UI with usage instructions on the bottom left of the screen
+- Fixing the browser viewport to be always at the origin, even if elements outside the viewport are focused
 
 ### Auto Layouting
 
@@ -190,13 +190,13 @@ To define how connects through output ports are handled in the data flow analysi
 of each output port using a custom language.
 This language has two main statements:
 
--   `forward <input>(, <input>)*`: simply forwards all labels from the named input port.
-    Each input port gets a name that consists of all named edges connecting to that input port. Multiple edge labels are joined using `_`.
--   `set <labelType>.<labelValue> = <expr>`: sets the existence of the label value of the specified type.
-    When the expression evaluates to `true`, the label value is set, otherwise it is not removed.
-    Inside the expression one can use the presence of labels from other inputs using `<input>.<labelType>.<labelValue>`.
-    Additionally, operators like `&&`, `||`, `!` and parentheses can be used.
-    `TRUE` and `FALSE` can be used as constants.
+- `forward <input>(, <input>)*`: simply forwards all labels from the named input port.
+  Each input port gets a name that consists of all named edges connecting to that input port. Multiple edge labels are joined using `_`.
+- `set <labelType>.<labelValue> = <expr>`: sets the existence of the label value of the specified type.
+  When the expression evaluates to `true`, the label value is set, otherwise it is not removed.
+  Inside the expression one can use the presence of labels from other inputs using `<input>.<labelType>.<labelValue>`.
+  Additionally, operators like `&&`, `||`, `!` and parentheses can be used.
+  `TRUE` and `FALSE` can be used as constants.
 
 Comments can be inserted by starting a line with `#` or `//`.
 To edit the behavior of an output port, the user can double-click the output port.
@@ -216,14 +216,14 @@ The grid can be ignored by holding the `SHIFT` key while dragging an element, th
 
 This grid snapper implementation has two specialties:
 
--   When moving or positioning ports, they are always placed on an edge of the parent node.
-    Normally, sprotty would allow free placement of ports relative to the respective parent node.
-    This is good for flexibility, but not what we want.
-    To get our expected behavior, we compute the distance to each edge to determine the closest edge.
-    One coordinate gets fixed by the selected edge and the other coordinate is snapped using a (onedimensional) grid.
--   The grid size adapts per element type. Nodes have a grid size of 5, while ports have a grid size of 2.5 pixels.
-    When changing these values, make sure that the bigger grid size is a multiple of the smaller grid size.
-    This is necessary to ensure that ports on two nodes with different heights can be aligned to the same height..
+- When moving or positioning ports, they are always placed on an edge of the parent node.
+  Normally, sprotty would allow free placement of ports relative to the respective parent node.
+  This is good for flexibility, but not what we want.
+  To get our expected behavior, we compute the distance to each edge to determine the closest edge.
+  One coordinate gets fixed by the selected edge and the other coordinate is snapped using a (onedimensional) grid.
+- The grid size adapts per element type. Nodes have a grid size of 5, while ports have a grid size of 2.5 pixels.
+  When changing these values, make sure that the bigger grid size is a multiple of the smaller grid size.
+  This is necessary to ensure that ports on two nodes with different heights can be aligned to the same height..
 
 ### Editor Mode
 
@@ -231,16 +231,16 @@ Located in `src/features/editorMode/`.
 
 This editor currently has three different modes:
 
--   `edit`: The default mode, allows to view and edit the diagram. Creation of new elements is possible.
-    Existing elements can be moved, modified, and deleted.
-    Newly created diagrams are always in this mode.
--   `annotated`: In this mode the diagram is read-only. The node annotations (refer to the DFD elements module)
-    are displayed and can be viewed to get information about e.g. analysis validation errors.
-    The user can still zoom and pan the diagram. Creation, deletion, and modification of elements is not possible.
-    However the user can click a button to switch to the `edit` mode.
-    Doing so will remove all node annotations and allow the user to edit the diagram again.
--   `readonly`: This mode is similar to the `annotated` mode but does not allow switching back to the `edit` mode.
-    It is intended to be used when the diagram is from a generated source and should only be viewed.
+- `edit`: The default mode, allows to view and edit the diagram. Creation of new elements is possible.
+  Existing elements can be moved, modified, and deleted.
+  Newly created diagrams are always in this mode.
+- `annotated`: In this mode the diagram is read-only. The node annotations (refer to the DFD elements module)
+  are displayed and can be viewed to get information about e.g. analysis validation errors.
+  The user can still zoom and pan the diagram. Creation, deletion, and modification of elements is not possible.
+  However the user can click a button to switch to the `edit` mode.
+  Doing so will remove all node annotations and allow the user to edit the diagram again.
+- `readonly`: This mode is similar to the `annotated` mode but does not allow switching back to the `edit` mode.
+  It is intended to be used when the diagram is from a generated source and should only be viewed.
 
 Diagrams with modes other than `edit` are not creatable using the editor.
 Diagrams with these modes are intended to be generated from some other source.
@@ -262,9 +262,9 @@ As an example, there might be the label type `Encrypted` with the following labe
 
 For the editor the DFD labels are used in two situations:
 
--   On DFD nodes, where they are displayed, added and removed
--   In the behavior language for output ports that are used to define whether the labels should be propagated
-    over edges or be set depending on specific conditions.
+- On DFD nodes, where they are displayed, added and removed
+- In the behavior language for output ports that are used to define whether the labels should be propagated
+  over edges or be set depending on specific conditions.
 
 This module does contain the `LabelTypeRegistry` where available label types and their values are managed.
 Additionally, it provides a UI that allows to view all defined label types and values,
