@@ -7,19 +7,19 @@
         "url": "https://github.com/DataFlowAnalysis/WebEditor.git"
     },
     "devDependencies": {
-        "@fortawesome/fontawesome-free": "^6.4.2",
-        "@vscode/codicons": "^0.0.33",
-        "husky": "^8.0.3",
-        "inversify": "^6.0.2",
-        "lint-staged": "^15.0.2",
+        "@fortawesome/fontawesome-free": "^6.7.2",
+        "@vscode/codicons": "^0.0.36",
+        "husky": "^9.1.7",
+        "inversify": "^6.2.1",
+        "lint-staged": "^15.4.3",
         "monaco-editor": "^0.45.0",
         "prettier": "^3.0.3",
-        "reflect-metadata": "^0.1.13",
-        "sprotty": "^1.0.0",
-        "sprotty-elk": "^1.0.0",
-        "sprotty-protocol": "^1.0.0",
-        "typescript": "^5.2.2",
-        "vite": "^4.5.0"
+        "reflect-metadata": "^0.2.2",
+        "sprotty": "^1.4.0",
+        "sprotty-elk": "^1.4.0",
+        "sprotty-protocol": "^1.4.0",
+        "typescript": "^5.7.3",
+        "vite": "^6.0.11"
     },
     "scripts": {
         "dev": "vite",

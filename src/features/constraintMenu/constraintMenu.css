@@ -1,0 +1,110 @@
+div.constraint-menu {
+    right: 20px;
+    bottom: 20px;
+    padding: 10px 10px;
+}
+
+.accordion-content:has(.monaco-editor.focused) * {
+    overflow: visible;
+}
+
+#constraint-menu-expand-title {
+    padding-right: 85px;
+}
+
+#constraint-menu-content {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 16px;
+    gap: 10px;
+}
+
+#run-button-container {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 80px;
+    z-index: 50;
+}
+
+#run-button {
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    cursor: pointer;
+}
+
+#run-button::before {
+    content: "";
+    background-image: url("@fortawesome/fontawesome-free/svgs/solid/play.svg");
+    display: inline-block;
+    filter: invert(var(--dark-mode));
+    height: 16px;
+    width: 16px;
+    background-size: 16px 16px;
+    vertical-align: text-top;
+}
+
+#constraint-menu-input {
+    grid-row-start: 1;
+    grid-row-end: 3;
+    grid-column-start: 1;
+    min-width: 300px;
+}
+
+#constraint-menu-input * {
+    overflow: visible;
+}
+
+#validation-label {
+    height: 1rem;
+    color: var(--color-error);
+}
+
+#validation-label.valid {
+    color: var(--color-valid);
+}
+
+#constraint-menu-list {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 2;
+    overflow: scroll;
+    max-height: 210px;
+}
+
+.constrain-label input {
+    background-color: var(--color-background);
+    text-align: center;
+    border: 1px solid var(--color-foreground);
+    border-radius: 15px;
+    padding: 3px;
+    margin: 4px;
+}
+
+.constrain-label.selected input {
+    border: 2px solid var(--color-foreground);
+}
+
+.constrain-label button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.constraint-add {
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}

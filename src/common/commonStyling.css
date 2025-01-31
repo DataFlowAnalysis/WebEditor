@@ -63,9 +63,6 @@ kbd {
 
 /* drop-down icon */
 .accordion-button {
-    /* space for the icon */
-    padding-right: 2em;
-
     /* Make the text unselectable. When rapidly clicking the accordion button,
        the text would be selected otherwise due to a double click. */
     -webkit-user-select: none;
@@ -80,7 +77,17 @@ kbd {
     --arrow-scale: -1;
 }
 
-.accordion-button::after {
+.accordion-button.cevron-right {
+    /* space for the icon */
+    padding-right: 2em;
+}
+
+.accordion-button.cevron-left {
+    /* space for the icon */
+    padding-left: 2em;
+}
+
+.accordion-button.cevron-right::after {
     content: "";
     background-image: url("@fortawesome/fontawesome-free/svgs/solid/chevron-down.svg");
     right: 1em;
@@ -99,7 +106,31 @@ kbd {
     transform: scaleY(var(--arrow-scale));
 }
 
+.accordion-button.cevron-left::before {
+    content: "";
+    background-image: url("@fortawesome/fontawesome-free/svgs/solid/chevron-down.svg");
+    left: 1em;
+    position: absolute;
+    display: inline-block;
+
+    /* only filter=invert(1) if dark mode is enabled aka --dark-mode is set to 1 */
+    filter: invert(var(--dark-mode));
+
+    width: 16px;
+    height: 16px;
+    background-size: 16px 16px;
+
+    vertical-align: text-top;
+    transition: transform 500ms ease;
+    transform: scaleY(var(--arrow-scale));
+}
+
 .accordion-state:checked ~ label .accordion-button::after {
+    /* flip arrow in y direction */
+    transform: scaleY(calc(var(--arrow-scale) * -1));
+}
+
+.accordion-state:checked ~ label .accordion-button::before {
     /* flip arrow in y direction */
     transform: scaleY(calc(var(--arrow-scale) * -1));
 }

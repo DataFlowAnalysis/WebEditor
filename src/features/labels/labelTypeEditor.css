@@ -63,3 +63,7 @@ div.label-type-editor-ui {
     padding: 3px;
     margin: 4px;
 }
+
+#accordion-state-label-title {
+    padding-right: 5px;
+}

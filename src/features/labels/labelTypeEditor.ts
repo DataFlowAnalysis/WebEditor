@@ -80,7 +80,7 @@ export class LabelTypeEditorUI extends AbstractUIExtension implements KeyListene
         containerElement.classList.add("ui-float");
         containerElement.innerHTML = `
             <label for="accordion-state-label-types">
-                <div class="accordion-button">Label Types</div>
+                <div class="accordion-button cevron-left" id="accordion-state-label-title">Label Types</div>
             </label>
             <div class="accordion-content">
                 <div class="label-type-edit-ui-inner"></div>

@@ -32,6 +32,7 @@ import "monaco-editor/esm/vs/editor/contrib/hover/browser/hover";
 import "monaco-editor/esm/vs/editor/contrib/inlineCompletions/browser/inlineCompletions.contribution.js";
 
 import "./outputPortEditUi.css";
+import { LightDarkSwitch, Switchable } from "../../common/lightDarkSwitch";
 
 /**
  * Detects when a dfd output port is double clicked and shows the OutputPortEditUI
@@ -158,7 +159,8 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
             };
         }
 
-        const lastWord = model.getLineContent(position.lineNumber).trimEnd().split(" ").pop() || "";
+        const lastWord =
+            model.getLineContent(position.lineNumber).substring(0, position.column).trimEnd().split(" ").pop() || "";
         const availableInputs = parent.getAvailableInputs().filter((input) => input !== undefined) as string[];
         if (lastWord.endsWith(",") || lastWord.endsWith(".") || lastWord == statementType?.word) {
             // Suggestions per statement type
@@ -181,7 +183,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
                     };
             }
         } else if (statementType?.word === "assign") {
-            const line = model.getLineContent(position.lineNumber);
+            const line = model.getLineContent(position.lineNumber).substring(0, position.column);
             const hasFromKeyword = line.includes("from");
             const hasIfKeyword = line.includes("if");
             if (lastWord == "from") {
@@ -353,7 +355,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
  * UI that allows editing the behavior text of a dfd output port (DfdOutputPortImpl).
  */
 @injectable()
-export class OutputPortEditUI extends AbstractUIExtension {
+export class OutputPortEditUI extends AbstractUIExtension implements Switchable {
     static readonly ID = "output-port-edit-ui";
 
     private unavailableInputsLabel: HTMLDivElement = document.createElement("div") as HTMLDivElement;
@@ -416,7 +418,7 @@ export class OutputPortEditUI extends AbstractUIExtension {
             new MonacoEditorDfdBehaviorCompletionProvider(this, this.labelTypeRegistry),
         );
 
-        const monacoTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "vs-dark" : "vs";
+        const monacoTheme = LightDarkSwitch?.useDarkMode ?? true ? "vs-dark" : "vs";
         this.editor = monaco.editor.create(this.editorContainer, {
             minimap: {
                 // takes too much space, not useful for our use case
@@ -654,6 +656,10 @@ export class OutputPortEditUI extends AbstractUIExtension {
 
     public getCurrentEditingPort(): DfdOutputPortImpl | undefined {
         return this.port;
+    }
+
+    switchTheme(useDark: boolean): void {
+        this.editor?.updateOptions({ theme: useDark ? "vs-dark" : "vs" });
     }
 }
 
