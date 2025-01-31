@@ -23,7 +23,7 @@ import { DfdNodeAnnotationUI, DfdNodeAnnotationUIMouseListener } from "./nodeAnn
 import { DFDBehaviorRefactorer, RefactorInputNameInDFDBehaviorCommand } from "./behaviorRefactorer";
 
 import "./elementStyles.css";
-import { SWITCHABLE } from "../../common/lightDarkSwitch";
+import { SWITCHABLE } from "../../common/themeManager";
 
 export const dfdElementsModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     const context = { bind, unbind, isBound, rebind };

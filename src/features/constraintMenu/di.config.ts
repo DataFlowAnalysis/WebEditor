@@ -3,7 +3,7 @@ import { EDITOR_TYPES } from "../../utils";
 import { ConstraintMenu } from "./ConstraintMenu";
 import { TYPES } from "sprotty";
 import { ConstraintRegistry } from "./constraintRegistry";
-import { SWITCHABLE } from "../../common/lightDarkSwitch";
+import { SWITCHABLE } from "../../common/themeManager";
 
 // This module contains an UI extension that adds a tool palette to the editor.
 // This tool palette allows the user to create new nodes and edges.
