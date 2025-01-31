@@ -17,7 +17,7 @@
         "reflect-metadata": "^0.1.13",
         "sprotty": "^1.0.0",
         "sprotty-elk": "^1.0.0",
-        "sprotty-protocol": "^1.0.0",
+        "sprotty-protocol": "^1.4.0",
         "typescript": "^5.7.3",
         "vite": "^4.5.0"
     },
