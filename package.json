@@ -14,7 +14,7 @@
         "lint-staged": "^15.4.3",
         "monaco-editor": "^0.45.0",
         "prettier": "^3.0.3",
-        "reflect-metadata": "^0.1.13",
+        "reflect-metadata": "^0.2.2",
         "sprotty": "^1.0.0",
         "sprotty-elk": "^1.0.0",
         "sprotty-protocol": "^1.4.0",
