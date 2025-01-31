@@ -1,12 +1,24 @@
-import { AbstractUIExtension } from "sprotty";
+import { AbstractUIExtension, ActionDispatcher, CommitModelAction, TYPES } from "sprotty";
 import { inject, injectable } from "inversify";
 
 import "./settingsMenu.css";
 import { Theme, ThemeManager } from "./themeManager";
+import { LayoutModelAction } from "../features/autoLayout/command";
 
 @injectable()
 export class SettingsManager {
-    public layoutMethod: LayoutMethod = LayoutMethod.LINES;
+    private _layoutMethod: LayoutMethod = LayoutMethod.LINES;
+
+    constructor(@inject(TYPES.IActionDispatcher) protected readonly dispatcher: ActionDispatcher) {}
+
+    public get layoutMethod(): LayoutMethod {
+        return this._layoutMethod;
+    }
+
+    public set layoutMethod(layoutMethod: LayoutMethod) {
+        this._layoutMethod = layoutMethod;
+        this.dispatcher.dispatchAll([LayoutModelAction.create(), CommitModelAction.create() /*, fitToScreenAction*/]);
+    }
 }
 
 @injectable()
@@ -38,14 +50,15 @@ export class SettingsUI extends AbstractUIExtension {
                 </div>
             </label>
             <div class="accordion-content">
-                <div id="settings-content"><label for="setting-layout-option">Theme</label>
-                  <select name="setting-layout-option" id="setting-layout-option">
+                <div id="settings-content">
+                    <label for="setting-theme">Theme</label>
+                  <select name="setting-theme" id="setting-theme">
                     <option value="${Theme.SYSTEM_DEFAULT}">System default</option>
                     <option value="${Theme.LIGHT}">Light</option>
                     <option value="${Theme.DARK}">Dark</option>
                   </select>
                   <label for="setting-layout-option">Layout Method</label>
-                  <select name="setting-theme" id="setting-theme">
+                  <select name="setting-layout-option" id="setting-layout-option">
                     <option value="${LayoutMethod.LINES}">Lines</option>
                     <option value="${LayoutMethod.WRAPPING}">Wrapping Lines</option>
                     <option value="${LayoutMethod.CIRCLES}">Circles</option>
