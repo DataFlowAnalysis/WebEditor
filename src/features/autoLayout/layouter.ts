@@ -1,4 +1,4 @@
-import ElkConstructor from "elkjs/lib/elk.bundled";
+import ElkConstructor, { ElkExtendedEdge } from "elkjs/lib/elk.bundled";
 import { injectable, inject } from "inversify";
 import {
     DefaultLayoutConfigurator,
@@ -8,7 +8,8 @@ import {
     ILayoutConfigurator,
 } from "sprotty-elk";
 import { SChildElementImpl, SShapeElementImpl, isBoundsAware } from "sprotty";
-import { SShapeElement, SGraph, SModelIndex } from "sprotty-protocol";
+import { SShapeElement, SGraph, SModelIndex, SEdge } from "sprotty-protocol";
+import { SModelElement } from "sprotty-protocol/lib/model";
 import { ElkShape, LayoutOptions } from "elkjs";
 import { LayoutMethod, SettingsManager } from "../../common/settingsMenu";
 
@@ -43,17 +44,19 @@ export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
                 // Do not do micro layout for nodes, which includes the node dimensions etc.
                 // These are all automatically determined by our dfd node views
                 "org.eclipse.elk.omitNodeMicroLayout": "true",
+                "org.eclipse.elk.port.borderOffset": "14.0",
             },
             [LayoutMethod.CIRCLES]: {
                 "org.eclipse.elk.algorithm": "org.eclipse.elk.stress",
                 "org.eclipse.elk.force.repulsion": "5.0",
                 "org.eclipse.elk.force.iterations": "100", //Reduce iterations for faster formatting, did not notice differences with more iterations
                 "org.eclipse.elk.force.repulsivePower": "1", //Edges should repel vertices as well
-                "org.eclipse.elk.port.borderOffset": "14.0",
                 // Do not do micro layout for nodes, which includes the node dimensions etc.
                 // These are all automatically determined by our dfd node views
                 "org.eclipse.elk.omitNodeMicroLayout": "true",
-                // Balanced graph > straight edges
+                "org.eclipse.elk.graphviz.adaptPortPositions": "true",
+                "org.eclipse.elk.portConstraints": "FREE",
+                "org.eclipse.elk.port.borderOffset": "14.0",
             },
         }[this.settings.layoutMethod];
     }
@@ -79,6 +82,7 @@ export class DfdElkLayoutEngine extends ElkLayoutEngine {
         @inject(ElkFactory) elkFactory: ElkFactory,
         @inject(IElementFilter) elementFilter: IElementFilter,
         @inject(ILayoutConfigurator) configurator: ILayoutConfigurator,
+        @inject(SettingsManager) protected readonly settings: SettingsManager,
     ) {
         super(elkFactory, elementFilter, configurator);
     }
@@ -94,12 +98,23 @@ export class DfdElkLayoutEngine extends ElkLayoutEngine {
         }
     }
 
+    protected override transformEdge(sedge: SEdge, index: SModelIndex): ElkExtendedEdge {
+        // remove all middle points of edge and only keep source and target
+        const elkEdge = super.transformEdge(sedge, index);
+        elkEdge.sections = [];
+        return elkEdge;
+    }
+
     protected override applyShape(sshape: SShapeElement, elkShape: ElkShape, index: SModelIndex): void {
         // Check if this is a port, if yes we want to center it on the node edge instead of putting it right next to the node at the edge
         if (this.getBasicType(sshape) === "port") {
             // Because we use actually pass SShapeElementImpl instead of SShapeElement to this method
             // we can access the parent property and the bounds of the parent which is the node of this port.
-            if (sshape instanceof SChildElementImpl && isBoundsAware(sshape.parent)) {
+            if (
+                this.settings.layoutMethod !== LayoutMethod.CIRCLES &&
+                sshape instanceof SChildElementImpl &&
+                isBoundsAware(sshape.parent)
+            ) {
                 const parent = sshape.parent;
                 if (elkShape.x && elkShape.width && elkShape.y && elkShape.height) {
                     // Note that the port x and y coordinates are relative to the parent node.
@@ -124,5 +139,14 @@ export class DfdElkLayoutEngine extends ElkLayoutEngine {
         }
 
         super.applyShape(sshape, elkShape, index);
+    }
+
+    protected applyEdge(sedge: SEdge, elkEdge: ElkExtendedEdge, index: SModelIndex): void {
+        if (this.settings.layoutMethod === LayoutMethod.CIRCLES) {
+            // In the circles layout method, we want to make sure that the edge is not straight
+            // This is because the circles layout method does not support straight edges
+            elkEdge.sections = [];
+        }
+        super.applyEdge(sedge, elkEdge, index);
     }
 }
