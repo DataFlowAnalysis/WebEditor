@@ -1,15 +1,14 @@
-import { AbstractUIExtension, ActionDispatcher, CommitModelAction, TYPES } from "sprotty";
+import { AbstractUIExtension, ActionDispatcher, CommitModelAction, LocalModelSource, TYPES } from "sprotty";
 import { inject, injectable } from "inversify";
 
 import "./settingsMenu.css";
 import { Theme, ThemeManager } from "./themeManager";
 import { LayoutModelAction } from "../features/autoLayout/command";
+import { createDefaultFitToScreenAction } from "../utils";
 
 @injectable()
 export class SettingsManager {
     private _layoutMethod: LayoutMethod = LayoutMethod.LINES;
-
-    constructor(@inject(TYPES.IActionDispatcher) protected readonly dispatcher: ActionDispatcher) {}
 
     public get layoutMethod(): LayoutMethod {
         return this._layoutMethod;
@@ -17,7 +16,6 @@ export class SettingsManager {
 
     public set layoutMethod(layoutMethod: LayoutMethod) {
         this._layoutMethod = layoutMethod;
-        this.dispatcher.dispatchAll([LayoutModelAction.create(), CommitModelAction.create() /*, fitToScreenAction*/]);
     }
 }
 
@@ -28,6 +26,8 @@ export class SettingsUI extends AbstractUIExtension {
     constructor(
         @inject(SettingsManager) protected readonly settings: SettingsManager,
         @inject(ThemeManager) protected readonly themeManager: ThemeManager,
+        @inject(TYPES.IActionDispatcher) protected readonly dispatcher: ActionDispatcher,
+        @inject(TYPES.ModelSource) protected readonly modelSource: LocalModelSource,
     ) {
         super();
     }
@@ -82,6 +82,11 @@ export class SettingsUI extends AbstractUIExtension {
         const layoutOptionSelect = containerElement.querySelector("#setting-layout-option") as HTMLSelectElement;
         layoutOptionSelect.addEventListener("change", () => {
             this.settings.layoutMethod = layoutOptionSelect.value as LayoutMethod;
+            this.dispatcher.dispatchAll([
+                LayoutModelAction.create(),
+                CommitModelAction.create(),
+                createDefaultFitToScreenAction(this.modelSource.model),
+            ]);
         });
 
         const themeOptionSelect = containerElement.querySelector("#setting-theme") as HTMLSelectElement;
