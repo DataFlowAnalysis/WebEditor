@@ -30,7 +30,6 @@ import "sprotty/css/edit-label.css";
 import "./theme.css";
 import "./page.css";
 import { LoadDiagramAction } from "./features/serialize/load";
-import { Action } from "sprotty-protocol";
 
 const container = new Container();
 
