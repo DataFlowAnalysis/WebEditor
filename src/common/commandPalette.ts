@@ -29,13 +29,13 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
         const commitAction = CommitModelAction.create();
 
         return [
-            new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
-            new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
-            new LabeledAction("Save diagram as DFD and DD", [SaveDFDandDDAction.create(), commitAction], "save-dfd"),
             new LabeledAction("Load diagram from JSON", [LoadDiagramAction.create(), commitAction], "go-to-file"),
+            new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "go-to-file"),
+            new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
+            new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
+            new LabeledAction("Save diagram as DFD and DD", [SaveDFDandDDAction.create(), commitAction], "save"),
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
-            new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "load-dfd"),
-            new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "load-pcm"),
+            new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
             new LabeledAction(
                 "Layout diagram",
                 [LayoutModelAction.create(), commitAction, fitToScreenAction],
