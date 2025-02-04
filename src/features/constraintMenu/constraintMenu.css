@@ -44,7 +44,7 @@ div.constraint-menu {
     content: "";
     background-image: url("@fortawesome/fontawesome-free/svgs/solid/play.svg");
     display: inline-block;
-    filter: invert(var(--dark-mode));
+    filter: invert(1);
     height: 16px;
     width: 16px;
     background-size: 16px 16px;
