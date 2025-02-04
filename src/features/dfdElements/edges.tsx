@@ -82,7 +82,7 @@ export class ArrowEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
             }
             // The children of an edge are not necessarily inside the bounding box of the route,
             // so we need to render a group to ensure the children have a chance to be rendered.
-            return <g>{context.renderChildren(edge, { route })}</g>;
+            return <g>{this.settings.hideEdgeLabels ? [] : context.renderChildren(edge, { route })}</g>;
         }
 
         return (
