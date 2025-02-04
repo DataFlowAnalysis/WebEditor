@@ -95,7 +95,7 @@ export class LoadPalladioCommand extends Command {
             ].join("---FILE---");
 
             // Send the structured message over WebSocket
-            await ws.send(message);
+            ws.send(message);
 
             // Set the model file name and page title based on one of the files (e.g., the first file)
             setModelFileName(files[0].name.substring(0, files[0].name.lastIndexOf(".")));
