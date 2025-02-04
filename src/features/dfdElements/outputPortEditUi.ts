@@ -418,7 +418,7 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             new MonacoEditorDfdBehaviorCompletionProvider(this, this.labelTypeRegistry),
         );
 
-        const monacoTheme = LightDarkSwitch?.useDarkMode ?? true ? "vs-dark" : "vs";
+        const monacoTheme = (LightDarkSwitch?.useDarkMode ?? true) ? "vs-dark" : "vs";
         this.editor = monaco.editor.create(this.editorContainer, {
             minimap: {
                 // takes too much space, not useful for our use case
