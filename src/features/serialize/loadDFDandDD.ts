@@ -72,7 +72,7 @@ export class LoadDFDandDDCommand extends Command {
             const dictionaryFileContent = await this.readFileContent(dictionaryFile);
 
             // Send each file's content in separate WebSocket messages
-            ws.send(
+            await ws.send(
                 wsId +
                     ":DFD:" +
                     this.getFileNameWithoutExtension(dataflowFile) +
