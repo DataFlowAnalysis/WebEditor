@@ -1,6 +1,6 @@
 import { Command, CommandExecutionContext, SModelRootImpl } from "sprotty";
 import { Action } from "sprotty-protocol";
-import { ws, wsId } from "./webSocketHandler";
+import { sendMessage } from "./webSocketHandler";
 import { setModelFileName } from "../..";
 import { setFileNameInPageTitle } from "./load";
 
@@ -72,9 +72,8 @@ export class LoadDFDandDDCommand extends Command {
             const dictionaryFileContent = await this.readFileContent(dictionaryFile);
 
             // Send each file's content in separate WebSocket messages
-            ws.send(
-                wsId +
-                    ":DFD:" +
+            sendMessage(
+                "DFD:" +
                     this.getFileNameWithoutExtension(dataflowFile) +
                     ":" +
                     dataflowFileContent +

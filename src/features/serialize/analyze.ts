@@ -4,7 +4,7 @@ import { Action } from "sprotty-protocol";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
 import { EditorModeController } from "../editorMode/editorModeController";
-import { ws, wsId } from "./webSocketHandler";
+import { sendMessage } from "./webSocketHandler";
 import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 import { SavedDiagram } from "./save";
 
@@ -59,7 +59,7 @@ export class AnalyzeDiagramCommand extends Command {
             editorMode: this.editorModeController?.getCurrentMode(),
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);
-        ws.send(wsId + ":Json:" + diagramJson);
+        sendMessage("Json:" + diagramJson);
         return context.root;
     }
 

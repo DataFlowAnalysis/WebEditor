@@ -1,7 +1,7 @@
 import { Command, CommandExecutionContext, SModelRootImpl } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { setModelFileName } from "../../index";
-import { ws, wsId } from "./webSocketHandler";
+import { sendMessage } from "./webSocketHandler";
 
 export interface LoadPalladioAction extends Action {
     kind: typeof LoadPalladioAction.KIND;
@@ -90,12 +90,12 @@ export class LoadPalladioCommand extends Command {
 
             // Construct the message format for WebSocket
             const message = [
-                wsId + ":", // Add wsId only once at the start
+                // Add wsId only once at the start
                 ...fileContents.map(({ name, content }) => `${name}:${content}`),
             ].join("---FILE---");
 
             // Send the structured message over WebSocket
-            ws.send(message);
+            sendMessage(message);
 
             // Set the model file name and page title based on one of the files (e.g., the first file)
             setModelFileName(files[0].name.substring(0, files[0].name.lastIndexOf(".")));
