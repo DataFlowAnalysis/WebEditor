@@ -5,9 +5,9 @@ import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { sendMessage } from "./webSocketHandler";
-import { modelFileName } from "../..";
 import { SavedDiagram } from "./save";
 import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
+import { getModelFileName } from "../../index";
 
 export interface SaveDFDandDDAction extends Action {
     kind: typeof SaveDFDandDDAction.KIND;
@@ -60,7 +60,7 @@ export class SaveDFDandDDCommand extends Command {
             editorMode: this.editorModeController?.getCurrentMode(),
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);
-        sendMessage("Json2DFD:" + modelFileName + ":" + diagramJson);
+        sendMessage("Json2DFD:" + getModelFileName() + ":" + diagramJson);
         return context.root;
     }
 
@@ -112,7 +112,7 @@ export class SaveDFDandDD {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", modelFileName + ending);
+        link.setAttribute("download", getModelFileName() + ending);
         document.body.appendChild(link); // Append link to the body
         link.click(); // Programmatically click to trigger download
         URL.revokeObjectURL(url); // Revoke the URL after download

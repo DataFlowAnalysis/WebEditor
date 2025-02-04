@@ -1,4 +1,4 @@
-import { modelFileName, setModelSource } from "../..";
+import { getModelFileName, setModelSource } from "../../index";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
 const webSocketAdress = `wss://websocket.dataflowanalysis.org/events/`;
@@ -50,7 +50,7 @@ function initWebSocket() {
 
         // Otherwise, treat incoming data as JSON for model source:
         setModelSource(
-            new File([new Blob([event.data], { type: "application/json" })], modelFileName + ".json", {
+            new File([new Blob([event.data], { type: "application/json" })], getModelFileName() + ".json", {
                 type: "application/json",
             }),
         );

@@ -61,10 +61,14 @@ export const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatche
 const defaultUIElements = container.getAll<AbstractUIExtension>(EDITOR_TYPES.DefaultUIElement);
 const modelSource = container.get<LocalModelSource>(TYPES.ModelSource);
 
-export var modelFileName = "diagram";
+let modelFileName = "diagram";
 
 export function setModelFileName(name: string): void {
     modelFileName = name;
+}
+
+export function getModelFileName(): string {
+    return modelFileName;
 }
 
 export function setModelSource(file: File): void {

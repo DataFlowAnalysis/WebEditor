@@ -1,7 +1,7 @@
 import { Command, CommandExecutionContext, SModelRootImpl } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { sendMessage } from "./webSocketHandler";
-import { setModelFileName } from "../..";
+import { setModelFileName } from "../../index";
 import { setFileNameInPageTitle } from "./load";
 
 export interface LoadDFDandDDAction extends Action {
