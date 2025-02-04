@@ -30,7 +30,7 @@ ws.onmessage = (event) => {
     }
     if (event.data.trim().endsWith("</datadictionary:DataDictionary>")) {
         var saveDFDandDD = new SaveDFDandDD(event.data);
-        saveDFDandDD.saveFiles();
+        saveDFDandDD.saveDiagramAsDFD();
         return;
     }
     setModelSource(

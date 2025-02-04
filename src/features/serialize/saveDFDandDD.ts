@@ -102,27 +102,20 @@ export class SaveDFDandDD {
     /**
      * Method to save both XML files by creating Blob objects and triggering downloads.
      */
-    public saveFiles(): void {
-        // Save the first XML file
-        const blob1 = new Blob([this.dfdString], { type: "application/xml" });
-        const url1 = URL.createObjectURL(blob1);
-        const link1 = document.createElement("a");
-        link1.href = url1;
-        link1.setAttribute("download", modelFileName + ".dataflowdiagram");
-        document.body.appendChild(link1); // Append link to the body
-        link1.click(); // Programmatically click to trigger download
-        URL.revokeObjectURL(url1); // Revoke the URL after download
-        link1.remove(); // Remove the link from the DOM
+    public saveDiagramAsDFD(): void {
+        this.saveFile(this.dfdString, ".dataflowdiagram");
+        this.saveFile(this.ddString, ".datadictionary");
+    }
 
-        // Save the second XML file
-        const blob2 = new Blob([this.ddString], { type: "application/xml" });
-        const url2 = URL.createObjectURL(blob2);
-        const link2 = document.createElement("a");
-        link2.href = url2;
-        link2.setAttribute("download", modelFileName + ".datadictionary");
-        document.body.appendChild(link2); // Append link to the body
-        link2.click(); // Programmatically click to trigger download
-        URL.revokeObjectURL(url2); // Revoke the URL after download
-        link2.remove(); // Remove the link from the DOM
+    private saveFile(file: string, ending: string) {
+        const blob = new Blob([file], { type: "application/xml" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", modelFileName + ending);
+        document.body.appendChild(link); // Append link to the body
+        link.click(); // Programmatically click to trigger download
+        URL.revokeObjectURL(url); // Revoke the URL after download
+        link.remove(); // Remove the link from the DOM
     }
 }
