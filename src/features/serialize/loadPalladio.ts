@@ -90,7 +90,6 @@ export class LoadPalladioCommand extends Command {
 
             // Construct the message format for WebSocket
             const message = [
-                // Add wsId only once at the start
                 ...fileContents.map(({ name, content }) => `${name}:${content}`),
             ].join("---FILE---");
 
