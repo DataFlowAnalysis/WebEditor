@@ -9,6 +9,7 @@ import { createDefaultFitToScreenAction } from "../utils";
 @injectable()
 export class SettingsManager {
     private _layoutMethod: LayoutMethod = LayoutMethod.LINES;
+    private _hideEdgeLabels = false;
 
     public get layoutMethod(): LayoutMethod {
         return this._layoutMethod;
@@ -16,6 +17,14 @@ export class SettingsManager {
 
     public set layoutMethod(layoutMethod: LayoutMethod) {
         this._layoutMethod = layoutMethod;
+    }
+
+    public get hideEdgeLabels(): boolean {
+        return this._hideEdgeLabels;
+    }
+
+    public set hideEdgeLabels(hideEdgeLabels: boolean) {
+        this._hideEdgeLabels = hideEdgeLabels;
     }
 }
 
@@ -63,7 +72,11 @@ export class SettingsUI extends AbstractUIExtension {
                     <option value="${LayoutMethod.WRAPPING}">Wrapping Lines</option>
                     <option value="${LayoutMethod.CIRCLES}">Circles</option>
                   </select>
-                  
+                  <label for="setting-hide-edge-labels">Hide Edge Labels</label>
+                  <label class="switch">
+                    <input type="checkbox" id="setting-hide-edge-labels">
+                    <span class="slider round"></span>
+                  </label>
                 </div>
             </div>
         `;
@@ -92,6 +105,13 @@ export class SettingsUI extends AbstractUIExtension {
         const themeOptionSelect = containerElement.querySelector("#setting-theme") as HTMLSelectElement;
         themeOptionSelect.addEventListener("change", () => {
             this.themeManager.theme = themeOptionSelect.value as Theme;
+        });
+
+        const hideEdgeLabelsCheckbox = containerElement.querySelector("#setting-hide-edge-labels") as HTMLInputElement;
+        hideEdgeLabelsCheckbox.checked = this.settings.hideEdgeLabels;
+        hideEdgeLabelsCheckbox.addEventListener("change", () => {
+            this.settings.hideEdgeLabels = hideEdgeLabelsCheckbox.checked;
+            this.dispatcher.dispatchAll([CommitModelAction.create()]);
         });
     }
 }
