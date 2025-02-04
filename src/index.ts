@@ -58,7 +58,7 @@ container.load(
     constraintMenuModule,
 );
 
-const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
+export const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
 const defaultUIElements = container.getAll<AbstractUIExtension>(EDITOR_TYPES.DefaultUIElement);
 const modelSource = container.get<LocalModelSource>(TYPES.ModelSource);
 
@@ -66,10 +66,6 @@ export var modelFileName = "diagram";
 
 export function setModelFileName(name: string): void {
     modelFileName = name;
-}
-
-export function executeAction(action: Action) {
-    dispatcher.dispatch(action);
 }
 
 export function setModelSource(file: File): void {

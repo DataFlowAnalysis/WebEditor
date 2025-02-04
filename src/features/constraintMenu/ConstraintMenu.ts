@@ -19,7 +19,7 @@ import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { Switchable } from "../../common/lightDarkSwitch";
-import { executeAction } from "../../index";
+import { dispatcher } from "../../index";
 import { AnalyzeDiagramAction } from "../serialize/analyze";
 
 @injectable()
@@ -302,7 +302,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         button.id = "run-button";
         button.innerHTML = "Run";
         button.onclick = () => {
-            executeAction(AnalyzeDiagramAction.create());
+            dispatcher.dispatch(AnalyzeDiagramAction.create());
         };
 
         wrapper.appendChild(button);
