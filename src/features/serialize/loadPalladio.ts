@@ -102,6 +102,7 @@ export class LoadPalladioCommand extends Command {
 
             return context.root;
         } catch (error) {
+            console.error(error);
             return context.root;
         }
     }

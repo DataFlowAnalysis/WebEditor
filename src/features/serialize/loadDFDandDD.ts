@@ -85,6 +85,7 @@ export class LoadDFDandDDCommand extends Command {
             setFileNameInPageTitle(dataflowFile.name);
             return context.root;
         } catch (error) {
+            console.error(error);
             return context.root;
         }
     }
