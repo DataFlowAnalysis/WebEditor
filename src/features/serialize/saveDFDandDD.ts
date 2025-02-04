@@ -1,11 +1,13 @@
 import { inject, injectable, optional } from "inversify";
 import { Command, CommandExecutionContext, LocalModelSource, SModelRootImpl, TYPES } from "sprotty";
-import { Action, SModelRoot } from "sprotty-protocol";
-import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
+import { Action } from "sprotty-protocol";
+import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
-import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
+import { EditorModeController } from "../editorMode/editorModeController";
 import { ws, wsId } from "./webSocketHandler";
 import { modelFileName } from "../..";
+import { SavedDiagram } from "./save";
+import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 
 export interface SaveDFDandDDAction extends Action {
     kind: typeof SaveDFDandDDAction.KIND;
@@ -22,12 +24,6 @@ export namespace SaveDFDandDDAction {
     }
 }
 
-export interface SavedDiagram {
-    model: SModelRoot;
-    labelTypes?: LabelType[];
-    editorMode?: EditorMode;
-}
-
 @injectable()
 export class SaveDFDandDDCommand extends Command {
     static readonly KIND = SaveDFDandDDAction.KIND;
@@ -41,6 +37,9 @@ export class SaveDFDandDDCommand extends Command {
     @inject(EditorModeController)
     @optional()
     private editorModeController?: EditorModeController;
+    @inject(ConstraintRegistry)
+    @optional()
+    private readonly constraintRegistry?: ConstraintRegistry;
 
     constructor() {
         super();
@@ -57,6 +56,7 @@ export class SaveDFDandDDCommand extends Command {
         const diagram: SavedDiagram = {
             model: modelCopy,
             labelTypes: this.labelTypeRegistry?.getLabelTypes(),
+            constraints: this.constraintRegistry?.getConstraints(),
             editorMode: this.editorModeController?.getCurrentMode(),
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);

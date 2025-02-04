@@ -1,22 +1,12 @@
 import { inject, injectable, optional } from "inversify";
 import { Command, CommandExecutionContext, LocalModelSource, SModelRootImpl, TYPES } from "sprotty";
-import { Action, SModelRoot } from "sprotty-protocol";
-import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
+import { Action } from "sprotty-protocol";
+import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
-import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
+import { EditorModeController } from "../editorMode/editorModeController";
 import { ws, wsId } from "./webSocketHandler";
-import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
-
-/**
- * Type that contains all data related to a diagram.
- * This contains the sprotty diagram model and other data related to it.
- */
-export interface SavedDiagram {
-    model: SModelRoot;
-    labelTypes?: LabelType[];
-    constraints?: Constraint[];
-    editorMode?: EditorMode;
-}
+import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
+import { SavedDiagram } from "./save";
 
 export interface AnalyzeDiagramAction extends Action {
     kind: typeof AnalyzeDiagramAction.KIND;
