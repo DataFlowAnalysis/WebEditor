@@ -57,7 +57,7 @@ container.load(
     constraintMenuModule,
 );
 
-export const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
+const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
 const defaultUIElements = container.getAll<AbstractUIExtension>(EDITOR_TYPES.DefaultUIElement);
 const modelSource = container.get<LocalModelSource>(TYPES.ModelSource);
 
