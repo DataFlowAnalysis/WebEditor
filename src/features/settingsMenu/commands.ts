@@ -9,7 +9,7 @@ import {
     SModelRootImpl,
     TYPES,
 } from "sprotty";
-import { getBasicType, LayoutAction, RedoAction, UndoAction } from "sprotty-protocol";
+import { getBasicType, RedoAction, UndoAction } from "sprotty-protocol";
 import { DfdNodeImpl } from "../dfdElements/nodes";
 import { SettingsManager } from "./SettingsManager";
 import {
@@ -22,6 +22,7 @@ import { ArrowEdgeImpl } from "../dfdElements/edges";
 import { createDefaultFitToScreenAction } from "../../utils";
 import { LayoutMethod } from "./LayoutMethod";
 import { Theme, ThemeManager } from "./themeManager";
+import { LayoutModelAction } from "../autoLayout/command";
 
 @injectable()
 export class NodeNameReplacementRegistry {
@@ -134,7 +135,7 @@ export class CompleteLayoutProcessCommand extends Command {
         this.previousMethod = this.settings.layoutMethod;
         this.settings.layoutMethod = this.action.method;
         this.actionDispatcher.dispatchAll([
-            LayoutAction.create(),
+            LayoutModelAction.create(),
             CommitModelAction.create(),
             createDefaultFitToScreenAction(context.root),
         ]);

@@ -21,7 +21,7 @@ export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
 
     protected override graphOptions(_sgraph: SGraph, _index: SModelIndex): LayoutOptions {
         // Elk settings. See https://eclipse.dev/elk/reference.html for available options.
-        /*return {
+        return {
             [LayoutMethod.LINES]: {
                 "org.eclipse.elk.algorithm": "org.eclipse.elk.layered",
                 "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "30.0",
@@ -56,8 +56,7 @@ export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
                 // These are all automatically determined by our dfd node views
                 "org.eclipse.elk.omitNodeMicroLayout": "true",
             },
-        }[LayoutMethod.LINES];*/
-        return {};
+        }[this.settings.layoutMethod];
     }
 }
 
@@ -173,12 +172,12 @@ export class CircleLayoutPostProcessor implements ILayoutPostprocessor {
     private connectedPorts: Map<string, string[]> = new Map();
     private nodeSquares: Map<string, Square> = new Map();
 
-    constructor(/*@inject(SettingsManager) protected readonly settings: SettingsManager*/) {}
+    constructor(@inject(SettingsManager) protected readonly settings: SettingsManager) {}
 
     postprocess(elkGraph: ElkNode): void {
-        /*if (this.settings.layoutMethod !== LayoutMethod.CIRCLES) {
+        if (this.settings.layoutMethod !== LayoutMethod.CIRCLES) {
             return;
-        }*/
+        }
         this.connectedPorts = new Map<string, string[]>();
         if (!elkGraph.edges || !elkGraph.children) {
             return;
