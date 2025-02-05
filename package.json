@@ -10,10 +10,10 @@
         "@fortawesome/fontawesome-free": "^6.7.2",
         "@vscode/codicons": "^0.0.36",
         "husky": "^9.1.7",
-        "inversify": "^6.2.1",
+        "inversify": "^6.2.2",
         "lint-staged": "^15.4.3",
         "monaco-editor": "^0.45.0",
-        "prettier": "^3.0.3",
+        "prettier": "^3.4.2",
         "reflect-metadata": "^0.2.2",
         "sprotty": "^1.4.0",
         "sprotty-elk": "^1.4.0",
@@ -26,7 +26,7 @@
         "build": "tsc && vite build",
         "preview": "vite preview",
         "format": "prettier --write \"./**/*.{html,css,ts,tsx,json,yaml,md}\"",
-        "prepare": "husky install"
+        "prepare": "husky"
     },
     "lint-staged": {
         "*.{html,css,ts,tsx,json,yaml,md}": "prettier --write"
