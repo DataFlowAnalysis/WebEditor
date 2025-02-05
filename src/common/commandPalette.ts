@@ -10,7 +10,7 @@ import { LayoutModelAction } from "../features/autoLayout/command";
 import "@vscode/codicons/dist/codicon.css";
 import "sprotty/css/command-palette.css";
 import "./commandPalette.css";
-import { SettingsManager } from "./settingsMenu";
+import { SettingsManager } from "../features/settingsMenu/SettingsManager";
 
 /**
  * Provides possible actions for the command palette.

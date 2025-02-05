@@ -32,7 +32,7 @@ import "monaco-editor/esm/vs/editor/contrib/hover/browser/hover";
 import "monaco-editor/esm/vs/editor/contrib/inlineCompletions/browser/inlineCompletions.contribution.js";
 
 import "./outputPortEditUi.css";
-import { ThemeManager, Switchable } from "../../common/themeManager";
+import { ThemeManager, Switchable } from "../settingsMenu/themeManager";
 
 /**
  * Detects when a dfd output port is double clicked and shows the OutputPortEditUI

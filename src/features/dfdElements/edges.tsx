@@ -13,13 +13,15 @@ import {
 import { VNode } from "snabbdom";
 import { Point, angleOfPoint, toDegrees, SEdge, SLabel } from "sprotty-protocol";
 import { DynamicChildrenEdge } from "./dynamicChildren";
-import { SettingsManager } from "../../common/settingsMenu";
+import { SettingsManager } from "../settingsMenu/SettingsManager";
 
 export interface ArrowEdge extends SEdge {
     text?: string;
 }
 
 export class ArrowEdgeImpl extends DynamicChildrenEdge implements WithEditableLabel {
+    text?: string;
+
     setChildren(schema: ArrowEdge): void {
         schema.children = [
             {

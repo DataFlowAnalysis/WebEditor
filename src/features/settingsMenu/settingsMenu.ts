@@ -1,32 +1,10 @@
-import { AbstractUIExtension, ActionDispatcher, CommitModelAction, LocalModelSource, TYPES } from "sprotty";
+import { AbstractUIExtension } from "sprotty";
 import { inject, injectable } from "inversify";
 
 import "./settingsMenu.css";
 import { Theme, ThemeManager } from "./themeManager";
-import { LayoutModelAction } from "../features/autoLayout/command";
-import { createDefaultFitToScreenAction } from "../utils";
-
-@injectable()
-export class SettingsManager {
-    private _layoutMethod: LayoutMethod = LayoutMethod.LINES;
-    private _hideEdgeLabels = false;
-
-    public get layoutMethod(): LayoutMethod {
-        return this._layoutMethod;
-    }
-
-    public set layoutMethod(layoutMethod: LayoutMethod) {
-        this._layoutMethod = layoutMethod;
-    }
-
-    public get hideEdgeLabels(): boolean {
-        return this._hideEdgeLabels;
-    }
-
-    public set hideEdgeLabels(hideEdgeLabels: boolean) {
-        this._hideEdgeLabels = hideEdgeLabels;
-    }
-}
+import { SettingsManager } from "./SettingsManager";
+import { LayoutMethod } from "./LayoutMethod";
 
 @injectable()
 export class SettingsUI extends AbstractUIExtension {
@@ -35,8 +13,6 @@ export class SettingsUI extends AbstractUIExtension {
     constructor(
         @inject(SettingsManager) protected readonly settings: SettingsManager,
         @inject(ThemeManager) protected readonly themeManager: ThemeManager,
-        @inject(TYPES.IActionDispatcher) protected readonly dispatcher: ActionDispatcher,
-        @inject(TYPES.ModelSource) protected readonly modelSource: LocalModelSource,
     ) {
         super();
     }
@@ -72,9 +48,16 @@ export class SettingsUI extends AbstractUIExtension {
                     <option value="${LayoutMethod.WRAPPING}">Wrapping Lines</option>
                     <option value="${LayoutMethod.CIRCLES}">Circles</option>
                   </select>
+
                   <label for="setting-hide-edge-labels">Hide Edge Labels</label>
                   <label class="switch">
                     <input type="checkbox" id="setting-hide-edge-labels">
+                    <span class="slider round"></span>
+                  </label>
+
+                  <label for="setting-simplify-node-names">Simplify Node Names</label>
+                  <label class="switch">
+                    <input type="checkbox" id="setting-simplify-node-names">
                     <span class="slider round"></span>
                   </label>
                 </div>
@@ -93,31 +76,17 @@ export class SettingsUI extends AbstractUIExtension {
         });
 
         const layoutOptionSelect = containerElement.querySelector("#setting-layout-option") as HTMLSelectElement;
-        layoutOptionSelect.addEventListener("change", () => {
-            this.settings.layoutMethod = layoutOptionSelect.value as LayoutMethod;
-            this.dispatcher.dispatchAll([
-                LayoutModelAction.create(),
-                CommitModelAction.create(),
-                createDefaultFitToScreenAction(this.modelSource.model),
-            ]);
-        });
+        this.settings.bindLayoutMethodSelect(layoutOptionSelect);
 
         const themeOptionSelect = containerElement.querySelector("#setting-theme") as HTMLSelectElement;
-        themeOptionSelect.addEventListener("change", () => {
-            this.themeManager.theme = themeOptionSelect.value as Theme;
-        });
+        this.themeManager.bindThemeSelect(themeOptionSelect);
 
         const hideEdgeLabelsCheckbox = containerElement.querySelector("#setting-hide-edge-labels") as HTMLInputElement;
-        hideEdgeLabelsCheckbox.checked = this.settings.hideEdgeLabels;
-        hideEdgeLabelsCheckbox.addEventListener("change", () => {
-            this.settings.hideEdgeLabels = hideEdgeLabelsCheckbox.checked;
-            this.dispatcher.dispatchAll([CommitModelAction.create()]);
-        });
-    }
-}
+        this.settings.bindHideEdgeLabelsCheckbox(hideEdgeLabelsCheckbox);
 
-export enum LayoutMethod {
-    LINES = "Lines",
-    WRAPPING = "Wrapping Lines",
-    CIRCLES = "Circles",
+        const simplifyNodeNamesCheckbox = containerElement.querySelector(
+            "#setting-simplify-node-names",
+        ) as HTMLInputElement;
+        this.settings.bindSimplifyNodeNamesCheckbox(simplifyNodeNamesCheckbox);
+    }
 }

@@ -18,7 +18,7 @@ import { AutoCompleteTree } from "./AutoCompletion";
 import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
-import { Switchable } from "../../common/themeManager";
+import { Switchable } from "../settingsMenu/themeManager";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension implements Switchable {
