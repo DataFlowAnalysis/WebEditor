@@ -10,6 +10,9 @@ import { LayoutModelAction } from "../features/autoLayout/command";
 import "@vscode/codicons/dist/codicon.css";
 import "sprotty/css/command-palette.css";
 import "./commandPalette.css";
+import { SaveDFDandDDAction } from "../features/serialize/saveDFDandDD";
+import { LoadDFDandDDAction } from "../features/serialize/loadDFDandDD";
+import { LoadPalladioAction } from "../features/serialize/loadPalladio";
 
 /**
  * Provides possible actions for the command palette.
@@ -26,10 +29,13 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
         const commitAction = CommitModelAction.create();
 
         return [
-            new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
-            new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
             new LabeledAction("Load diagram from JSON", [LoadDiagramAction.create(), commitAction], "go-to-file"),
+            new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "go-to-file"),
+            new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
+            new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
+            new LabeledAction("Save diagram as DFD and DD", [SaveDFDandDDAction.create(), commitAction], "save"),
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
+            new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
             new LabeledAction(
                 "Layout diagram",
                 [LayoutModelAction.create(), commitAction, fitToScreenAction],

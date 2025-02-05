@@ -1,6 +1,6 @@
 import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
-import { AbstractUIExtension, LocalModelSource, TYPES } from "sprotty";
+import { AbstractUIExtension, IActionDispatcher, LocalModelSource, TYPES } from "sprotty";
 import { calculateTextSize, generateRandomSprottyId } from "../../utils";
 import { Constraint, ConstraintRegistry } from "./constraintRegistry";
 
@@ -19,6 +19,7 @@ import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { Switchable } from "../../common/lightDarkSwitch";
+import { AnalyzeDiagramAction } from "../serialize/analyze";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension implements Switchable {
@@ -34,6 +35,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
         @inject(LabelTypeRegistry) labelTypeRegistry: LabelTypeRegistry,
         @inject(TYPES.ModelSource) modelSource: LocalModelSource,
+        @inject(TYPES.IActionDispatcher) private readonly dispatcher: IActionDispatcher,
         @inject(EditorModeController)
         @optional()
         editorModeController?: EditorModeController,
@@ -300,7 +302,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         button.id = "run-button";
         button.innerHTML = "Run";
         button.onclick = () => {
-            console.log("Run button clicked");
+            this.dispatcher.dispatch(AnalyzeDiagramAction.create());
         };
 
         wrapper.appendChild(button);
