@@ -1,5 +1,5 @@
 import { inject, injectable, multiInject } from "inversify";
-import { TYPES } from "sprotty";
+import { ActionDispatcher, TYPES } from "sprotty";
 import { ChangeThemeAction } from "./actions";
 
 export enum Theme {
