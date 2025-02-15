@@ -75,7 +75,11 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         containerElement.appendChild(this.buildRunButton());
         containerElement.appendChild(accordionContent);
 
-        this.constraintRegistry.onUpdate(() => this.rerenderConstraintList());
+        this.constraintRegistry.onUpdate(() => {
+            this.rerenderConstraintList();
+            const selected = this.constraintRegistry.getConstraints().find((c) => c.id === this.selectedConstraint?.id);
+            this.selectConstraintListItem(selected);
+        });
     }
 
     private buildConstraintInputWrapper(): HTMLElement {
