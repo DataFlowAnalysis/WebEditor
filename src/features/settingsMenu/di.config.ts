@@ -8,7 +8,6 @@ import {
     ChangeThemeCommand,
     CompleteLayoutProcessCommand,
     NodeNameReplacementRegistry,
-    ReSnapPortsAfterChangeCommand,
     SimplifyNodeNamesCommand,
 } from "./commands";
 import { SettingsManager } from "./SettingsManager";
@@ -26,5 +25,4 @@ export const settingsModule = new ContainerModule((bind, unbind, isBound, rebind
     configureCommand(context, ChangeEdgeLabelVisibilityCommand);
     configureCommand(context, CompleteLayoutProcessCommand);
     configureCommand(context, ChangeThemeCommand);
-    configureCommand(context, ReSnapPortsAfterChangeCommand);
 });
