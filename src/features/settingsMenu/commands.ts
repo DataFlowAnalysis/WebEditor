@@ -5,8 +5,10 @@ import {
     CommandExecutionContext,
     CommandReturn,
     CommitModelAction,
+    ISnapper,
     SLabelImpl,
     SModelRootImpl,
+    SPortImpl,
     TYPES,
 } from "sprotty";
 import { getBasicType, RedoAction, UndoAction } from "sprotty-protocol";
@@ -16,6 +18,7 @@ import {
     ChangeEdgeLabelVisibilityAction,
     ChangeThemeAction,
     CompleteLayoutProcessAction,
+    ReSnapPortsAfterChangeAction,
     SimplifyNodeNamesAction,
 } from "./actions";
 import { ArrowEdgeImpl } from "../dfdElements/edges";
@@ -23,6 +26,7 @@ import { createDefaultFitToScreenAction } from "../../utils";
 import { LayoutMethod } from "./LayoutMethod";
 import { Theme, ThemeManager } from "./themeManager";
 import { LayoutModelAction } from "../autoLayout/command";
+import { snapPortsOfNode } from "../dfdElements/portSnapper";
 
 @injectable()
 export class NodeNameReplacementRegistry {
@@ -44,23 +48,29 @@ export class NodeNameReplacementRegistry {
 @injectable()
 export class SimplifyNodeNamesCommand extends Command {
     static readonly KIND = SimplifyNodeNamesAction.KIND;
+    private readonly portMove: ReSnapPortsAfterChangeCommand;
 
     constructor(
         @inject(TYPES.Action) private action: SimplifyNodeNamesAction,
         @inject(SettingsManager) private settings: SettingsManager,
         @inject(NodeNameReplacementRegistry) private registry: NodeNameReplacementRegistry,
+        @inject(TYPES.ISnapper) snapper: ISnapper,
     ) {
         super();
+        this.portMove = new ReSnapPortsAfterChangeCommand(snapper);
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        return this.perform(context, this.action.mode);
+        this.perform(context, this.action.mode);
+        return this.portMove.execute(context);
     }
     undo(context: CommandExecutionContext): CommandReturn {
-        return this.perform(context, this.action.mode === "hide" ? "show" : "hide");
+        this.perform(context, this.action.mode === "hide" ? "show" : "hide");
+        return this.portMove.undo(context);
     }
     redo(context: CommandExecutionContext): CommandReturn {
-        return this.perform(context, this.action.mode);
+        this.perform(context, this.action.mode);
+        return this.portMove.redo(context);
     }
 
     private perform(context: CommandExecutionContext, mode: SimplifyNodeNamesAction.Mode): SModelRootImpl {
@@ -73,7 +83,7 @@ export class SimplifyNodeNamesCommand extends Command {
             if (!label) {
                 return;
             }
-            label.text = mode === "hide" ? this.registry.get(node.id) : node.text ?? "";
+            label.text = mode === "hide" ? this.registry.get(node.id) : (node.text ?? "");
         });
         return context.root;
     }
@@ -110,7 +120,7 @@ export class ChangeEdgeLabelVisibilityCommand extends Command {
             if (!label) {
                 return;
             }
-            label.text = hide ? "" : edge.text ?? "";
+            label.text = hide ? "" : (edge.text ?? "");
         });
 
         return context.root;
@@ -179,5 +189,67 @@ export class ChangeThemeCommand extends Command {
         this.previousTheme = this.themeManager.theme;
         this.themeManager.theme = this.action.theme;
         return context.root;
+    }
+}
+
+@injectable()
+export class ReSnapPortsAfterChangeCommand extends Command {
+    static readonly KIND = ReSnapPortsAfterChangeAction.KIND;
+    private previousPositions: Map<string, { x: number; y: number }> = new Map();
+
+    constructor(@inject(TYPES.ISnapper) private readonly snapper: ISnapper) {
+        super();
+    }
+
+    execute(context: CommandExecutionContext): CommandReturn {
+        const model = context.root;
+
+        model.children.forEach((node) => {
+            if (node instanceof DfdNodeImpl) {
+                this.savePortPositions(node);
+            }
+        });
+
+        model.children.forEach((node) => {
+            if (node instanceof DfdNodeImpl) {
+                snapPortsOfNode(node, this.snapper);
+            }
+        });
+        return model;
+    }
+    undo(context: CommandExecutionContext): CommandReturn {
+        const model = context.root;
+        model.children.forEach((node) => {
+            if (node instanceof DfdNodeImpl) {
+                node.children.forEach((child) => {
+                    if (child instanceof SPortImpl) {
+                        const pos = this.previousPositions.get(child.id);
+                        if (pos) {
+                            child.position = pos;
+                        }
+                    }
+                });
+            }
+        });
+        return model;
+    }
+    redo(context: CommandExecutionContext): CommandReturn {
+        const model = context.root;
+        model.children.forEach((node) => {
+            if (node instanceof DfdNodeImpl) {
+                snapPortsOfNode(node, this.snapper);
+            }
+        });
+        return model;
+    }
+
+    private savePortPositions(element: DfdNodeImpl) {
+        element.children.forEach((child) => {
+            if (child instanceof SPortImpl) {
+                this.previousPositions.set(child.id, { x: child.position.x, y: child.position.y });
+            } else if (child instanceof DfdNodeImpl) {
+                this.savePortPositions(child);
+            }
+        });
     }
 }

@@ -53,3 +53,15 @@ export namespace ChangeThemeAction {
         return { kind: KIND, theme };
     }
 }
+
+export interface ReSnapPortsAfterChangeAction extends Action {
+    kind: typeof ReSnapPortsAfterChangeAction.KIND;
+}
+
+export namespace ReSnapPortsAfterChangeAction {
+    export const KIND = "resnap-ports-after-change";
+
+    export function create(): Action {
+        return { kind: KIND };
+    }
+}

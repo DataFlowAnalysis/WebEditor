@@ -167,6 +167,7 @@ export class DfdElkLayoutEngine extends ElkLayoutEngine {
     }
 }
 
+@injectable()
 export class CircleLayoutPostProcessor implements ILayoutPostprocessor {
     private portToNodes: Map<string, string> = new Map();
     private connectedPorts: Map<string, string[]> = new Map();
