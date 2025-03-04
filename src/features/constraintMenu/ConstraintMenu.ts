@@ -1,6 +1,6 @@
 import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
-import { AbstractUIExtension, LocalModelSource, TYPES } from "sprotty";
+import { AbstractUIExtension, IActionDispatcher, LocalModelSource, TYPES } from "sprotty";
 import { calculateTextSize, generateRandomSprottyId } from "../../utils";
 import { Constraint, ConstraintRegistry } from "./constraintRegistry";
 
@@ -19,6 +19,7 @@ import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { Switchable } from "../settingsMenu/themeManager";
+import { AnalyzeDiagramAction } from "../serialize/analyze";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension implements Switchable {
@@ -34,6 +35,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
         @inject(LabelTypeRegistry) labelTypeRegistry: LabelTypeRegistry,
         @inject(TYPES.ModelSource) modelSource: LocalModelSource,
+        @inject(TYPES.IActionDispatcher) private readonly dispatcher: IActionDispatcher,
         @inject(EditorModeController)
         @optional()
         editorModeController?: EditorModeController,
@@ -72,6 +74,12 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         contentDiv.appendChild(this.buildConstraintListWrapper());
         containerElement.appendChild(this.buildRunButton());
         containerElement.appendChild(accordionContent);
+
+        this.constraintRegistry.onUpdate(() => {
+            this.rerenderConstraintList();
+            const selected = this.constraintRegistry.getConstraints().find((c) => c.id === this.selectedConstraint?.id);
+            this.selectConstraintListItem(selected);
+        });
     }
 
     private buildConstraintInputWrapper(): HTMLElement {
@@ -121,7 +129,6 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         this.editor?.onDidChangeModelContent(() => {
             if (this.selectedConstraint) {
                 this.selectedConstraint.constraint = this.editor?.getValue() ?? "";
-                this.constraintRegistry.constraintChanged();
             }
 
             this.tree.setContent(this.editor?.getValue() ?? "");
@@ -191,7 +198,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         this.dynamicallySetInputSize(valueInput);
         valueInput.onchange = () => {
             constraint.name = valueInput.value;
-            this.constraintRegistry.constraintChanged();
+            this.constraintRegistry.constraintListChanged();
         };
         valueInput.onkeydown = (e) => {
             if (e.key === "Enter") {
@@ -232,6 +239,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             list = document.getElementById("constraint-menu-list") ?? undefined;
         }
         if (!list) return;
+        const width = list.clientWidth;
+        list.style.minWidth = width + "px";
         list.innerHTML = "";
         this.constraintRegistry.getConstraints().forEach((constraint) => {
             list!.appendChild(this.buildConstraintListItem(constraint));
@@ -255,9 +264,6 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             };
             this.constraintRegistry.registerConstraint(constraint);
 
-            // Insert label type last but before the button
-            const newValueElement = this.buildConstraintListItem(constraint);
-            list!.insertBefore(newValueElement, list.lastChild);
             this.selectConstraintListItem(constraint);
 
             // Select the text input element of the new value to allow entering the value
@@ -265,6 +271,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             input.focus();
         };
         list.appendChild(addButton);
+        list.style.minWidth = "initial";
     }
 
     /**
@@ -300,7 +307,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         button.id = "run-button";
         button.innerHTML = "Run";
         button.onclick = () => {
-            console.log("Run button clicked");
+            this.dispatcher.dispatch(AnalyzeDiagramAction.create());
         };
 
         wrapper.appendChild(button);

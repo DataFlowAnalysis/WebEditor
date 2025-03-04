@@ -13,20 +13,20 @@ export class ConstraintRegistry {
 
     public registerConstraint(constraint: Constraint): void {
         this.constraints.push(constraint);
-        this.constraintChanged();
+        this.constraintListChanged();
     }
 
     public unregisterConstraint(constraint: Constraint): void {
         this.constraints = this.constraints.filter((c) => c.id !== constraint.id);
-        this.constraintChanged();
+        this.constraintListChanged();
     }
 
     public clearConstraints(): void {
         this.constraints = [];
-        this.constraintChanged();
+        this.constraintListChanged();
     }
 
-    public constraintChanged(): void {
+    public constraintListChanged(): void {
         this.updateCallbacks.forEach((cb) => cb());
     }
 
