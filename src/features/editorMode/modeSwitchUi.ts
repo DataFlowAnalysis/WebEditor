@@ -1,7 +1,6 @@
-import { AbstractUIExtension, ActionDispatcher, TYPES } from "sprotty";
+import { AbstractUIExtension } from "sprotty";
 import { EditorMode, EditorModeController } from "./editorModeController";
 import { inject, injectable } from "inversify";
-import { ChangeEditorModeAction } from "./command";
 
 import "./modeSwitchUi.css";
 
@@ -18,8 +17,6 @@ export class EditorModeSwitchUi extends AbstractUIExtension {
     constructor(
         @inject(EditorModeController)
         private readonly editorModeController: EditorModeController,
-        @inject(TYPES.IActionDispatcher)
-        private readonly actionDispatcher: ActionDispatcher,
     ) {
         super();
     }
