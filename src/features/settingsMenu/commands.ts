@@ -87,6 +87,8 @@ export class SimplifyNodeNamesCommand extends Command {
                 return;
             }
             label.text = mode === "hide" ? this.registry.get(node.id) : (node.text ?? "");
+            node.hideLabels = mode === "hide";
+            node.minimumWidth = mode === "hide" ? DfdNodeImpl.DEFAULT_WIDTH / 2 : DfdNodeImpl.DEFAULT_WIDTH;
         });
         this.editorModeController.setMode(mode === "hide" ? "annotated" : "edit");
         return context.root;
