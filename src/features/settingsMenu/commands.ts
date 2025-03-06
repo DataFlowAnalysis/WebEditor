@@ -90,7 +90,9 @@ export class SimplifyNodeNamesCommand extends Command {
             node.hideLabels = mode === "hide";
             node.minimumWidth = mode === "hide" ? DfdNodeImpl.DEFAULT_WIDTH / 2 : DfdNodeImpl.DEFAULT_WIDTH;
         });
-        this.editorModeController.setMode(mode === "hide" ? "annotated" : "edit");
+        if (this.editorModeController.getCurrentMode() !== "readonly") {
+            this.editorModeController.setMode(mode === "hide" || this.settings.hideEdgeLabels ? "annotated" : "edit");
+        }
         return context.root;
     }
 }
@@ -129,7 +131,9 @@ export class ChangeEdgeLabelVisibilityCommand extends Command {
             }
             label.text = hide ? "" : (edge.text ?? "");
         });
-        this.editorModeController.setMode(hide ? "annotated" : "edit");
+        if (this.editorModeController.getCurrentMode() !== "readonly") {
+            this.editorModeController.setMode(hide || this.settings.simplifyNodeNames ? "annotated" : "edit");
+        }
         return context.root;
     }
 }

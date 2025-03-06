@@ -110,7 +110,9 @@ export class SettingsUI extends AbstractUIExtension {
             readOnlyCheckbox.disabled = true;
         }
         readOnlyCheckbox.addEventListener("change", () => {
-            this.dispatcher.dispatch(ChangeReadOnlyAction.create(readOnlyCheckbox.checked));
+            if (this.editorModeController.getCurrentMode() !== "readonly") {
+                this.dispatcher.dispatch(ChangeReadOnlyAction.create(readOnlyCheckbox.checked));
+            }
         });
     }
 }
