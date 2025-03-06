@@ -1,10 +1,12 @@
-import { AbstractUIExtension } from "sprotty";
+import { AbstractUIExtension, ActionDispatcher, TYPES } from "sprotty";
 import { inject, injectable } from "inversify";
 
 import "./settingsMenu.css";
 import { Theme, ThemeManager } from "./themeManager";
 import { SettingsManager } from "./SettingsManager";
 import { LayoutMethod } from "./LayoutMethod";
+import { EditorModeController } from "../editorMode/editorModeController";
+import { ChangeReadOnlyAction } from "./actions";
 
 @injectable()
 export class SettingsUI extends AbstractUIExtension {
@@ -13,6 +15,8 @@ export class SettingsUI extends AbstractUIExtension {
     constructor(
         @inject(SettingsManager) protected readonly settings: SettingsManager,
         @inject(ThemeManager) protected readonly themeManager: ThemeManager,
+        @inject(EditorModeController) private editorModeController: EditorModeController,
+        @inject(TYPES.IActionDispatcher) protected readonly dispatcher: ActionDispatcher,
     ) {
         super();
     }
@@ -60,6 +64,12 @@ export class SettingsUI extends AbstractUIExtension {
                     <input type="checkbox" id="setting-simplify-node-names">
                     <span class="slider round"></span>
                   </label>
+
+                  <label for="setting-read-only">Read only</label>
+                  <label class="switch">
+                    <input type="checkbox" id="setting-read-only">
+                    <span class="slider round"></span>
+                  </label>
                 </div>
             </div>
         `;
@@ -88,5 +98,19 @@ export class SettingsUI extends AbstractUIExtension {
             "#setting-simplify-node-names",
         ) as HTMLInputElement;
         this.settings.bindSimplifyNodeNamesCheckbox(simplifyNodeNamesCheckbox);
+
+        const readOnlyCheckbox = containerElement.querySelector("#setting-read-only") as HTMLInputElement;
+        this.editorModeController.onModeChange((mode) => {
+            readOnlyCheckbox.checked = mode !== "edit";
+        });
+        if (this.editorModeController.isReadOnly()) {
+            readOnlyCheckbox.checked = true;
+        }
+        if (this.editorModeController.getCurrentMode() === "readonly") {
+            readOnlyCheckbox.disabled = true;
+        }
+        readOnlyCheckbox.addEventListener("change", () => {
+            this.dispatcher.dispatch(ChangeReadOnlyAction.create(readOnlyCheckbox.checked));
+        });
     }
 }

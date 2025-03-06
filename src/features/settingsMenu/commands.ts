@@ -16,6 +16,7 @@ import { DfdNodeImpl } from "../dfdElements/nodes";
 import { SettingsManager } from "./SettingsManager";
 import {
     ChangeEdgeLabelVisibilityAction,
+    ChangeReadOnlyAction,
     ChangeThemeAction,
     CompleteLayoutProcessAction,
     ReSnapPortsAfterChangeAction,
@@ -27,6 +28,7 @@ import { LayoutMethod } from "./LayoutMethod";
 import { Theme, ThemeManager } from "./themeManager";
 import { LayoutModelAction } from "../autoLayout/command";
 import { snapPortsOfNode } from "../dfdElements/portSnapper";
+import { EditorModeController } from "../editorMode/editorModeController";
 
 @injectable()
 export class NodeNameReplacementRegistry {
@@ -55,6 +57,7 @@ export class SimplifyNodeNamesCommand extends Command {
         @inject(SettingsManager) private settings: SettingsManager,
         @inject(NodeNameReplacementRegistry) private registry: NodeNameReplacementRegistry,
         @inject(TYPES.ISnapper) snapper: ISnapper,
+        @inject(EditorModeController) private editorModeController: EditorModeController,
     ) {
         super();
         this.portMove = new ReSnapPortsAfterChangeCommand(snapper);
@@ -85,6 +88,7 @@ export class SimplifyNodeNamesCommand extends Command {
             }
             label.text = mode === "hide" ? this.registry.get(node.id) : (node.text ?? "");
         });
+        this.editorModeController.setMode(mode === "hide" ? "annotated" : "edit");
         return context.root;
     }
 }
@@ -96,6 +100,7 @@ export class ChangeEdgeLabelVisibilityCommand extends Command {
     constructor(
         @inject(TYPES.Action) private action: ChangeEdgeLabelVisibilityAction,
         @inject(SettingsManager) private settings: SettingsManager,
+        @inject(EditorModeController) private editorModeController: EditorModeController,
     ) {
         super();
     }
@@ -122,7 +127,7 @@ export class ChangeEdgeLabelVisibilityCommand extends Command {
             }
             label.text = hide ? "" : (edge.text ?? "");
         });
-
+        this.editorModeController.setMode(hide ? "annotated" : "edit");
         return context.root;
     }
 }
@@ -251,5 +256,30 @@ export class ReSnapPortsAfterChangeCommand extends Command {
                 this.savePortPositions(child);
             }
         });
+    }
+}
+
+@injectable()
+export class ChangeReadOnlyCommand extends Command {
+    static readonly KIND = ChangeReadOnlyAction.KIND;
+
+    constructor(
+        @inject(TYPES.Action) private action: ChangeReadOnlyAction,
+        @inject(EditorModeController) private editorModeController: EditorModeController,
+    ) {
+        super();
+    }
+
+    execute(context: CommandExecutionContext): CommandReturn {
+        this.editorModeController.setMode(this.action.readOnly ? "annotated" : "edit");
+        return context.root;
+    }
+    undo(context: CommandExecutionContext): CommandReturn {
+        this.editorModeController.setMode(this.action.readOnly ? "edit" : "annotated");
+        return context.root;
+    }
+    redo(context: CommandExecutionContext): CommandReturn {
+        this.editorModeController.setMode(this.action.readOnly ? "annotated" : "edit");
+        return context.root;
     }
 }

@@ -39,6 +39,14 @@ div.settings-ui {
     border-radius: 6px;
 }
 
+.switch input:disabled + .slider {
+    background-color: color-mix(in srgb, var(--color-primary) 50%, #555 50%);
+}
+
+.switch input:disabled + .slider:before {
+    background-color: color-mix(in srgb, var(--color-background) 50%, #555 50%);
+}
+
 /* https://www.w3schools.com/HOWTO/howto_css_switch.asp */
 /* The switch - the box around the slider */
 .switch {

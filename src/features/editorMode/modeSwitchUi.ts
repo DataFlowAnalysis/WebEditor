@@ -59,14 +59,9 @@ export class EditorModeSwitchUi extends AbstractUIExtension {
 
     private renderAnnotatedMode(): void {
         this.containerElement.innerHTML = `
-            Currently viewing model annotations.</br>
+            Currently viewing model in read only mode.</br>
             Enabling editing will remove the annotations.</br>
-            <button id="enableEditingButton">Enable editing</button>
         `;
-        const enableEditingButton = this.containerElement.querySelector("#enableEditingButton");
-        enableEditingButton?.addEventListener("click", () => {
-            this.actionDispatcher.dispatch(ChangeEditorModeAction.create("edit"));
-        });
     }
 
     private renderReadonlyMode(): void {
