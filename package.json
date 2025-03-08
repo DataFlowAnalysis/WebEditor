@@ -18,7 +18,7 @@
         "sprotty": "^1.4.0",
         "sprotty-elk": "^1.4.0",
         "sprotty-protocol": "^1.4.0",
-        "typescript": "^5.7.3",
+        "typescript": "^5.8.2",
         "vite": "^6.2.0"
     },
     "scripts": {
