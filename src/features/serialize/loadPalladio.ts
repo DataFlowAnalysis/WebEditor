@@ -89,9 +89,7 @@ export class LoadPalladioCommand extends Command {
             );
 
             // Construct the message format for WebSocket
-            const message = [
-                ...fileContents.map(({ name, content }) => `${name}:${content}`),
-            ].join("---FILE---");
+            const message = [...fileContents.map(({ name, content }) => `${name}:${content}`)].join("---FILE---");
 
             // Send the structured message over WebSocket
             sendMessage(message);

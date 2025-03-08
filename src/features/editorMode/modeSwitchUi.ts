@@ -1,7 +1,6 @@
-import { AbstractUIExtension, ActionDispatcher, TYPES } from "sprotty";
+import { AbstractUIExtension } from "sprotty";
 import { EditorMode, EditorModeController } from "./editorModeController";
 import { inject, injectable } from "inversify";
-import { ChangeEditorModeAction } from "./command";
 
 import "./modeSwitchUi.css";
 
@@ -18,8 +17,6 @@ export class EditorModeSwitchUi extends AbstractUIExtension {
     constructor(
         @inject(EditorModeController)
         private readonly editorModeController: EditorModeController,
-        @inject(TYPES.IActionDispatcher)
-        private readonly actionDispatcher: ActionDispatcher,
     ) {
         super();
     }
@@ -59,14 +56,9 @@ export class EditorModeSwitchUi extends AbstractUIExtension {
 
     private renderAnnotatedMode(): void {
         this.containerElement.innerHTML = `
-            Currently viewing model annotations.</br>
+            Currently viewing model in read only mode.</br>
             Enabling editing will remove the annotations.</br>
-            <button id="enableEditingButton">Enable editing</button>
         `;
-        const enableEditingButton = this.containerElement.querySelector("#enableEditingButton");
-        enableEditingButton?.addEventListener("click", () => {
-            this.actionDispatcher.dispatch(ChangeEditorModeAction.create("edit"));
-        });
     }
 
     private renderReadonlyMode(): void {

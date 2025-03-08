@@ -6,6 +6,7 @@ import { calculateTextSize } from "../../utils";
 import { LabelAssignment, LabelTypeRegistry, globalLabelTypeRegistry } from "./labelTypeRegistry";
 import { DeleteLabelAssignmentAction } from "./commands";
 import { ContainsDfdLabels } from "./elementFeature";
+import { SettingsManager } from "../settingsMenu/SettingsManager";
 
 @injectable()
 export class DfdNodeLabelRenderer {
@@ -16,6 +17,7 @@ export class DfdNodeLabelRenderer {
 
     constructor(
         @inject(TYPES.IActionDispatcher) private readonly actionDispatcher: IActionDispatcher,
+        @inject(SettingsManager) private readonly settingsManager: SettingsManager,
         @inject(LabelTypeRegistry) @optional() private readonly labelTypeRegistry?: LabelTypeRegistry,
     ) {}
 
@@ -104,7 +106,10 @@ export class DfdNodeLabelRenderer {
         baseY: number,
         xOffset = 0,
         labelSpacing = DfdNodeLabelRenderer.LABEL_SPACING_HEIGHT,
-    ): VNode {
+    ): VNode | undefined {
+        if (this.settingsManager.simplifyNodeNames) {
+            return undefined;
+        }
         this.sortLabels(node.labels);
         return (
             <g>

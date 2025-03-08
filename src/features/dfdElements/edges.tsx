@@ -1,5 +1,5 @@
 /** @jsx svg */
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import {
     PolylineEdgeViewWithGapsOnIntersections,
     SEdgeImpl,
@@ -13,12 +13,15 @@ import {
 import { VNode } from "snabbdom";
 import { Point, angleOfPoint, toDegrees, SEdge, SLabel } from "sprotty-protocol";
 import { DynamicChildrenEdge } from "./dynamicChildren";
+import { SettingsManager } from "../settingsMenu/SettingsManager";
 
 export interface ArrowEdge extends SEdge {
     text?: string;
 }
 
 export class ArrowEdgeImpl extends DynamicChildrenEdge implements WithEditableLabel {
+    text?: string;
+
     setChildren(schema: ArrowEdge): void {
         schema.children = [
             {
@@ -52,6 +55,10 @@ export class ArrowEdgeImpl extends DynamicChildrenEdge implements WithEditableLa
 
 @injectable()
 export class ArrowEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
+    constructor(@inject(SettingsManager) protected readonly settings: SettingsManager) {
+        super();
+    }
+
     override render(edge: Readonly<SEdgeImpl>, context: RenderingContext, args?: IViewArgs): VNode | undefined {
         // In the default implementation children of the edge are always rendered, because they
         // may be visible when the rest of the edge is not.
@@ -63,7 +70,31 @@ export class ArrowEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
             return undefined;
         }
 
-        return super.render(edge, context, args);
+        return this.superRender(edge, context, args);
+    }
+
+    superRender(edge: Readonly<SEdgeImpl>, context: RenderingContext, args?: IViewArgs): VNode | undefined {
+        const route = this.edgeRouterRegistry.route(edge, args);
+        if (route.length === 0) {
+            return this.renderDanglingEdge("Cannot compute route", edge, context);
+        }
+        if (!this.isVisible(edge, route, context)) {
+            if (edge.children.length === 0) {
+                return undefined;
+            }
+            // The children of an edge are not necessarily inside the bounding box of the route,
+            // so we need to render a group to ensure the children have a chance to be rendered.
+            return <g>{this.settings.hideEdgeLabels ? [] : context.renderChildren(edge, { route })}</g>;
+        }
+
+        return (
+            <g class-sprotty-edge={true} class-mouseover={edge.hoverFeedback}>
+                {this.renderLine(edge, route, context, args)}
+                {this.renderAdditionals(edge, route, context)}
+                {this.renderJunctionPoints(edge, route, context, args)}
+                {this.settings.hideEdgeLabels ? [] : context.renderChildren(edge, { route })}
+            </g>
+        );
     }
 
     /**
