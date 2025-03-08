@@ -268,24 +268,41 @@ export class ReSnapPortsAfterChangeCommand extends Command {
 @injectable()
 export class ChangeReadOnlyCommand extends Command {
     static readonly KIND = ChangeReadOnlyAction.KIND;
+    private previousSimplifyNodeNames: boolean;
+    private previousHideEdgeLabels: boolean;
 
     constructor(
         @inject(TYPES.Action) private action: ChangeReadOnlyAction,
+        @inject(SettingsManager) private settings: SettingsManager,
         @inject(EditorModeController) private editorModeController: EditorModeController,
     ) {
         super();
+        this.previousSimplifyNodeNames = settings.simplifyNodeNames;
+        this.previousHideEdgeLabels = settings.hideEdgeLabels;
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
         this.editorModeController.setMode(this.action.readOnly ? "annotated" : "edit");
+        if (!this.action.readOnly) {
+            this.settings.simplifyNodeNames = false;
+            this.settings.hideEdgeLabels = false;
+        }
         return context.root;
     }
     undo(context: CommandExecutionContext): CommandReturn {
         this.editorModeController.setMode(this.action.readOnly ? "edit" : "annotated");
+        if (!this.action.readOnly) {
+            this.settings.simplifyNodeNames = this.previousSimplifyNodeNames;
+            this.settings.hideEdgeLabels = this.previousHideEdgeLabels;
+        }
         return context.root;
     }
     redo(context: CommandExecutionContext): CommandReturn {
         this.editorModeController.setMode(this.action.readOnly ? "annotated" : "edit");
+        if (!this.action.readOnly) {
+            this.settings.simplifyNodeNames = false;
+            this.settings.hideEdgeLabels = false;
+        }
         return context.root;
     }
 }
