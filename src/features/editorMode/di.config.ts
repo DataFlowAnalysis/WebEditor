@@ -3,11 +3,7 @@ import { DeleteElementCommand, EditLabelMouseListener, MoveCommand, TYPES, confi
 import { EditorModeController } from "./editorModeController";
 import { EditorModeSwitchUi } from "./modeSwitchUi";
 import { EDITOR_TYPES } from "../../utils";
-import {
-    EditorModeAwareDeleteElementCommand,
-    EditorModeAwareEditLabelMouseListener,
-    EditorModeAwareMoveCommand,
-} from "./sprottyHooks";
+import { EditorModeAwareDeleteElementCommand, EditorModeAwareEditLabelMouseListener } from "./sprottyHooks";
 import { ChangeEditorModeCommand } from "./command";
 
 export const editorModeModule = new ContainerModule((bind, unbind, isBound, rebind) => {
@@ -23,6 +19,5 @@ export const editorModeModule = new ContainerModule((bind, unbind, isBound, rebi
     // Sprotty hooks that hook into the edit label, move and edit module
     // to intercept model modifications to prevent them when the editor is in a read-only mode.
     rebind(EditLabelMouseListener).to(EditorModeAwareEditLabelMouseListener);
-    rebind(MoveCommand).to(EditorModeAwareMoveCommand);
     rebind(DeleteElementCommand).to(EditorModeAwareDeleteElementCommand);
 });

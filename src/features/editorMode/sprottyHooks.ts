@@ -30,36 +30,6 @@ export class EditorModeAwareEditLabelMouseListener extends EditLabelMouseListene
 }
 
 @injectable()
-export class EditorModeAwareMoveCommand extends MoveCommand {
-    @inject(EditorModeController)
-    private readonly editorModeController?: EditorModeController;
-
-    execute(context: CommandExecutionContext): CommandReturn {
-        if (this.editorModeController?.isReadOnly()) {
-            return context.root;
-        }
-
-        return super.execute(context);
-    }
-
-    undo(context: CommandExecutionContext): Promise<SModelRootImpl> {
-        if (this.editorModeController?.isReadOnly()) {
-            return Promise.resolve(context.root);
-        }
-
-        return super.undo(context);
-    }
-
-    redo(context: CommandExecutionContext): Promise<SModelRootImpl> {
-        if (this.editorModeController?.isReadOnly()) {
-            return Promise.resolve(context.root);
-        }
-
-        return super.redo(context);
-    }
-}
-
-@injectable()
 export class EditorModeAwareDeleteElementCommand extends DeleteElementCommand {
     @inject(EditorModeController)
     private readonly editorModeController?: EditorModeController;
