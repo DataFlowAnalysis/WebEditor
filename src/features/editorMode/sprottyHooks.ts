@@ -4,9 +4,7 @@ import {
     CommandReturn,
     DeleteElementCommand,
     EditLabelMouseListener,
-    MoveCommand,
     SModelElementImpl,
-    SModelRootImpl,
 } from "sprotty";
 import { EditorModeController } from "./editorModeController";
 import { Action } from "sprotty-protocol";

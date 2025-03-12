@@ -1,5 +1,5 @@
 import { ContainerModule } from "inversify";
-import { DeleteElementCommand, EditLabelMouseListener, MoveCommand, TYPES, configureCommand } from "sprotty";
+import { DeleteElementCommand, EditLabelMouseListener, TYPES, configureCommand } from "sprotty";
 import { EditorModeController } from "./editorModeController";
 import { EditorModeSwitchUi } from "./modeSwitchUi";
 import { EDITOR_TYPES } from "../../utils";
