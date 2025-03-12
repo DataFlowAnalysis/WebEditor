@@ -1,5 +1,9 @@
 import { Command, CommandExecutionContext, CommandReturn } from "sprotty";
-import { themeStyle } from "./style";
+// typescript does not recognize css files as modules
+// @ts-ignore
+import themeCss from "../../theme.css?raw";
+// @ts-ignore
+import elementCss from "../dfdElements/elementStyles.css?raw";
 import { Action } from "sprotty-protocol";
 import { getModelFileName } from "../..";
 
@@ -24,7 +28,7 @@ export class SaveImageCommand extends Command {
         const firstChild = root.children[0];
         if (!firstChild) return context.root;
         const innerSvg = firstChild.innerHTML;
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg"><defs><style type="text/css">${themeStyle}</style></defs>${innerSvg}</svg>`;
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg"><defs><style type="text/css">${themeCss}\n${elementCss}</style></defs>${innerSvg}</svg>`;
 
         const blob = new Blob([svg], { type: "image/svg+xml" });
         const url = URL.createObjectURL(blob);
