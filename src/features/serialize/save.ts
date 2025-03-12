@@ -14,7 +14,7 @@ export interface SavedDiagram {
     model: SModelRoot;
     labelTypes?: LabelType[];
     constraints?: Constraint[];
-    editorMode?: EditorMode;
+    mode?: EditorMode;
 }
 
 export interface SaveDiagramAction extends Action {
