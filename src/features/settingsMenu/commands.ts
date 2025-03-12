@@ -16,7 +16,6 @@ import { DfdNodeImpl } from "../dfdElements/nodes";
 import { SettingsManager } from "./SettingsManager";
 import {
     ChangeEdgeLabelVisibilityAction,
-    ChangeReadOnlyAction,
     ChangeThemeAction,
     CompleteLayoutProcessAction,
     ReSnapPortsAfterChangeAction,
@@ -76,7 +75,7 @@ export class SimplifyNodeNamesCommand extends Command {
         return this.portMove.redo(context);
     }
 
-    private perform(context: CommandExecutionContext, mode: SimplifyNodeNamesAction.Mode): SModelRootImpl {
+    private perform(context: CommandExecutionContext, mode: SimplifyNodeNamesAction.Mode): CommandReturn {
         this.settings.simplifyNodeNames = mode === "hide";
         const nodes = context.root.children.filter((node) => getBasicType(node) === "node") as DfdNodeImpl[];
         nodes.forEach((node) => {
@@ -90,7 +89,9 @@ export class SimplifyNodeNamesCommand extends Command {
             node.hideLabels = mode === "hide";
             node.minimumWidth = mode === "hide" ? DfdNodeImpl.DEFAULT_WIDTH / 2 : DfdNodeImpl.DEFAULT_WIDTH;
         });
-        this.editorModeController.setMode(mode === "hide" || this.settings.hideEdgeLabels ? "view" : "edit");
+        if (mode === "hide") {
+            this.editorModeController.setMode("view");
+        }
 
         return context.root;
     }
@@ -130,7 +131,9 @@ export class ChangeEdgeLabelVisibilityCommand extends Command {
             }
             label.text = hide ? "" : (edge.text ?? "");
         });
-        this.editorModeController.setMode(hide || this.settings.simplifyNodeNames ? "view" : "edit");
+        if (hide) {
+            this.editorModeController.setMode("view");
+        }
 
         return context.root;
     }
@@ -260,47 +263,5 @@ export class ReSnapPortsAfterChangeCommand extends Command {
                 this.savePortPositions(child);
             }
         });
-    }
-}
-
-@injectable()
-export class ChangeReadOnlyCommand extends Command {
-    static readonly KIND = ChangeReadOnlyAction.KIND;
-    private previousSimplifyNodeNames: boolean;
-    private previousHideEdgeLabels: boolean;
-
-    constructor(
-        @inject(TYPES.Action) private action: ChangeReadOnlyAction,
-        @inject(SettingsManager) private settings: SettingsManager,
-        @inject(EditorModeController) private editorModeController: EditorModeController,
-    ) {
-        super();
-        this.previousSimplifyNodeNames = settings.simplifyNodeNames;
-        this.previousHideEdgeLabels = settings.hideEdgeLabels;
-    }
-
-    execute(context: CommandExecutionContext): CommandReturn {
-        this.editorModeController.setMode(this.action.readOnly ? "view" : "edit");
-        if (!this.action.readOnly) {
-            this.settings.simplifyNodeNames = false;
-            this.settings.hideEdgeLabels = false;
-        }
-        return context.root;
-    }
-    undo(context: CommandExecutionContext): CommandReturn {
-        this.editorModeController.setMode(this.action.readOnly ? "edit" : "view");
-        if (!this.action.readOnly) {
-            this.settings.simplifyNodeNames = this.previousSimplifyNodeNames;
-            this.settings.hideEdgeLabels = this.previousHideEdgeLabels;
-        }
-        return context.root;
-    }
-    redo(context: CommandExecutionContext): CommandReturn {
-        this.editorModeController.setMode(this.action.readOnly ? "view" : "edit");
-        if (!this.action.readOnly) {
-            this.settings.simplifyNodeNames = false;
-            this.settings.hideEdgeLabels = false;
-        }
-        return context.root;
     }
 }

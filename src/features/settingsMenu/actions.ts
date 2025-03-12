@@ -65,16 +65,3 @@ export namespace ReSnapPortsAfterChangeAction {
         return { kind: KIND };
     }
 }
-
-export interface ChangeReadOnlyAction extends Action {
-    kind: typeof ChangeReadOnlyAction.KIND;
-    readOnly: boolean;
-}
-
-export namespace ChangeReadOnlyAction {
-    export const KIND = "change-read-only";
-
-    export function create(readOnly: boolean): ChangeReadOnlyAction {
-        return { kind: KIND, readOnly };
-    }
-}

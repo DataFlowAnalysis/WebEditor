@@ -6,7 +6,7 @@ import { Theme, ThemeManager } from "./themeManager";
 import { SettingsManager } from "./SettingsManager";
 import { LayoutMethod } from "./LayoutMethod";
 import { EditorModeController } from "../editorMode/editorModeController";
-import { ChangeReadOnlyAction } from "./actions";
+import { ChangeEditorModeAction } from "../editorMode/command";
 
 @injectable()
 export class SettingsUI extends AbstractUIExtension {
@@ -106,13 +106,8 @@ export class SettingsUI extends AbstractUIExtension {
         if (this.editorModeController.isReadOnly()) {
             readOnlyCheckbox.checked = true;
         }
-        if (this.editorModeController.getCurrentMode() === "readonly") {
-            readOnlyCheckbox.disabled = true;
-        }
         readOnlyCheckbox.addEventListener("change", () => {
-            if (this.editorModeController.getCurrentMode() !== "readonly") {
-                this.dispatcher.dispatch(ChangeReadOnlyAction.create(readOnlyCheckbox.checked));
-            }
+            this.dispatcher.dispatch(ChangeEditorModeAction.create(readOnlyCheckbox.checked ? "view" : "edit"));
         });
     }
 }
