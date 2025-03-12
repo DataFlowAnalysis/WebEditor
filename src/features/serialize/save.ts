@@ -65,7 +65,7 @@ export class SaveDiagramCommand extends Command {
             model: modelCopy,
             labelTypes: this.labelTypeRegistry?.getLabelTypes(),
             constraints: this.constraintRegistry?.getConstraints(),
-            editorMode: this.editorModeController?.getCurrentMode(),
+            mode: this.editorModeController?.getCurrentMode(),
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);
         const jsonBlob = new Blob([diagramJson], { type: "application/json" });
