@@ -7,8 +7,6 @@ import "./modeSwitchUi.css";
 /**
  * UI that shows the current editor mode (unless it is edit mode)
  * with details about the mode.
- * For annotated mode the user can also choose to enable editing
- * and switch the editor to edit mode.
  */
 @injectable()
 export class EditorModeSwitchUi extends AbstractUIExtension {
@@ -41,29 +39,19 @@ export class EditorModeSwitchUi extends AbstractUIExtension {
             case "edit":
                 this.containerElement.style.visibility = "hidden";
                 break;
-            case "readonly":
+            case "view":
                 this.containerElement.style.visibility = "visible";
-                this.renderReadonlyMode();
-                break;
-            case "annotated":
-                this.containerElement.style.visibility = "visible";
-                this.renderAnnotatedMode();
+                this.renderViewMode();
                 break;
             default:
                 throw new Error(`Unknown editor mode: ${mode}`);
         }
     }
 
-    private renderAnnotatedMode(): void {
+    private renderViewMode(): void {
         this.containerElement.innerHTML = `
             Currently viewing model in read only mode.</br>
             Enabling editing will remove the annotations.</br>
-        `;
-    }
-
-    private renderReadonlyMode(): void {
-        this.containerElement.innerHTML = `
-            This diagram was generated and is readonly.
         `;
     }
 }

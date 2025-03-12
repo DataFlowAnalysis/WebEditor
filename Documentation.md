@@ -234,13 +234,11 @@ This editor currently has three different modes:
 - `edit`: The default mode, allows to view and edit the diagram. Creation of new elements is possible.
   Existing elements can be moved, modified, and deleted.
   Newly created diagrams are always in this mode.
-- `annotated`: In this mode the diagram is read-only. The node annotations (refer to the DFD elements module)
+- `view`: In this mode the diagram is read-only. The node annotations (refer to the DFD elements module)
   are displayed and can be viewed to get information about e.g. analysis validation errors.
   The user can still zoom and pan the diagram. Creation, deletion, and modification of elements is not possible.
   However the user can click a button to switch to the `edit` mode.
   Doing so will remove all node annotations and allow the user to edit the diagram again.
-- `readonly`: This mode is similar to the `annotated` mode but does not allow switching back to the `edit` mode.
-  It is intended to be used when the diagram is from a generated source and should only be viewed.
 
 Diagrams with modes other than `edit` are not creatable using the editor.
 Diagrams with these modes are intended to be generated from some other source.
@@ -249,7 +247,7 @@ This module contains the `EditorModeController` which manages the global editor 
 All other modules that want to behave differently depending on the editor mode use this as a
 source of truth and subscribe to changes of the editor mode.
 Additionally, this module contains a UI that shows when the editor mode is not `edit`
-and allows switching from `annotated` to `edit` mode.
+and allows switching from `view` to `edit` mode.
 
 ### (DFD) Label
 

@@ -90,9 +90,8 @@ export class SimplifyNodeNamesCommand extends Command {
             node.hideLabels = mode === "hide";
             node.minimumWidth = mode === "hide" ? DfdNodeImpl.DEFAULT_WIDTH / 2 : DfdNodeImpl.DEFAULT_WIDTH;
         });
-        if (this.editorModeController.getCurrentMode() !== "readonly") {
-            this.editorModeController.setMode(mode === "hide" || this.settings.hideEdgeLabels ? "annotated" : "edit");
-        }
+        this.editorModeController.setMode(mode === "hide" || this.settings.hideEdgeLabels ? "view" : "edit");
+
         return context.root;
     }
 }
@@ -131,9 +130,8 @@ export class ChangeEdgeLabelVisibilityCommand extends Command {
             }
             label.text = hide ? "" : (edge.text ?? "");
         });
-        if (this.editorModeController.getCurrentMode() !== "readonly") {
-            this.editorModeController.setMode(hide || this.settings.simplifyNodeNames ? "annotated" : "edit");
-        }
+        this.editorModeController.setMode(hide || this.settings.simplifyNodeNames ? "view" : "edit");
+
         return context.root;
     }
 }
@@ -282,7 +280,7 @@ export class ChangeReadOnlyCommand extends Command {
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        this.editorModeController.setMode(this.action.readOnly ? "annotated" : "edit");
+        this.editorModeController.setMode(this.action.readOnly ? "view" : "edit");
         if (!this.action.readOnly) {
             this.settings.simplifyNodeNames = false;
             this.settings.hideEdgeLabels = false;
@@ -290,7 +288,7 @@ export class ChangeReadOnlyCommand extends Command {
         return context.root;
     }
     undo(context: CommandExecutionContext): CommandReturn {
-        this.editorModeController.setMode(this.action.readOnly ? "edit" : "annotated");
+        this.editorModeController.setMode(this.action.readOnly ? "edit" : "view");
         if (!this.action.readOnly) {
             this.settings.simplifyNodeNames = this.previousSimplifyNodeNames;
             this.settings.hideEdgeLabels = this.previousHideEdgeLabels;
@@ -298,7 +296,7 @@ export class ChangeReadOnlyCommand extends Command {
         return context.root;
     }
     redo(context: CommandExecutionContext): CommandReturn {
-        this.editorModeController.setMode(this.action.readOnly ? "annotated" : "edit");
+        this.editorModeController.setMode(this.action.readOnly ? "view" : "edit");
         if (!this.action.readOnly) {
             this.settings.simplifyNodeNames = false;
             this.settings.hideEdgeLabels = false;
