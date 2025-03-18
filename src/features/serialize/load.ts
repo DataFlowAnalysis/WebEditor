@@ -194,9 +194,9 @@ export class LoadDiagramCommand extends Command {
             if (this.editorModeController) {
                 // Load editor mode
                 this.oldEditorMode = this.editorModeController.getCurrentMode();
-                this.newEditorMode = newDiagram?.editorMode;
-                if (newDiagram?.editorMode) {
-                    this.editorModeController.setMode(newDiagram.editorMode);
+                this.newEditorMode = newDiagram?.mode;
+                if (newDiagram?.mode) {
+                    this.editorModeController.setMode(newDiagram.mode);
                 } else {
                     this.editorModeController.setDefaultMode();
                 }

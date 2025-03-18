@@ -78,8 +78,8 @@ export class LoadDefaultDiagramCommand extends Command {
 
         if (this.editorModeController) {
             this.oldEditorMode = this.editorModeController.getCurrentMode();
-            if (defaultDiagram.editorMode) {
-                this.editorModeController.setMode(defaultDiagram.editorMode);
+            if (defaultDiagram.mode) {
+                this.editorModeController.setMode(defaultDiagram.mode);
             } else {
                 this.editorModeController.setDefaultMode();
             }
@@ -112,8 +112,8 @@ export class LoadDefaultDiagramCommand extends Command {
             this.labelTypeRegistry?.registerLabelType(labelType);
         });
         if (this.editorModeController) {
-            if (defaultDiagram.editorMode) {
-                this.editorModeController.setMode(defaultDiagram.editorMode);
+            if (defaultDiagram.mode) {
+                this.editorModeController.setMode(defaultDiagram.mode);
             } else {
                 this.editorModeController.setDefaultMode();
             }
