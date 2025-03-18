@@ -9,6 +9,7 @@ import { AnalyzeDiagramCommand } from "./analyze";
 import { LoadDFDandDDCommand } from "./loadDFDandDD";
 import { SaveDFDandDDCommand } from "./saveDFDandDD";
 import { LoadPalladioCommand } from "./loadPalladio";
+import { SaveImageCommand } from "./image";
 
 export const serializeModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     const context = { bind, unbind, isBound, rebind };
@@ -19,6 +20,7 @@ export const serializeModule = new ContainerModule((bind, unbind, isBound, rebin
     configureCommand(context, LoadDFDandDDCommand);
     configureCommand(context, SaveDFDandDDCommand);
     configureCommand(context, LoadPalladioCommand);
+    configureCommand(context, SaveImageCommand);
 
     bind(TYPES.KeyListener).to(SerializeKeyListener).inSingletonScope();
     bind(TYPES.MouseListener).to(SerializeDropHandler).inSingletonScope();
