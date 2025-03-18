@@ -1,0 +1,109 @@
+div.settings-ui {
+    left: 20px;
+    bottom: 70px;
+    padding: 10px 10px;
+}
+
+#settings-ui-accordion-label .accordion-button::before {
+    content: "";
+    background-image: url("@fortawesome/fontawesome-free/svgs/solid/gear.svg");
+    display: inline-block;
+    filter: invert(var(--dark-mode));
+    height: 16px;
+    width: 16px;
+    background-size: 16px 16px;
+    vertical-align: text-top;
+}
+
+#settings-content {
+    display: grid;
+    gap: 8px 6px;
+
+    align-items: center;
+}
+
+#settings-content > label {
+    grid-column-start: 1;
+}
+
+#settings-content > input,
+#settings-content > select,
+#settings-content > label.switch {
+    grid-column-start: 2;
+}
+
+#settings-content select {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border: 1px solid var(--color-foreground);
+    border-radius: 6px;
+}
+
+.switch input:disabled + .slider {
+    background-color: color-mix(in srgb, var(--color-primary) 50%, #555 50%);
+}
+
+.switch input:disabled + .slider:before {
+    background-color: color-mix(in srgb, var(--color-background) 50%, #555 50%);
+}
+
+/* https://www.w3schools.com/HOWTO/howto_css_switch.asp */
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 17px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-background);
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 13px;
+    width: 13px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--color-primary);
+    -webkit-transition: 0.3s;
+    transition: 0.3s;
+}
+
+input:checked + .slider {
+    background-color: var(--color-background);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
+    background-color: var(--color-foreground);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 17px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}

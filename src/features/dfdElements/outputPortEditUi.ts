@@ -32,7 +32,7 @@ import "monaco-editor/esm/vs/editor/contrib/hover/browser/hover";
 import "monaco-editor/esm/vs/editor/contrib/inlineCompletions/browser/inlineCompletions.contribution.js";
 
 import "./outputPortEditUi.css";
-import { LightDarkSwitch, Switchable } from "../../common/lightDarkSwitch";
+import { ThemeManager, Switchable } from "../settingsMenu/themeManager";
 
 /**
  * Detects when a dfd output port is double clicked and shows the OutputPortEditUI
@@ -418,7 +418,7 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             new MonacoEditorDfdBehaviorCompletionProvider(this, this.labelTypeRegistry),
         );
 
-        const monacoTheme = (LightDarkSwitch?.useDarkMode ?? true) ? "vs-dark" : "vs";
+        const monacoTheme = (ThemeManager?.useDarkMode ?? true) ? "vs-dark" : "vs";
         this.editor = monaco.editor.create(this.editorContainer, {
             minimap: {
                 // takes too much space, not useful for our use case

@@ -1,8 +1,7 @@
-import { inject, optional } from "inversify";
+import { inject } from "inversify";
 import { Command, CommandExecutionContext, SModelRootImpl, TYPES } from "sprotty";
 import { Action, IModelLayoutEngine, SGraph, SModelRoot } from "sprotty-protocol";
 import { LoadDiagramCommand } from "../serialize/load";
-import { EditorModeController } from "../editorMode/editorModeController";
 
 export interface LayoutModelAction extends Action {
     kind: typeof LayoutModelAction.KIND;
@@ -20,10 +19,6 @@ export namespace LayoutModelAction {
 export class LayoutModelCommand extends Command {
     static readonly KIND = LayoutModelAction.KIND;
 
-    @inject(EditorModeController)
-    @optional()
-    private editorModeController?: EditorModeController;
-
     @inject(TYPES.IModelLayoutEngine)
     private readonly layoutEngine?: IModelLayoutEngine;
 
@@ -31,11 +26,6 @@ export class LayoutModelCommand extends Command {
     private newModel?: SModelRootImpl;
 
     async execute(context: CommandExecutionContext): Promise<SModelRootImpl> {
-        if (this.editorModeController?.isReadOnly()) {
-            // We don't want to layout the model in read-only mode.
-            return context.root;
-        }
-
         this.oldModelSchema = context.modelFactory.createSchema(context.root);
 
         if (!this.layoutEngine) throw new Error("Missing injects");

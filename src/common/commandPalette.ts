@@ -1,4 +1,4 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { ICommandPaletteActionProvider, LabeledAction, SModelRootImpl, CommitModelAction } from "sprotty";
 import { Point } from "sprotty-protocol";
 import { LoadDiagramAction } from "../features/serialize/load";
@@ -14,12 +14,15 @@ import { SaveDFDandDDAction } from "../features/serialize/saveDFDandDD";
 import { LoadDFDandDDAction } from "../features/serialize/loadDFDandDD";
 import { LoadPalladioAction } from "../features/serialize/loadPalladio";
 import { SaveImageAction } from "../features/serialize/image";
+import { SettingsManager } from "../features/settingsMenu/SettingsManager";
 
 /**
  * Provides possible actions for the command palette.
  */
 @injectable()
 export class ServerCommandPaletteActionProvider implements ICommandPaletteActionProvider {
+    constructor(@inject(SettingsManager) protected readonly settings: SettingsManager) {}
+
     async getActions(
         root: Readonly<SModelRootImpl>,
         _text: string,
@@ -39,7 +42,7 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
             new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
             new LabeledAction(
-                "Layout diagram",
+                "Layout diagram (Method: " + this.settings.layoutMethod + ")",
                 [LayoutModelAction.create(), commitAction, fitToScreenAction],
                 "layout",
             ),
