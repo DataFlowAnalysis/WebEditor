@@ -13,6 +13,7 @@ import "./commandPalette.css";
 import { SaveDFDandDDAction } from "../features/serialize/saveDFDandDD";
 import { LoadDFDandDDAction } from "../features/serialize/loadDFDandDD";
 import { LoadPalladioAction } from "../features/serialize/loadPalladio";
+import { SaveImageAction } from "../features/serialize/image";
 import { SettingsManager } from "../features/settingsMenu/SettingsManager";
 
 /**
@@ -37,6 +38,7 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
             new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
             new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
             new LabeledAction("Save diagram as DFD and DD", [SaveDFDandDDAction.create(), commitAction], "save"),
+            new LabeledAction("Save viewport as image", [SaveImageAction.create()], "save"),
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
             new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
             new LabeledAction(
