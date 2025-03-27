@@ -20,12 +20,13 @@ export class ThemeManager {
     private static SYSTEM_DEFAULT =
         window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? Theme.DARK : Theme.LIGHT;
     private themeSelect?: HTMLSelectElement;
+    private static readonly localStorageKey = "theme";
 
     constructor(
         @multiInject(SWITCHABLE) protected switchables: Switchable[],
         @inject(TYPES.IActionDispatcher) protected readonly dispatcher: ActionDispatcher,
     ) {
-        this.theme = ThemeManager.SYSTEM_DEFAULT;
+        this.theme = (localStorage.getItem(ThemeManager.localStorageKey) ?? ThemeManager.SYSTEM_DEFAULT) as Theme;
     }
 
     get useDarkMode(): boolean {
@@ -55,12 +56,14 @@ export class ThemeManager {
         const value = this.useDarkMode ? "dark" : "light";
         rootElement.setAttribute("data-theme", value);
         sprottyElement.setAttribute("data-theme", value);
+        localStorage.setItem(ThemeManager.localStorageKey, theme);
 
         this.switchables.forEach((s) => s.switchTheme(this.useDarkMode));
     }
 
     bindThemeSelect(themeSelect: HTMLSelectElement) {
         this.themeSelect = themeSelect;
+        this.themeSelect.value = this.theme;
         this.themeSelect.addEventListener("change", () => {
             this.dispatcher.dispatch(ChangeThemeAction.create(themeSelect.value as Theme));
         });
