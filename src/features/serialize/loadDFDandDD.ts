@@ -3,6 +3,8 @@ import { Action } from "sprotty-protocol";
 import { sendMessage } from "./webSocketHandler";
 import { setModelFileName } from "../../index";
 import { setFileNameInPageTitle } from "./load";
+import { inject, optional } from "inversify";
+import { LoadingIndicator } from "../../common/loadingIndicator";
 
 export interface LoadDFDandDDAction extends Action {
     kind: typeof LoadDFDandDDAction.KIND;
@@ -21,6 +23,10 @@ export namespace LoadDFDandDDAction {
 
 export class LoadDFDandDDCommand extends Command {
     static readonly KIND = LoadDFDandDDAction.KIND;
+
+    @inject(LoadingIndicator)
+    @optional()
+    protected loadingIndicator?: LoadingIndicator;
 
     constructor() {
         super();
@@ -64,6 +70,7 @@ export class LoadDFDandDDCommand extends Command {
     }
 
     async execute(context: CommandExecutionContext): Promise<SModelRootImpl> {
+        this.loadingIndicator?.showIndicator("Loading DFD and DD files...");
         try {
             const [dataflowFile, dictionaryFile] = (await this.getModelFiles()) ?? [];
 
@@ -85,6 +92,7 @@ export class LoadDFDandDDCommand extends Command {
             return context.root;
         } catch (error) {
             console.error(error);
+            this.loadingIndicator?.hideIndicator();
             return context.root;
         }
     }

@@ -19,6 +19,7 @@ import { FitToScreenKeyListener as CenterDiagramKeyListener } from "./fitToScree
 import { DiagramModificationCommandStack } from "./customCommandStack";
 
 import "./commonStyling.css";
+import { LoadingIndicator } from "./loadingIndicator";
 
 export const commonModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(ServerCommandPaletteActionProvider).toSelf().inSingletonScope();
@@ -32,6 +33,11 @@ export const commonModule = new ContainerModule((bind, unbind, isBound, rebind) 
     bind(HelpUI).toSelf().inSingletonScope();
     bind(TYPES.IUIExtension).toService(HelpUI);
     bind(EDITOR_TYPES.DefaultUIElement).toService(HelpUI);
+
+    //bind(LoadingIndicator).toConstantValue(loadingIndicator);
+    bind(LoadingIndicator).toSelf().inSingletonScope();
+    bind(TYPES.IUIExtension).toService(LoadingIndicator);
+    bind(EDITOR_TYPES.DefaultUIElement).toService(LoadingIndicator);
 
     bind(DynamicChildrenProcessor).toSelf().inSingletonScope();
 

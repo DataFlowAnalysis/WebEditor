@@ -19,6 +19,7 @@ import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { LayoutModelAction } from "../autoLayout/command";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
 import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
+import { LoadingIndicator } from "../../common/loadingIndicator";
 
 export interface LoadDiagramAction extends Action {
     kind: typeof LoadDiagramAction.KIND;
@@ -71,6 +72,9 @@ export class LoadDiagramCommand extends Command {
     @inject(ConstraintRegistry)
     @optional()
     private readonly constraintRegistry?: ConstraintRegistry;
+    @inject(LoadingIndicator)
+    @optional()
+    private readonly loadingIndicator?: LoadingIndicator;
 
     private oldRoot: SModelRootImpl | undefined;
     private newRoot: SModelRootImpl | undefined;
@@ -138,6 +142,7 @@ export class LoadDiagramCommand extends Command {
     }
 
     async execute(context: CommandExecutionContext): Promise<SModelRootImpl> {
+        this.loadingIndicator?.showIndicator("Loading model...");
         this.oldRoot = context.root;
         try {
             const file = await this.getModelFile();
@@ -167,6 +172,7 @@ export class LoadDiagramCommand extends Command {
             if (!newSchema) {
                 this.logger.info(this, "Model loading aborted");
                 this.newRoot = this.oldRoot;
+                this.loadingIndicator?.hideIndicator();
                 return this.oldRoot;
             }
 
@@ -224,11 +230,14 @@ export class LoadDiagramCommand extends Command {
             this.newFileName = file.name;
             setFileNameInPageTitle(file.name);
 
+            this.loadingIndicator?.hideIndicator();
             return this.newRoot;
         } catch (error) {
             this.logger.error(this, "Error loading model", error);
             alert("Error loading model: " + error);
             this.newRoot = this.oldRoot;
+
+            this.loadingIndicator?.hideIndicator();
             return this.oldRoot;
         }
     }
@@ -261,6 +270,7 @@ export class LoadDiagramCommand extends Command {
     }
 
     undo(context: CommandExecutionContext): SModelRootImpl {
+        this.loadingIndicator?.showIndicator("Undoing load...");
         this.labelTypeRegistry?.clearLabelTypes();
         this.oldLabelTypes?.forEach((labelType) => this.labelTypeRegistry?.registerLabelType(labelType));
         if (this.oldEditorMode) {
@@ -270,10 +280,12 @@ export class LoadDiagramCommand extends Command {
         this.oldConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
         setFileNameInPageTitle(this.oldFileName);
 
+        this.loadingIndicator?.hideIndicator();
         return this.oldRoot ?? context.modelFactory.createRoot(EMPTY_ROOT);
     }
 
     redo(context: CommandExecutionContext): SModelRootImpl {
+        this.loadingIndicator?.showIndicator("Redoing load...");
         this.labelTypeRegistry?.clearLabelTypes();
         this.newLabelTypes?.forEach((labelType) => this.labelTypeRegistry?.registerLabelType(labelType));
         if (this.editorModeController) {
@@ -287,6 +299,7 @@ export class LoadDiagramCommand extends Command {
         this.newConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
         setFileNameInPageTitle(this.newFileName);
 
+        this.loadingIndicator?.hideIndicator();
         return this.newRoot ?? this.oldRoot ?? context.modelFactory.createRoot(EMPTY_ROOT);
     }
 }
