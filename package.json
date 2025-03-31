@@ -35,6 +35,6 @@
         "prepare": "husky"
     },
     "lint-staged": {
-        "*.{html,css,ts,tsx,json,yaml,md}": "prettier --write"
+        "*.{html,css,ts,tsx,json,md}": ["npm run lint", "npm run format"]
     }
 }
