@@ -30,6 +30,7 @@ import "sprotty/css/sprotty.css";
 import "sprotty/css/edit-label.css";
 import "./theme.css";
 import "./page.css";
+import { settingsModule } from "./features/settingsMenu/di.config";
 import { LoadDiagramAction } from "./features/serialize/load";
 
 const container = new Container();
@@ -47,6 +48,7 @@ container.load(elkLayoutModule);
 // Custom modules that we provide ourselves
 container.load(
     commonModule,
+    settingsModule,
     noScrollLabelEditUiModule,
     autoLayoutModule,
     dfdElementsModule,

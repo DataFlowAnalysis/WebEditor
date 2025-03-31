@@ -42,6 +42,8 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
     text: string = "";
     labels: LabelAssignment[] = [];
     ports: SPort[] = [];
+    hideLabels: boolean = false;
+    minimumWidth: number = DfdNodeImpl.DEFAULT_WIDTH;
     annotation?: DfdNodeAnnotation;
 
     override setChildren(schema: DfdNode): void {
@@ -84,7 +86,10 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
     }
 
     protected calculateWidth(): number {
-        const textWidth = calculateTextSize(this.editableLabel?.text).width;
+        if (this.hideLabels) {
+            return this.minimumWidth + DfdNodeImpl.WIDTH_PADDING;
+        }
+        const textWidth = calculateTextSize(this.text).width;
         const labelWidths = this.labels.map(
             (labelAssignment) => DfdNodeLabelRenderer.computeLabelContent(labelAssignment)[1],
         );
@@ -155,7 +160,7 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
 export class StorageNodeImpl extends DfdNodeImpl {
     protected override calculateHeight(): number {
         const hasLabels = this.labels.length > 0;
-        if (hasLabels) {
+        if (hasLabels && !this.hideLabels) {
             return (
                 StorageNodeImpl.LABEL_START_HEIGHT +
                 this.labels.length * DfdNodeLabelRenderer.LABEL_SPACING_HEIGHT +
@@ -206,7 +211,7 @@ export class StorageNodeView extends ShapeView {
 export class FunctionNodeImpl extends DfdNodeImpl {
     protected override calculateHeight(): number {
         const hasLabels = this.labels.length > 0;
-        if (hasLabels) {
+        if (hasLabels && !this.hideLabels) {
             return (
                 // height for text
                 FunctionNodeImpl.LABEL_START_HEIGHT +
@@ -259,7 +264,7 @@ export class FunctionNodeView extends ShapeView {
 export class IONodeImpl extends DfdNodeImpl {
     protected override calculateHeight(): number {
         const hasLabels = this.labels.length > 0;
-        if (hasLabels) {
+        if (hasLabels && !this.hideLabels) {
             return (
                 IONodeImpl.LABEL_START_HEIGHT +
                 this.labels.length * DfdNodeLabelRenderer.LABEL_SPACING_HEIGHT +

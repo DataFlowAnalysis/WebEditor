@@ -1,4 +1,4 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { ICommandPaletteActionProvider, LabeledAction, SModelRootImpl, CommitModelAction } from "sprotty";
 import { LoadDiagramAction } from "../features/serialize/load";
 import { createDefaultFitToScreenAction } from "../utils";
@@ -12,12 +12,16 @@ import "./commandPalette.css";
 import { SaveDFDandDDAction } from "../features/serialize/saveDFDandDD";
 import { LoadDFDandDDAction } from "../features/serialize/loadDFDandDD";
 import { LoadPalladioAction } from "../features/serialize/loadPalladio";
+import { SaveImageAction } from "../features/serialize/image";
+import { SettingsManager } from "../features/settingsMenu/SettingsManager";
 
 /**
  * Provides possible actions for the command palette.
  */
 @injectable()
 export class ServerCommandPaletteActionProvider implements ICommandPaletteActionProvider {
+    constructor(@inject(SettingsManager) protected readonly settings: SettingsManager) {}
+
     async getActions(root: Readonly<SModelRootImpl>): Promise<LabeledAction[]> {
         const fitToScreenAction = createDefaultFitToScreenAction(root);
         const commitAction = CommitModelAction.create();
@@ -28,10 +32,11 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
             new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
             new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
             new LabeledAction("Save diagram as DFD and DD", [SaveDFDandDDAction.create(), commitAction], "save"),
+            new LabeledAction("Save viewport as image", [SaveImageAction.create()], "save"),
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
             new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
             new LabeledAction(
-                "Layout diagram",
+                "Layout diagram (Method: " + this.settings.layoutMethod + ")",
                 [LayoutModelAction.create(), commitAction, fitToScreenAction],
                 "layout",
             ),

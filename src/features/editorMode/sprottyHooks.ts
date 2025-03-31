@@ -4,9 +4,7 @@ import {
     CommandReturn,
     DeleteElementCommand,
     EditLabelMouseListener,
-    MoveCommand,
     SModelElementImpl,
-    SModelRootImpl,
 } from "sprotty";
 import { EditorModeController } from "./editorModeController";
 import { Action } from "sprotty-protocol";
@@ -26,36 +24,6 @@ export class EditorModeAwareEditLabelMouseListener extends EditLabelMouseListene
         }
 
         return super.doubleClick(target, event);
-    }
-}
-
-@injectable()
-export class EditorModeAwareMoveCommand extends MoveCommand {
-    @inject(EditorModeController)
-    private readonly editorModeController?: EditorModeController;
-
-    execute(context: CommandExecutionContext): CommandReturn {
-        if (this.editorModeController?.isReadOnly()) {
-            return context.root;
-        }
-
-        return super.execute(context);
-    }
-
-    undo(context: CommandExecutionContext): Promise<SModelRootImpl> {
-        if (this.editorModeController?.isReadOnly()) {
-            return Promise.resolve(context.root);
-        }
-
-        return super.undo(context);
-    }
-
-    redo(context: CommandExecutionContext): Promise<SModelRootImpl> {
-        if (this.editorModeController?.isReadOnly()) {
-            return Promise.resolve(context.root);
-        }
-
-        return super.redo(context);
     }
 }
 

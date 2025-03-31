@@ -60,7 +60,7 @@ export class ChangeEditorModeCommand extends Command {
     }
 
     private postModeSwitch(context: CommandExecutionContext): void {
-        if (this.oldMode === "annotated" && this.action.newMode === "edit") {
+        if (this.oldMode === "view" && this.action.newMode === "edit") {
             // Remove annotations when enabling editing
 
             this.oldNodeAnnotations.clear();
@@ -74,7 +74,7 @@ export class ChangeEditorModeCommand extends Command {
     }
 
     private undoPostModeSwitch(context: CommandExecutionContext): void {
-        if (this.oldMode === "annotated" && this.action.newMode === "edit") {
+        if (this.oldMode === "view" && this.action.newMode === "edit") {
             // Restore annotations when disabling editing
             this.oldNodeAnnotations.forEach((annotation, id) => {
                 const element = context.root.index.getById(id);
