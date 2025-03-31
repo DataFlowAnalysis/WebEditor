@@ -8,11 +8,11 @@ import {
     ILayoutConfigurator,
 } from "sprotty-elk";
 import { SChildElementImpl, SShapeElementImpl, isBoundsAware } from "sprotty";
-import { SShapeElement, SGraph, SModelIndex } from "sprotty-protocol";
+import { SShapeElement, SModelIndex } from "sprotty-protocol";
 import { ElkShape, LayoutOptions } from "elkjs";
 
 export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
-    protected override graphOptions(_sgraph: SGraph, _index: SModelIndex): LayoutOptions {
+    protected override graphOptions(): LayoutOptions {
         // Elk settings. See https://eclipse.dev/elk/reference.html for available options.
         return {
             "org.eclipse.elk.algorithm": "org.eclipse.elk.layered",

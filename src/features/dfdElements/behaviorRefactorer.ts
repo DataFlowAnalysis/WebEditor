@@ -132,6 +132,7 @@ export class DFDBehaviorRefactorer {
             let newLine = line;
             changedLabelTypes.forEach((changedLabelType) => {
                 newLine = newLine.replace(
+                    // eslint-disable-next-line no-useless-escape
                     new RegExp(`([^a-zA-Z0-9_])${changedLabelType.oldLabelType.name}(\.)`, "g"),
                     `$1${changedLabelType.newLabelType.name}$2`,
                 );
@@ -144,6 +145,7 @@ export class DFDBehaviorRefactorer {
             changedLabelValues.forEach((changedLabelValue) => {
                 newLine = newLine.replace(
                     new RegExp(
+                        // eslint-disable-next-line no-useless-escape
                         `([^a-zA-Z0-9_])${changedLabelValue.labelType.name}\.${changedLabelValue.oldLabelValue.text}([^a-zA-Z0-9_]|$)`,
                         "g",
                     ),
@@ -201,6 +203,7 @@ export class DFDBehaviorRefactorer {
                 // inside the input. We can use these two constraints to identify the input name
                 // and only change inputs with that name. Label types/values with the same name are not replaced
                 // because of these constraints.
+                // eslint-disable-next-line no-useless-escape
                 return line.replace(new RegExp(`( )${oldInputName}(\.)`, "g"), `$1${newInputName}$2`);
             } else {
                 // Idk what to do with this line, just return it as is

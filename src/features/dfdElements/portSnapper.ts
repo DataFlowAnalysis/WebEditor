@@ -3,7 +3,6 @@ import {
     CenterGridSnapper,
     Command,
     CommandExecutionContext,
-    ApplyLabelEditCommand,
     CommandReturn,
     ISnapper,
     MoveMouseListener,

@@ -22,8 +22,10 @@ export default [
       }
     },
     rules: {
-      'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
+      'no-console': 'error',
       'no-restricted-exports': ['error', { restrictDefaultExports: { direct: true } }],
+      // used multiple times to stay consistent with sprotty
+      '@typescript-eslint/no-namespace': 'off',
     }
   },
   {

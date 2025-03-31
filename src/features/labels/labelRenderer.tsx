@@ -1,6 +1,7 @@
 /** @jsx svg */
 import { injectable, inject, optional } from "inversify";
 import { VNode } from "snabbdom";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IActionDispatcher, SNodeImpl, TYPES, svg } from "sprotty";
 import { calculateTextSize } from "../../utils";
 import { LabelAssignment, LabelTypeRegistry, globalLabelTypeRegistry } from "./labelTypeRegistry";

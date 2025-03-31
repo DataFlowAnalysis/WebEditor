@@ -44,7 +44,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         this.constraintRegistry = constraintRegistry;
         this.tree = new AutoCompleteTree(TreeBuilder.buildTree(modelSource, labelTypeRegistry));
         this.forceReadOnly = editorModeController?.getCurrentMode() !== "edit";
-        editorModeController?.onModeChange((_) => {
+        editorModeController?.onModeChange(() => {
             this.forceReadOnly = editorModeController!.isReadOnly();
         });
     }

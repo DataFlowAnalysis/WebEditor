@@ -1,6 +1,5 @@
 import { injectable } from "inversify";
 import { ICommandPaletteActionProvider, LabeledAction, SModelRootImpl, CommitModelAction } from "sprotty";
-import { Point } from "sprotty-protocol";
 import { LoadDiagramAction } from "../features/serialize/load";
 import { createDefaultFitToScreenAction } from "../utils";
 import { SaveDiagramAction } from "../features/serialize/save";
@@ -19,12 +18,7 @@ import { LoadPalladioAction } from "../features/serialize/loadPalladio";
  */
 @injectable()
 export class ServerCommandPaletteActionProvider implements ICommandPaletteActionProvider {
-    async getActions(
-        root: Readonly<SModelRootImpl>,
-        _text: string,
-        _lastMousePosition?: Point,
-        _index?: number,
-    ): Promise<LabeledAction[]> {
+    async getActions(root: Readonly<SModelRootImpl>): Promise<LabeledAction[]> {
         const fitToScreenAction = createDefaultFitToScreenAction(root);
         const commitAction = CommitModelAction.create();
 

@@ -1,4 +1,4 @@
-import { getModelFileName, setModelSource } from "../../index";
+import { getModelFileName, logger, setModelSource } from "../../index";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
 const webSocketAdress = `wss://websocket.dataflowanalysis.org/events/`;
@@ -13,22 +13,22 @@ function initWebSocket() {
     ws = new WebSocket(webSocketAdress);
 
     ws.onopen = () => {
-        console.log("WebSocket connection established.");
+        logger.log(ws, "WebSocket connection established.");
     };
 
     ws.onclose = () => {
-        console.log("WebSocket connection closed. Reconnecting...");
+        logger.log(ws, "WebSocket connection closed. Reconnecting...");
         initWebSocket();
     };
 
     ws.onerror = () => {
-        console.log("WebSocket encountered an error. Reconnecting...");
+        logger.log(ws, "WebSocket encountered an error. Reconnecting...");
         initWebSocket();
     };
 
     ws.onmessage = (event) => {
-        console.log("WebSocketID:", wsId);
-        console.log(event.data);
+        logger.log(ws, "WebSocketID:", wsId);
+        logger.log(ws, event.data);
 
         // Example of specific handling for certain messages:
         if (event.data === "Error:Cycle") {

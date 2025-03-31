@@ -1,4 +1,5 @@
 /** @jsx svg */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { IViewArgs, SLabelImpl, SNodeImpl, ShapeView, RenderingContext, svg } from "sprotty";
 import { VNode } from "snabbdom";
 import { injectable } from "inversify";
