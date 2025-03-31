@@ -90,7 +90,7 @@ export class ArrowEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
 
         return (
             <g class-sprotty-edge={true} class-mouseover={edge.hoverFeedback}>
-                {this.renderLine(edge, route, context, args)}
+                {this.renderLine(edge, route)}
                 {this.renderAdditionals(edge, route, context)}
                 {this.renderJunctionPoints(edge, route, context, args)}
                 {this.settings.hideEdgeLabels ? [] : context.renderChildren(edge, { route })}
