@@ -35,6 +35,9 @@
         "prepare": "husky"
     },
     "lint-staged": {
-        "*.{html,css,ts,tsx,json,md}": ["npm run lint", "npm run format"]
+        "*.{html,css,ts,tsx,json,md}": [
+            "npm run lint",
+            "npm run format"
+        ]
     }
 }

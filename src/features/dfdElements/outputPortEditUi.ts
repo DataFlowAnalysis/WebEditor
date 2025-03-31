@@ -255,8 +255,7 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
             case 1:
                 // If there's only one part, we're completing the `Type`
                 return this.getLabelTypeCompletions(model, position);
-            case 2: // If there's already a dot, we complete the `value` for the specific `Type`
-            {
+            case 2: { // If there's already a dot, we complete the `value` for the specific `Type`
                 const labelTypeName = expressionParts[0];
                 return this.getLabelValueCompletions(model, position, labelTypeName);
             }
