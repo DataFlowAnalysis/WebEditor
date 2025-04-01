@@ -109,6 +109,7 @@ export abstract class CreationTool<S extends Schema, I extends Impl> extends Mou
                 root = this.element.root as SGraphImpl;
             } catch (error) {
                 // element has no assigned root
+                void error;
             }
 
             // Remove element from graph

@@ -1,5 +1,6 @@
 /** @jsx svg */
 import {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     svg,
     ShapeView,
     SPortImpl,
@@ -18,7 +19,7 @@ import { ArrowEdgeImpl } from "./edges";
 const defaultPortFeatures = [...SPortImpl.DEFAULT_FEATURES, moveFeature, deletableFeature];
 const portSize = 7;
 
-export interface DfdInputPort extends SPort {}
+export type DfdInputPort = SPort;
 
 @injectable()
 export class DfdInputPortImpl extends SPortImpl {

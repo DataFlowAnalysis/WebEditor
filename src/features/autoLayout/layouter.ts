@@ -9,7 +9,7 @@ import {
     ILayoutPostprocessor,
 } from "sprotty-elk";
 import { SChildElementImpl, SShapeElementImpl, isBoundsAware } from "sprotty";
-import { SShapeElement, SGraph, SModelIndex, SEdge } from "sprotty-protocol";
+import { SShapeElement, SModelIndex, SEdge } from "sprotty-protocol";
 import { ElkShape, LayoutOptions } from "elkjs";
 import { SettingsManager } from "../settingsMenu/SettingsManager";
 import { LayoutMethod } from "../settingsMenu/LayoutMethod";
@@ -19,7 +19,7 @@ export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
         super();
     }
 
-    protected override graphOptions(_sgraph: SGraph, _index: SModelIndex): LayoutOptions {
+    protected override graphOptions(): LayoutOptions {
         // Elk settings. See https://eclipse.dev/elk/reference.html for available options.
         return {
             [LayoutMethod.LINES]: {

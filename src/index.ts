@@ -5,6 +5,7 @@ import {
     AbstractUIExtension,
     ActionDispatcher,
     CommitModelAction,
+    ILogger,
     LocalModelSource,
     SetUIExtensionVisibilityAction,
     TYPES,
@@ -62,6 +63,7 @@ container.load(
 const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
 const defaultUIElements = container.getAll<AbstractUIExtension>(EDITOR_TYPES.DefaultUIElement);
 const modelSource = container.get<LocalModelSource>(TYPES.ModelSource);
+export const logger = container.get<ILogger>(TYPES.ILogger);
 
 let modelFileName = "diagram";
 
@@ -103,7 +105,7 @@ export function setModelSource(file: File): void {
             sprottySvgContainer?.focus();
         })
         .catch((error) => {
-            console.error("Failed to show default UIs and load default diagram", error);
+            logger.error(null, "Failed to show default UIs and load default diagram", error);
         });
 }
 
@@ -139,5 +141,5 @@ modelSource
         sprottySvgContainer?.focus();
     })
     .catch((error) => {
-        console.error("Failed to show default UIs and load default diagram", error);
+        logger.error(null, "Failed to show default UIs and load default diagram", error);
     });

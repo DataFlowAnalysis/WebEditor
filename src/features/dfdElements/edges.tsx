@@ -3,6 +3,7 @@ import { inject, injectable } from "inversify";
 import {
     PolylineEdgeViewWithGapsOnIntersections,
     SEdgeImpl,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     svg,
     RenderingContext,
     IViewArgs,
@@ -89,7 +90,7 @@ export class ArrowEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
 
         return (
             <g class-sprotty-edge={true} class-mouseover={edge.hoverFeedback}>
-                {this.renderLine(edge, route, context, args)}
+                {this.renderLine(edge, route)}
                 {this.renderAdditionals(edge, route, context)}
                 {this.renderJunctionPoints(edge, route, context, args)}
                 {this.settings.hideEdgeLabels ? [] : context.renderChildren(edge, { route })}
@@ -123,7 +124,7 @@ export class ArrowEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
      * In contrast to the default implementation that we override here,
      * this implementation makes the edge line 10px shorter at the end to make space for the arrow without any overlap.
      */
-    protected renderLine(edge: SEdgeImpl, segments: Point[], _context: RenderingContext, _args?: IViewArgs): VNode {
+    protected renderLine(edge: SEdgeImpl, segments: Point[]): VNode {
         const firstPoint = segments[0];
         let path = `M ${firstPoint.x},${firstPoint.y}`;
         for (let i = 1; i < segments.length; i++) {
