@@ -122,7 +122,6 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
 
             // If mouse not in popup => hide
             const rect = containerElement.getBoundingClientRect();
-            console.log(rect);
             if (
                 event.clientX < rect.left ||
                 event.clientX > rect.right ||

@@ -34,7 +34,6 @@ export const commonModule = new ContainerModule((bind, unbind, isBound, rebind) 
     bind(TYPES.IUIExtension).toService(HelpUI);
     bind(EDITOR_TYPES.DefaultUIElement).toService(HelpUI);
 
-    //bind(LoadingIndicator).toConstantValue(loadingIndicator);
     bind(LoadingIndicator).toSelf().inSingletonScope();
     bind(TYPES.IUIExtension).toService(LoadingIndicator);
     bind(EDITOR_TYPES.DefaultUIElement).toService(LoadingIndicator);

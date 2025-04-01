@@ -308,7 +308,7 @@ export class LabelTypeEditorUI extends AbstractUIExtension implements KeyListene
         return [];
     }
 
-    keyUp(_element: SModelElementImpl, _event: KeyboardEvent): Action[] {
+    keyUp(): Action[] {
         return [];
     }
 

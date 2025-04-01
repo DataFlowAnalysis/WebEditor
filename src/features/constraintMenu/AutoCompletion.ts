@@ -43,7 +43,7 @@ export class ConstantWord implements AbstractWord {
         }
     }
 
-    completionOptions(_: string): WordCompletion[] {
+    completionOptions(): WordCompletion[] {
         return [
             {
                 insertText: this.word,
@@ -54,7 +54,7 @@ export class ConstantWord implements AbstractWord {
 }
 
 export class AnyWord implements AbstractWord {
-    completionOptions(_: string): WordCompletion[] {
+    completionOptions(): WordCompletion[] {
         return [];
     }
     verifyWord(word: string): string[] {
@@ -110,7 +110,7 @@ export class AutoCompleteTree {
             return;
         }
         this.content = line.split(" ");
-        this.startColumns = this.content.map((_) => 0);
+        this.startColumns = this.content.map(() => 0);
         for (let i = 1; i < this.content.length; i++) {
             this.startColumns[i] = this.startColumns[i - 1] + this.content[i - 1].length + 1;
         }
@@ -134,7 +134,7 @@ export class AutoCompleteTree {
             }
         }
 
-        let foundErrors: ValidationError[] = [];
+        const foundErrors: ValidationError[] = [];
         let childErrors: ValidationError[] = [];
         for (const n of nodes) {
             const v = n.word.verifyWord(this.content[index]);

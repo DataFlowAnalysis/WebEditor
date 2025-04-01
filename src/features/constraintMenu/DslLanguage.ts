@@ -35,7 +35,7 @@ export class MonacoEditorConstraintDslCompletionProvider implements monaco.langu
 export const constraintDslLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = {
     keywords: ["data", "vertex", "neverFlows", "to", "where", "named", "present", "empty", "type"],
 
-    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    symbols: /[=><!~?:&|+\-*/^%]+/,
 
     brackets: [
         {
@@ -49,7 +49,7 @@ export const constraintDslLanguageMonarchDefinition: monaco.languages.IMonarchLa
         root: [
             // keywords and identifiers
             [
-                /[a-zA-Z_\|$][\w$]*/,
+                /[a-zA-Z_|$][\w$]*/,
                 {
                     cases: {
                         "@keywords": "keyword",
@@ -222,7 +222,7 @@ export namespace TreeBuilder {
             if (attributes.length > 2) {
                 return [];
             }
-            return this.constraintVariableReference.completionOptions(attributes[attributes.length - 1]);
+            return this.constraintVariableReference.completionOptions();
         }
         verifyWord(word: string): string[] {
             if (!word.startsWith("intersection(")) {
@@ -303,7 +303,7 @@ export namespace TreeBuilder {
     class VariableName implements AbstractWord {
         constructor(private readonly modelSource: LocalModelSource) {}
 
-        completionOptions(_: string): WordCompletion[] {
+        completionOptions(): WordCompletion[] {
             return this.getAllPortNames().map((n) => ({
                 insertText: n,
                 kind: monaco.languages.CompletionItemKind.Variable,
