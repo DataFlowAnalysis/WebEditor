@@ -251,6 +251,14 @@ export class LoadDiagramCommand extends Command {
      * @param modelSchema The model schema to preprocess
      */
     public static preprocessModelSchema(modelSchema: SModelRoot): void {
+        // These properties are all not included in the root typing and if present are not loaded and handled correctly. So they are removed.
+        if ("features" in modelSchema) {
+            delete modelSchema["features"];
+        }
+        if ("canvasBounds" in modelSchema) {
+            delete modelSchema["canvasBounds"];
+        }
+
         if (modelSchema.children) {
             modelSchema.children.forEach((child: SModelElement) => this.preprocessModelSchema(child));
         }
