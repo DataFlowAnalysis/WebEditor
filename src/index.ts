@@ -31,6 +31,7 @@ import "./theme.css";
 import "./page.css";
 import { settingsModule } from "./features/settingsMenu/di.config";
 import { LoadDiagramAction } from "./features/serialize/load";
+import { commandPaletteModule } from "./features/commandPalette/di.config";
 
 const container = new Container();
 
@@ -57,6 +58,7 @@ container.load(
     toolPaletteModule,
     copyPasteModule,
     constraintMenuModule,
+    commandPaletteModule,
 );
 
 const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);

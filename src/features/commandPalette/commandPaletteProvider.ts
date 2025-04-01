@@ -1,20 +1,19 @@
 import { inject, injectable } from "inversify";
 import { ICommandPaletteActionProvider, LabeledAction, SModelRootImpl, CommitModelAction } from "sprotty";
 import { Point } from "sprotty-protocol";
-import { LoadDiagramAction } from "../features/serialize/load";
-import { createDefaultFitToScreenAction } from "../utils";
-import { SaveDiagramAction } from "../features/serialize/save";
-import { LoadDefaultDiagramAction } from "../features/serialize/loadDefaultDiagram";
-import { LayoutModelAction } from "../features/autoLayout/command";
+import { LoadDiagramAction } from "../serialize/load";
+import { createDefaultFitToScreenAction } from "../../utils";
+import { SaveDiagramAction } from "../serialize/save";
+import { LoadDefaultDiagramAction } from "../serialize/loadDefaultDiagram";
+import { LayoutModelAction } from "../autoLayout/command";
 
 import "@vscode/codicons/dist/codicon.css";
 import "sprotty/css/command-palette.css";
-import "./commandPalette.css";
-import { SaveDFDandDDAction } from "../features/serialize/saveDFDandDD";
-import { LoadDFDandDDAction } from "../features/serialize/loadDFDandDD";
-import { LoadPalladioAction } from "../features/serialize/loadPalladio";
-import { SaveImageAction } from "../features/serialize/image";
-import { SettingsManager } from "../features/settingsMenu/SettingsManager";
+import { SaveDFDandDDAction } from "../serialize/saveDFDandDD";
+import { LoadDFDandDDAction } from "../serialize/loadDFDandDD";
+import { LoadPalladioAction } from "../serialize/loadPalladio";
+import { SaveImageAction } from "../serialize/image";
+import { SettingsManager } from "../settingsMenu/SettingsManager";
 
 /**
  * Provides possible actions for the command palette.
