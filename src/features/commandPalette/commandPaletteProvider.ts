@@ -27,17 +27,38 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
         _text: string,
         _lastMousePosition?: Point,
         _index?: number,
-    ): Promise<LabeledAction[]> {
+    ): Promise<(LabeledAction | FolderAction)[]> {
         const fitToScreenAction = createDefaultFitToScreenAction(root);
         const commitAction = CommitModelAction.create();
 
         return [
-            new LabeledAction("Load diagram from JSON", [LoadDiagramAction.create(), commitAction], "go-to-file"),
-            new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "go-to-file"),
-            new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
-            new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
-            new LabeledAction("Save diagram as DFD and DD", [SaveDFDandDDAction.create(), commitAction], "save"),
-            new LabeledAction("Save viewport as image", [SaveImageAction.create()], "save"),
+            new FolderAction(
+                "Load",
+                [
+                    new LabeledAction(
+                        "Load diagram from JSON",
+                        [LoadDiagramAction.create(), commitAction],
+                        "go-to-file",
+                    ),
+                    new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "go-to-file"),
+                    new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
+                ],
+                "go-to-file",
+            ),
+            new FolderAction(
+                "Save",
+                [
+                    new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
+                    new LabeledAction(
+                        "Save diagram as DFD and DD",
+                        [SaveDFDandDDAction.create(), commitAction],
+                        "save",
+                    ),
+                    new LabeledAction("Save viewport as image", [SaveImageAction.create()], "save"),
+                ],
+                "save",
+            ),
+
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
             new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
             new LabeledAction(
@@ -46,5 +67,15 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
                 "layout",
             ),
         ];
+    }
+}
+
+export class FolderAction extends LabeledAction {
+    constructor(
+        label: string,
+        readonly children: LabeledAction[],
+        icon?: string,
+    ) {
+        super(label, [], icon);
     }
 }
