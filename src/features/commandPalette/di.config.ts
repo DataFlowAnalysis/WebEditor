@@ -4,7 +4,7 @@ import { ServerCommandPaletteActionProvider } from "./commandPaletteProvider";
 import { CustomCommandPalette } from "./commandPalette";
 import "./commandPalette.css";
 
-export const commandPaletteModule = new ContainerModule((bind, unbind, isBound, rebind) => {
+export const commandPaletteModule = new ContainerModule((bind, _, __, rebind) => {
     rebind(CommandPalette).to(CustomCommandPalette).inSingletonScope();
 
     bind(ServerCommandPaletteActionProvider).toSelf().inSingletonScope();

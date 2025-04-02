@@ -1,37 +1,19 @@
-import { inject, injectable } from "inversify";
-import {
-    AbstractUIExtension,
-    CommandPaletteActionProviderRegistry,
-    IActionDispatcherProvider,
-    LabeledAction,
-    MousePositionTracker,
-    SModelRootImpl,
-    TYPES,
-    ViewerOptions,
-} from "sprotty";
-import { DOMHelper } from "sprotty/lib/base/views/dom-helper";
+import { injectable } from "inversify";
+import { CommandPalette, LabeledAction, SModelRootImpl } from "sprotty";
 import { matchesKeystroke } from "sprotty/lib/utils/keyboard";
 import { FolderAction } from "./commandPaletteProvider";
 import "./commandPalette.css";
 
 @injectable()
-export class CustomCommandPalette extends AbstractUIExtension {
+export class CustomCommandPalette extends CommandPalette {
     static readonly ID = "command-palette";
 
-    protected inputElement?: HTMLInputElement;
     protected suggestionElement?: HTMLElement;
     protected index = -1;
     protected childIndex = -1;
     protected insideChild = false;
     protected actions: (LabeledAction | FolderAction)[] = [];
     protected filteredActions: (LabeledAction | FolderAction)[] = [];
-
-    @inject(TYPES.IActionDispatcherProvider) protected actionDispatcherProvider: IActionDispatcherProvider;
-    @inject(TYPES.ICommandPaletteActionProviderRegistry)
-    protected actionProviderRegistry: CommandPaletteActionProviderRegistry;
-    @inject(TYPES.ViewerOptions) protected viewerOptions: ViewerOptions;
-    @inject(TYPES.DOMHelper) protected domHelper: DOMHelper;
-    @inject(MousePositionTracker) protected mousePositionTracker: MousePositionTracker;
 
     protected initializeContents(containerElement: HTMLElement) {
         containerElement.style.position = "absolute";
@@ -50,6 +32,7 @@ export class CustomCommandPalette extends AbstractUIExtension {
 
     override show(root: Readonly<SModelRootImpl>, ...contextElementIds: string[]) {
         super.show(root, ...contextElementIds);
+        this.autoCompleteResult.destroy();
         this.index = -1;
         this.childIndex = -1;
         this.insideChild = false;
@@ -93,16 +76,6 @@ export class CustomCommandPalette extends AbstractUIExtension {
             }
             this.suggestionElement!.appendChild(suggestion);
         }
-    }
-
-    private getIconId(id: string) {
-        if (id.startsWith("codicon-")) {
-            return "codicon " + id;
-        }
-        if (id.startsWith("fa-")) {
-            return "fa " + id;
-        }
-        return "codicon codicon-" + id;
     }
 
     private renderSuggestion(action: LabeledAction | FolderAction) {
