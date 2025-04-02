@@ -158,7 +158,7 @@ export class CustomCommandPalette extends CommandPalette {
             }
         }
         if (matchesKeystroke(event, "ArrowRight")) {
-            if (!this.insideChild) {
+            if (!this.insideChild && this.filteredActions[this.index] instanceof FolderAction) {
                 this.insideChild = true;
                 this.childIndex = 0;
             }
