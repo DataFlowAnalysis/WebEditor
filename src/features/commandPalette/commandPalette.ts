@@ -95,6 +95,16 @@ export class CustomCommandPalette extends AbstractUIExtension {
         }
     }
 
+    private getIconId(id: string) {
+        if (id.startsWith("codicon-")) {
+            return "codicon " + id;
+        }
+        if (id.startsWith("fa-")) {
+            return "fa " + id;
+        }
+        return "codicon codicon-" + id;
+    }
+
     private renderSuggestion(action: LabeledAction | FolderAction) {
         const suggestion = document.createElement("div");
         suggestion.className = "command-palette-suggestion";

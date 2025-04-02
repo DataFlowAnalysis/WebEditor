@@ -35,12 +35,8 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
             new FolderAction(
                 "Load",
                 [
-                    new LabeledAction(
-                        "Load diagram from JSON",
-                        [LoadDiagramAction.create(), commitAction],
-                        "go-to-file",
-                    ),
-                    new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "go-to-file"),
+                    new LabeledAction("Load diagram from JSON", [LoadDiagramAction.create(), commitAction], "json"),
+                    new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "coffee"),
                     new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
                 ],
                 "go-to-file",
@@ -48,19 +44,19 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
             new FolderAction(
                 "Save",
                 [
-                    new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "save"),
+                    new LabeledAction("Save diagram as JSON", [SaveDiagramAction.create()], "json"),
                     new LabeledAction(
                         "Save diagram as DFD and DD",
                         [SaveDFDandDDAction.create(), commitAction],
-                        "save",
+                        "coffee",
                     ),
-                    new LabeledAction("Save viewport as image", [SaveImageAction.create()], "save"),
+                    new LabeledAction("Save viewport as image", [SaveImageAction.create()], "device-camera"),
                 ],
                 "save",
             ),
 
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
-            new LabeledAction("Fit to Screen", [fitToScreenAction], "layout"),
+            new LabeledAction("Fit to Screen", [fitToScreenAction], "screen-normal"),
             new LabeledAction(
                 "Layout diagram (Method: " + this.settings.layoutMethod + ")",
                 [LayoutModelAction.create(), commitAction, fitToScreenAction],
