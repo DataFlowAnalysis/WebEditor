@@ -7,7 +7,7 @@
         "url": "https://github.com/DataFlowAnalysis/WebEditor.git"
     },
     "devDependencies": {
-        "@eslint/eslintrc": "^3.2.0",
+        "@eslint/eslintrc": "^3.3.1",
         "@eslint/js": "^9.20.0",
         "@fortawesome/fontawesome-free": "^6.7.2",
         "@vscode/codicons": "^0.0.36",
