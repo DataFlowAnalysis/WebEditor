@@ -10,7 +10,7 @@ import {
     TYPES,
     isLocateable,
 } from "sprotty";
-import { Action, SModelRoot } from "sprotty-protocol";
+import { Action, SModelElement, SModelRoot } from "sprotty-protocol";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
 import { inject, optional } from "inversify";
 import { createDefaultFitToScreenAction } from "../../utils";
@@ -251,12 +251,16 @@ export class LoadDiagramCommand extends Command {
      * @param modelSchema The model schema to preprocess
      */
     public static preprocessModelSchema(modelSchema: SModelRoot): void {
-        // These properties are all not included in the root typing.
-        "features" in modelSchema && delete modelSchema["features"];
-        "canvasBounds" in modelSchema && delete modelSchema["canvasBounds"];
+        // These properties are all not included in the root typing and if present are not loaded and handled correctly. So they are removed.
+        if ("features" in modelSchema) {
+            delete modelSchema["features"];
+        }
+        if ("canvasBounds" in modelSchema) {
+            delete modelSchema["canvasBounds"];
+        }
 
         if (modelSchema.children) {
-            modelSchema.children.forEach((child: any) => this.preprocessModelSchema(child));
+            modelSchema.children.forEach((child: SModelElement) => this.preprocessModelSchema(child));
         }
     }
 

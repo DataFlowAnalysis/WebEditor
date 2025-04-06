@@ -21,7 +21,7 @@ interface PortBehaviorValidationError {
 @injectable()
 export class PortBehaviorValidator {
     // RegEx validating names of input pins
-    private static readonly INPUT_LABEL_REGEX = /[A-Za-z0-9_~][A-Za-z0-9_~\|]+/;
+    private static readonly INPUT_LABEL_REGEX = /[A-Za-z0-9_~][A-Za-z0-9_~|]+/;
 
     // RegEx validating names of output labels
     private static readonly OUTPUT_LABEL_REGEX = /[A-Za-z0-9_]+\.[A-Za-z0-9_]+/;
@@ -58,7 +58,7 @@ export class PortBehaviorValidator {
     );
 
     // Regex matching alphanumeric characters.
-    public static readonly REGEX_ALPHANUMERIC = /[A-Za-z0-9_\|]+/;
+    public static readonly REGEX_ALPHANUMERIC = /[A-Za-z0-9_|]+/;
 
     constructor(@inject(LabelTypeRegistry) @optional() private readonly labelTypeRegistry?: LabelTypeRegistry) {}
 
@@ -362,7 +362,7 @@ export class PortBehaviorValidator {
         }
 
         // Extract all used inputs, label types and the corresponding label values.
-        let term = match[2];
+        const term = match[2];
 
         const termMatch = term.match(PortBehaviorValidator.TERM_REGEX);
         if (term == "" || !termMatch) {
@@ -378,8 +378,6 @@ export class PortBehaviorValidator {
             ...term.matchAll(new RegExp("(" + PortBehaviorValidator.OUTPUT_LABEL_REGEX.source + ")", "g")),
         ];
         const inputAccessErrors = [];
-
-        console.log(matches);
 
         for (const inputMatch of matches) {
             const inputLabelType = inputMatch[1];
@@ -434,8 +432,6 @@ export class PortBehaviorValidator {
                 }
             }
 
-            console.log(inputMatch);
-
             if (inputMatch[3] !== undefined) {
                 inputAccessErrors.push({
                     line: lineNumber,
@@ -458,7 +454,7 @@ export class PortBehaviorValidator {
         for (const inPortName of inPorts) {
             if (!availableInputs.includes(inPortName) && inPortName !== "") {
                 // Find all occurrences of the unavailable input.
-                let idx = line.indexOf(inPortName);
+                const idx = line.indexOf(inPortName);
                 inputAccessErrors.push({
                     line: lineNumber,
                     message: `invalid/unknown input: ${inPortName}`,

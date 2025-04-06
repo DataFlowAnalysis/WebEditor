@@ -5,7 +5,9 @@ import {
     CommandExecutionContext,
     CommandReturn,
     CommitModelAction,
+    ILogger,
     ISnapper,
+    NullLogger,
     SLabelImpl,
     SModelRootImpl,
     SPortImpl,
@@ -144,6 +146,9 @@ export class CompleteLayoutProcessCommand extends Command {
     static readonly KIND = CompleteLayoutProcessAction.KIND;
     private previousMethod?: LayoutMethod;
 
+    @inject(TYPES.ILogger)
+    private readonly logger: ILogger = new NullLogger();
+
     constructor(
         @inject(TYPES.Action) private action: CompleteLayoutProcessAction,
         @inject(TYPES.IActionDispatcher) private actionDispatcher: ActionDispatcher,
@@ -153,7 +158,7 @@ export class CompleteLayoutProcessCommand extends Command {
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        console.info("CompleteLayoutProcessCommand", this.action.method);
+        this.logger.info(this, "CompleteLayoutProcessCommand", this.action.method);
         this.previousMethod = this.settings.layoutMethod;
         this.settings.layoutMethod = this.action.method;
         this.actionDispatcher.dispatchAll([

@@ -1,8 +1,10 @@
 import { Command, CommandExecutionContext, CommandReturn } from "sprotty";
 // typescript does not recognize css files as modules
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 import themeCss from "../../theme.css?raw";
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 import elementCss from "../dfdElements/elementStyles.css?raw";
 import { Action } from "sprotty-protocol";
 import { getModelFileName } from "../..";

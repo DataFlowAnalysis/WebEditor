@@ -23,7 +23,7 @@ export class CopyPasteKeyListener implements KeyListener {
 
     constructor(@inject(MousePositionTracker) private readonly mousePositionTracker: MousePositionTracker) {}
 
-    keyUp(_element: SModelElementImpl, _event: KeyboardEvent): Action[] {
+    keyUp(): Action[] {
         return [];
     }
 

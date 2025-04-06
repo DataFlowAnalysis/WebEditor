@@ -42,7 +42,7 @@ import { ThemeManager, Switchable } from "../settingsMenu/themeManager";
 export class OutputPortEditUIMouseListener extends MouseListener {
     private editUIVisible = false;
 
-    mouseDown(target: SModelElementImpl, _event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseDown(target: SModelElementImpl): (Action | Promise<Action>)[] {
         if (this.editUIVisible) {
             // The user has clicked somewhere on the sprotty diagram (not the port edit UI)
             // while the UI was open. In this case we hide the UI.
@@ -64,7 +64,7 @@ export class OutputPortEditUIMouseListener extends MouseListener {
         return [];
     }
 
-    doubleClick(target: SModelElementImpl, _event: MouseEvent): (Action | Promise<Action>)[] {
+    doubleClick(target: SModelElementImpl): (Action | Promise<Action>)[] {
         if (target instanceof DfdOutputPortImpl) {
             // The user has double clicked on a dfd output port
             // => show the OutputPortEditUI for this port.
@@ -91,13 +91,13 @@ const dfdBehaviorLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = 
 
     operators: ["=", "||", "&&", "!"],
 
-    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    symbols: /[=><!~?:&|+\-*/^%]+/,
 
     tokenizer: {
         root: [
             // keywords and identifiers
             [
-                /[a-zA-Z_\|$][\w$]*/,
+                /[a-zA-Z_|$][\w$]*/,
                 {
                     cases: {
                         "@keywords": "keyword",
@@ -255,10 +255,11 @@ class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.Comp
             case 1:
                 // If there's only one part, we're completing the `Type`
                 return this.getLabelTypeCompletions(model, position);
-            case 2:
+            case 2: {
                 // If there's already a dot, we complete the `value` for the specific `Type`
                 const labelTypeName = expressionParts[0];
                 return this.getLabelValueCompletions(model, position, labelTypeName);
+            }
         }
 
         return [];
@@ -518,9 +519,11 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             });
         });
 
+        // we allow aliasing here so it is available in the inner class, as this would refer to the inner class
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const portEditUi = this;
         class ZoomMouseListener extends MouseListener {
-            wheel(_target: SModelElementImpl, _event: WheelEvent): (Action | Promise<Action>)[] {
+            wheel(): (Action | Promise<Action>)[] {
                 // Re-set position of the UI after next event loop tick.
                 // In the current event loop tick the scoll is still processed and the
                 // position of the port may change after the scroll processing, so we need to wait for that.

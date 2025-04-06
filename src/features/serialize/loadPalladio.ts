@@ -1,7 +1,8 @@
-import { Command, CommandExecutionContext, SModelRootImpl } from "sprotty";
+import { Command, CommandExecutionContext, ILogger, NullLogger, SModelRootImpl, TYPES } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { setModelFileName } from "../../index";
 import { sendMessage } from "./webSocketHandler";
+import { inject } from "inversify";
 
 export interface LoadPalladioAction extends Action {
     kind: typeof LoadPalladioAction.KIND;
@@ -20,6 +21,9 @@ export namespace LoadPalladioAction {
 
 export class LoadPalladioCommand extends Command {
     static readonly KIND = LoadPalladioAction.KIND;
+
+    @inject(TYPES.ILogger)
+    private readonly logger: ILogger = new NullLogger();
 
     constructor() {
         super();
@@ -99,7 +103,7 @@ export class LoadPalladioCommand extends Command {
 
             return context.root;
         } catch (error) {
-            console.error(error);
+            this.logger.error(this, (error as Error).message);
             return context.root;
         }
     }

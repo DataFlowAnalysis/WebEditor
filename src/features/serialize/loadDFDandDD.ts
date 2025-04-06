@@ -1,8 +1,9 @@
-import { Command, CommandExecutionContext, SModelRootImpl } from "sprotty";
+import { Command, CommandExecutionContext, ILogger, NullLogger, SModelRootImpl, TYPES } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { sendMessage } from "./webSocketHandler";
 import { setModelFileName } from "../../index";
 import { setFileNameInPageTitle } from "./load";
+import { inject } from "inversify";
 
 export interface LoadDFDandDDAction extends Action {
     kind: typeof LoadDFDandDDAction.KIND;
@@ -21,6 +22,9 @@ export namespace LoadDFDandDDAction {
 
 export class LoadDFDandDDCommand extends Command {
     static readonly KIND = LoadDFDandDDAction.KIND;
+
+    @inject(TYPES.ILogger)
+    private readonly logger: ILogger = new NullLogger();
 
     constructor() {
         super();
@@ -84,7 +88,7 @@ export class LoadDFDandDDCommand extends Command {
             setFileNameInPageTitle(dataflowFile.name);
             return context.root;
         } catch (error) {
-            console.error(error);
+            this.logger.error(this, (error as Error).message);
             return context.root;
         }
     }

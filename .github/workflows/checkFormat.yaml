@@ -1,0 +1,26 @@
+name: Check Prettier Format
+
+on:
+    workflow_dispatch:
+    push:
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+
+            - name: Install and Lint
+              run: |
+                  npm install
+                  npx prettier --check ./**/*.html
+                  npx prettier --check ./**/*.css
+                  npx prettier --check ./**/*.ts
+                  npx prettier --check ./**/*.tsx
+                  npx prettier --check ./**/*.json
+                  npx prettier --check ./**/*.md

@@ -2,6 +2,7 @@
 import { injectable, inject, multiInject, optional } from "inversify";
 import { VNode } from "snabbdom";
 import {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     svg,
     AbstractUIExtension,
     IActionDispatcher,
@@ -267,7 +268,7 @@ export class ToolPaletteUI extends AbstractUIExtension implements IActionHandler
         return [];
     }
 
-    keyUp(_element: SModelElementImpl, _event: KeyboardEvent): Action[] {
+    keyUp(): Action[] {
         // ignored
         return [];
     }
