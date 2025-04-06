@@ -123,13 +123,13 @@ export class CustomCommandPalette extends CommandPalette {
         return CustomCommandPalette.ID;
     }
 
-    protected hideIfEscapeEvent(event: KeyboardEvent): any {
+    protected hideIfEscapeEvent(event: KeyboardEvent) {
         if (matchesKeystroke(event, "Escape")) {
             this.hide();
         }
     }
 
-    protected cycleIndex(event: KeyboardEvent): any {
+    protected cycleIndex(event: KeyboardEvent) {
         if (matchesKeystroke(event, "ArrowDown")) {
             if (this.insideChild) {
                 this.childIndex =
