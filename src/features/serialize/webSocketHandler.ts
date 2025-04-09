@@ -1,4 +1,4 @@
-import { getModelFileName, logger, setModelSource } from "../../index";
+import { getModelFileName, logger, setModelSource, loadingIndicator } from "../../index";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
 const webSocketAdress = `wss://websocket.dataflowanalysis.org/events/`;
@@ -18,11 +18,13 @@ function initWebSocket() {
 
     ws.onclose = () => {
         logger.log(ws, "WebSocket connection closed. Reconnecting...");
+        loadingIndicator.hideIndicator();
         initWebSocket();
     };
 
     ws.onerror = () => {
         logger.log(ws, "WebSocket encountered an error. Reconnecting...");
+        loadingIndicator.hideIndicator();
         initWebSocket();
     };
 
@@ -33,18 +35,22 @@ function initWebSocket() {
         // Example of specific handling for certain messages:
         if (event.data === "Error:Cycle") {
             alert("Error analyzing model: Model terminates in cycle!");
+            loadingIndicator.hideIndicator();
             return;
         }
         if (event.data.startsWith("ID assigned:")) {
             wsId = parseInt(event.data.split(":")[1].trim(), 10);
+            loadingIndicator.hideIndicator();
             return;
         }
         if (event.data === "Shutdown") {
+            loadingIndicator.hideIndicator();
             return;
         }
         if (event.data.trim().endsWith("</datadictionary:DataDictionary>")) {
             const saveDFDandDD = new SaveDFDandDD(event.data);
             saveDFDandDD.saveDiagramAsDFD();
+            loadingIndicator.hideIndicator();
             return;
         }
 
@@ -54,6 +60,7 @@ function initWebSocket() {
                 type: "application/json",
             }),
         );
+        loadingIndicator.hideIndicator();
     };
 }
 

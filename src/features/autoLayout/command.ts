@@ -1,7 +1,8 @@
-import { inject } from "inversify";
+import { inject, optional } from "inversify";
 import { Command, CommandExecutionContext, SModelRootImpl, TYPES } from "sprotty";
 import { Action, IModelLayoutEngine, SGraph, SModelRoot } from "sprotty-protocol";
 import { LoadDiagramCommand } from "../serialize/load";
+import { LoadingIndicator } from "../../common/loadingIndicator";
 
 export interface LayoutModelAction extends Action {
     kind: typeof LayoutModelAction.KIND;
@@ -22,10 +23,15 @@ export class LayoutModelCommand extends Command {
     @inject(TYPES.IModelLayoutEngine)
     private readonly layoutEngine?: IModelLayoutEngine;
 
+    @inject(LoadingIndicator)
+    @optional()
+    private readonly loadingIndicator?: LoadingIndicator;
+
     private oldModelSchema?: SModelRoot;
     private newModel?: SModelRootImpl;
 
     async execute(context: CommandExecutionContext): Promise<SModelRootImpl> {
+        this.loadingIndicator?.showIndicator("Layouting...");
         this.oldModelSchema = context.modelFactory.createSchema(context.root);
 
         if (!this.layoutEngine) throw new Error("Missing injects");
@@ -39,6 +45,7 @@ export class LayoutModelCommand extends Command {
         const newModel = await this.layoutEngine.layout(context.root as unknown as SGraph);
         // Here we need to cast back.
         this.newModel = newModel as unknown as SModelRootImpl;
+        this.loadingIndicator?.hideIndicator();
         return this.newModel;
     }
 
@@ -47,8 +54,12 @@ export class LayoutModelCommand extends Command {
             // No old schema saved because the layout was not executed due to read-only mode.
             return context.root;
         }
+        this.loadingIndicator?.showIndicator("Undoing layouting...");
 
         LoadDiagramCommand.preprocessModelSchema(this.oldModelSchema);
+
+        this.loadingIndicator?.hideIndicator();
+
         return context.modelFactory.createRoot(this.oldModelSchema);
     }
 
