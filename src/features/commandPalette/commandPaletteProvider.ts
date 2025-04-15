@@ -31,7 +31,7 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
                 [
                     new LabeledAction("Load diagram from JSON", [LoadDiagramAction.create(), commitAction], "json"),
                     new LabeledAction("Load DFD and DD", [LoadDFDandDDAction.create(), commitAction], "coffee"),
-                    new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "go-to-file"),
+                    new LabeledAction("Load Palladio", [LoadPalladioAction.create(), commitAction], "fa-puzzle-piece"),
                 ],
                 "go-to-file",
             ),

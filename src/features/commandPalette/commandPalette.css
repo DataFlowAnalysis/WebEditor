@@ -49,3 +49,7 @@
 .command-palette-suggestion.expanded > .command-palette-suggestion-children {
     display: block;
 }
+
+.command-palette .fa-solid {
+    text-align: center;
+}

@@ -82,7 +82,7 @@ export class CustomCommandPalette extends CommandPalette {
         const suggestion = document.createElement("div");
         suggestion.className = "command-palette-suggestion";
         const icon = document.createElement("span");
-        icon.className = "codicon codicon-" + (action.icon || "gear");
+        icon.className = this.getIconClasses(action.icon);
         suggestion.appendChild(icon);
         const label = document.createElement("span");
         label.className = "command-palette-suggestion-label";
@@ -110,6 +110,19 @@ export class CustomCommandPalette extends CommandPalette {
             }
         });
         return suggestion;
+    }
+
+    private getIconClasses(icon?: string) {
+        if (!icon) {
+            return "codicon codicon-gear";
+        }
+        if (icon.startsWith("fa-")) {
+            return "fa-solid " + icon;
+        }
+        if (icon.startsWith("codicon-")) {
+            return "codicon " + icon;
+        }
+        return "codicon codicon-" + icon;
     }
 
     private matchFilter(action: LabeledAction, searchText: string): boolean {
