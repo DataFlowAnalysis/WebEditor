@@ -32,6 +32,7 @@ import "./theme.css";
 import "./page.css";
 import { settingsModule } from "./features/settingsMenu/di.config";
 import { LoadDiagramAction } from "./features/serialize/load";
+import { LoadingIndicator } from "./common/loadingIndicator";
 
 const container = new Container();
 
@@ -143,3 +144,5 @@ modelSource
     .catch((error) => {
         logger.error(null, "Failed to show default UIs and load default diagram", error);
     });
+
+export const loadingIndicator = container.get<LoadingIndicator>(LoadingIndicator);
