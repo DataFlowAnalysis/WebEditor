@@ -21,8 +21,8 @@ export class CustomCommandPalette extends CommandPalette {
         containerElement.style.left = "100px";
         this.inputElement = document.createElement("input");
         this.inputElement.style.width = "100%";
-        this.inputElement.addEventListener("keydown", (event) => this.hideIfEscapeEvent(event));
-        this.inputElement.addEventListener("keydown", (event) => this.cycleIndex(event));
+        this.inputElement.addEventListener("keydown", (event) => this.processKeyStrokeInInput(event));
+        this.inputElement.addEventListener("input", () => this.updateSuggestions());
         this.inputElement.onblur = () => window.setTimeout(() => this.hide(), 200);
         this.suggestionElement = document.createElement("div");
         this.suggestionElement.className = "command-palette-suggestions-holder";
@@ -136,13 +136,11 @@ export class CustomCommandPalette extends CommandPalette {
         return CustomCommandPalette.ID;
     }
 
-    protected hideIfEscapeEvent(event: KeyboardEvent) {
+    protected processKeyStrokeInInput(event: KeyboardEvent) {
         if (matchesKeystroke(event, "Escape")) {
             this.hide();
         }
-    }
 
-    protected cycleIndex(event: KeyboardEvent) {
         if (matchesKeystroke(event, "ArrowDown")) {
             if (this.insideChild) {
                 this.childIndex =
@@ -172,12 +170,14 @@ export class CustomCommandPalette extends CommandPalette {
         }
         if (matchesKeystroke(event, "ArrowRight")) {
             if (!this.insideChild && this.filteredActions[this.index] instanceof FolderAction) {
+                event.preventDefault();
                 this.insideChild = true;
                 this.childIndex = 0;
             }
         }
         if (matchesKeystroke(event, "ArrowLeft")) {
             if (this.insideChild) {
+                event.preventDefault();
                 this.insideChild = false;
                 this.childIndex = -1;
             }
