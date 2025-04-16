@@ -42,7 +42,8 @@
     background: var(--color-primary);
     width: fit-content;
     height: fit-content;
-    border-left: 4px solid var(--color-background);
+    border-left: 4px solid var(--color-spacer);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .command-palette-suggestion:hover > .command-palette-suggestion-children,
