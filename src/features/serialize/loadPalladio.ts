@@ -2,7 +2,8 @@ import { Command, CommandExecutionContext, ILogger, NullLogger, SModelRootImpl, 
 import { Action } from "sprotty-protocol";
 import { setModelFileName } from "../../index";
 import { sendMessage } from "./webSocketHandler";
-import { inject } from "inversify";
+import { inject, optional } from "inversify";
+import { LoadingIndicator } from "../../common/loadingIndicator";
 
 export interface LoadPalladioAction extends Action {
     kind: typeof LoadPalladioAction.KIND;
@@ -24,6 +25,9 @@ export class LoadPalladioCommand extends Command {
 
     @inject(TYPES.ILogger)
     private readonly logger: ILogger = new NullLogger();
+    @inject(LoadingIndicator)
+    @optional()
+    protected loadingIndicator?: LoadingIndicator;
 
     constructor() {
         super();
@@ -80,6 +84,7 @@ export class LoadPalladioCommand extends Command {
     }
 
     async execute(context: CommandExecutionContext): Promise<SModelRootImpl> {
+        this.loadingIndicator?.showIndicator("Loading model files...");
         try {
             // Fetch all required files
             const files = (await this.getModelFiles()) ?? []; // Ensure getModelFiles() returns exactly seven files
@@ -104,6 +109,7 @@ export class LoadPalladioCommand extends Command {
             return context.root;
         } catch (error) {
             this.logger.error(this, (error as Error).message);
+            this.loadingIndicator?.hideIndicator();
             return context.root;
         }
     }

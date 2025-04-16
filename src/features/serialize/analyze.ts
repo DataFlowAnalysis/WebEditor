@@ -7,6 +7,7 @@ import { EditorModeController } from "../editorMode/editorModeController";
 import { sendMessage } from "./webSocketHandler";
 import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 import { SavedDiagram } from "./save";
+import { LoadingIndicator } from "../../common/loadingIndicator";
 
 export interface AnalyzeDiagramAction extends Action {
     kind: typeof AnalyzeDiagramAction.KIND;
@@ -39,12 +40,16 @@ export class AnalyzeDiagramCommand extends Command {
     @inject(ConstraintRegistry)
     @optional()
     private readonly constraintRegistry?: ConstraintRegistry;
+    @inject(LoadingIndicator)
+    @optional()
+    private loadingIndicator?: LoadingIndicator;
 
     constructor() {
         super();
     }
 
     execute(context: CommandExecutionContext): SModelRootImpl {
+        this.loadingIndicator?.showIndicator("Analyzing diagram...");
         // Convert the model to JSON
         // Do a copy because we're going to modify it
         const modelCopy = JSON.parse(JSON.stringify(this.modelSource.model));
