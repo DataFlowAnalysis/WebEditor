@@ -53,16 +53,20 @@ export class CustomCommandPalette extends CommandPalette {
         }
         this.suggestionElement!.innerHTML = "";
         const searchText = this.inputElement!.value.toLowerCase();
-        this.filteredActions = this.actions.filter((action) => {
+        this.filteredActions = [];
+        for (const action of this.actions) {
+            if (this.matchFilter(action, searchText)) {
+                this.filteredActions.push(action);
+                continue;
+            }
             if (action instanceof FolderAction) {
-                for (const childAction of action.children) {
-                    if (this.matchFilter(childAction, searchText)) {
-                        return true;
-                    }
+                const filteredChildren = action.children.filter((child) => this.matchFilter(child, searchText));
+                if (filteredChildren.length > 0) {
+                    this.filteredActions.push(new FolderAction(action.label, filteredChildren, action.icon));
+                    continue;
                 }
             }
-            return this.matchFilter(action, searchText);
-        });
+        }
         if (this.index >= this.filteredActions.length) {
             this.index = -1;
         }
