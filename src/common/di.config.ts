@@ -10,7 +10,6 @@ import {
     configureCommand,
     configureViewerOptions,
 } from "sprotty";
-import { ServerCommandPaletteActionProvider } from "./commandPalette";
 import { HelpUI } from "./helpUi";
 import { DeleteKeyListener } from "./deleteKeyListener";
 import { EDITOR_TYPES } from "../utils";
@@ -22,9 +21,6 @@ import "./commonStyling.css";
 import { LoadingIndicator } from "./loadingIndicator";
 
 export const commonModule = new ContainerModule((bind, unbind, isBound, rebind) => {
-    bind(ServerCommandPaletteActionProvider).toSelf().inSingletonScope();
-    bind(TYPES.ICommandPaletteActionProvider).toService(ServerCommandPaletteActionProvider);
-
     bind(DeleteKeyListener).toSelf().inSingletonScope();
     bind(TYPES.KeyListener).toService(DeleteKeyListener);
     bind(CenterDiagramKeyListener).toSelf().inSingletonScope();

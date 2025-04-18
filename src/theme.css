@@ -2,6 +2,7 @@
     --color-foreground: #000;
     --color-background: #fff;
     --color-primary: #dfdfdf;
+    --color-spacer: #e5e5e5;
     --color-error: #f00;
     --color-valid: #00b600;
     --color-tool-palette-hover: #ccc;
@@ -12,6 +13,7 @@
 :root[data-theme="dark"] {
     --color-foreground: #fff;
     --color-background: #1d1c22;
+    --color-spacer: var(--color-background);
     --color-primary: #302e38;
     --color-valid: #0f0;
     --color-tool-palette-hover: #f00;
