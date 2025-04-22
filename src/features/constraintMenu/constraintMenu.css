@@ -79,6 +79,10 @@ div.constraint-menu {
     max-height: 210px;
 }
 
+#constraint-menu-list * {
+    color: var(--color-foreground);
+}
+
 .constrain-label input {
     background-color: var(--color-background);
     text-align: center;
