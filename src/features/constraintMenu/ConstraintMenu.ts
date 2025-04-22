@@ -18,7 +18,7 @@ import { AutoCompleteTree } from "./AutoCompletion";
 import { TreeBuilder } from "./DslLanguage";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
-import { Switchable } from "../settingsMenu/themeManager";
+import { Switchable, ThemeManager } from "../settingsMenu/themeManager";
 import { AnalyzeDiagramAction } from "../serialize/analyze";
 
 @injectable()
@@ -99,7 +99,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             new MonacoEditorConstraintDslCompletionProvider(this.tree),
         );
 
-        const monacoTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "vs-dark" : "vs";
+        const monacoTheme = ThemeManager.useDarkMode ? "vs-dark" : "vs";
         this.editor = monaco.editor.create(this.editorContainer, {
             minimap: {
                 // takes too much space, not useful for our use case
