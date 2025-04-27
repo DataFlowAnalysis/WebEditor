@@ -6,7 +6,7 @@ import { Constraint, ConstraintRegistry } from "./constraintRegistry";
 
 // Enable hover feature that is used to show validation errors.
 // Inline completions are enabled to allow autocompletion of keywords and inputs/label types/label values.
-import "monaco-editor/esm/vs/editor/contrib/hover/browser/hover";
+import "monaco-editor/esm/vs/editor/contrib/hover/browser/hoverContribution";
 import "monaco-editor/esm/vs/editor/contrib/inlineCompletions/browser/inlineCompletions.contribution.js";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import {
