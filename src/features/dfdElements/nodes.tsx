@@ -90,11 +90,12 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
             return this.minimumWidth + DfdNodeImpl.WIDTH_PADDING;
         }
         const textWidth = calculateTextSize(this.text).width;
+        const editableLableWidth = this.editableLabel ? calculateTextSize(this.editableLabel.text).width : 0;
         const labelWidths = this.labels.map(
             (labelAssignment) => DfdNodeLabelRenderer.computeLabelContent(labelAssignment)[1],
         );
 
-        const neededWidth = Math.max(...labelWidths, textWidth, DfdNodeImpl.DEFAULT_WIDTH);
+        const neededWidth = Math.max(...labelWidths, textWidth, editableLableWidth, DfdNodeImpl.DEFAULT_WIDTH);
         return neededWidth + DfdNodeImpl.WIDTH_PADDING;
     }
 
