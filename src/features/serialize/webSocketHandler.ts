@@ -1,7 +1,9 @@
 import { getModelFileName, logger, setModelSource, loadingIndicator } from "../../index";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
-const webSocketAdress = `localhost:3000/events/`;
+//Debug
+//const webSocketAdress = `ws://localhost:3000/events/`;
+const webSocketAdress = `wss://websocket.dataflowanalysis.org/events/`;
 
 let ws: WebSocket;
 let wsId = 0;
@@ -50,10 +52,10 @@ function initWebSocket() {
 
         let message = event.data;
         const name = message.split(":")[0];
-        message = message.replaceFirst(name + ":", "");
+        message = message.replace(name + ":", "");
 
         if (event.data.trim().endsWith("</datadictionary:DataDictionary>")) {
-            const saveDFDandDD = new SaveDFDandDD(event.data);
+            const saveDFDandDD = new SaveDFDandDD(message);
             saveDFDandDD.saveDiagramAsDFD();
             loadingIndicator.hideIndicator();
             return;
@@ -61,7 +63,7 @@ function initWebSocket() {
 
         // Otherwise, treat incoming data as JSON for model source:
         setModelSource(
-            new File([new Blob([event.data], { type: "application/json" })], name + ".json", {
+            new File([new Blob([message], { type: "application/json" })], name + ".json", {
                 type: "application/json",
             }),
         );

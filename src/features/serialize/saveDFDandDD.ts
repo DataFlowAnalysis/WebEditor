@@ -60,7 +60,7 @@ export class SaveDFDandDDCommand extends Command {
             mode: this.editorModeController?.getCurrentMode(),
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);
-        sendMessage("Json2DFD:" + getModelFileName() + ":" + diagramJson);
+        sendMessage("Json2DFD:" + diagramJson);
         return context.root;
     }
 
