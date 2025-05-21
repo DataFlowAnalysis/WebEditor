@@ -148,6 +148,7 @@ export class LoadDiagramCommand extends Command {
             const file = await this.getModelFile();
             if (!file) {
                 // No file was selected, skip
+                this.loadingIndicator?.hideIndicator();
                 return context.root;
             }
 
