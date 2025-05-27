@@ -11,7 +11,7 @@ import {
     TYPES,
 } from "sprotty";
 import { LabelAssignment, LabelType, LabelTypeRegistry, LabelTypeValue } from "./labelTypeRegistry";
-import { DeleteLabelTypeAction, DeleteLabelTypeValueAction } from "./commands";
+import { AddLabelAssignmentAction, DeleteLabelTypeAction, DeleteLabelTypeValueAction } from "./commands";
 import { LABEL_ASSIGNMENT_MIME_TYPE } from "./dropListener";
 import { Action } from "sprotty-protocol";
 import { snapPortsOfNode } from "../dfdElements/portSnapper";
@@ -259,6 +259,36 @@ export class LabelTypeEditorUI extends AbstractUIExtension implements KeyListene
             };
             const assignmentJson = JSON.stringify(assignment);
             event.dataTransfer?.setData(LABEL_ASSIGNMENT_MIME_TYPE, assignmentJson);
+        };
+
+        valueInput.onclick = () => {
+            if (valueInput.getAttribute("clicked") === "true") {
+                return;
+            }
+
+            valueInput.setAttribute("clicked", "true");
+            setTimeout(() => {
+                if (valueInput.getAttribute("clicked") === "true") {
+                    this.actionDispatcher.dispatch(
+                        AddLabelAssignmentAction.create({
+                            labelTypeId: labelType.id,
+                            labelTypeValueId: labelTypeValue.id,
+                        }),
+                    );
+                    valueInput.removeAttribute("clicked");
+                }
+            }, 500);
+        };
+        valueInput.ondblclick = () => {
+            valueInput.removeAttribute("clicked");
+            valueInput.focus();
+        };
+        valueInput.onfocus = (event) => {
+            // we check for the single click here, since this gets triggered before the ondblclick event
+            if (valueInput.getAttribute("clicked") !== "true") {
+                event.preventDefault();
+                valueInput.blur();
+            }
         };
 
         valueElement.appendChild(valueInput);
