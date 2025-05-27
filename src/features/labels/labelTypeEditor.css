@@ -67,3 +67,10 @@ div.label-type-editor-ui {
 #accordion-state-label-title {
     padding-right: 5px;
 }
+
+.label-all {
+    border: 1px solid var(--color-foreground);
+    border-radius: 20px;
+    padding: 3px 6px;
+    margin-top: 4px;
+}

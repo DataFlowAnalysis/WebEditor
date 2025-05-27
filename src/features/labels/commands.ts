@@ -4,6 +4,8 @@ import {
     CommandExecutionContext,
     CommandReturn,
     ISnapper,
+    isSelected,
+    SChildElementImpl,
     SModelElementImpl,
     SNodeImpl,
     SParentElementImpl,
@@ -313,4 +315,172 @@ export class DeleteLabelTypeCommand extends Command {
     redo(context: CommandExecutionContext): CommandReturn {
         return this.execute(context);
     }
+}
+
+interface LabelToAllOrSelectionAction extends Action {
+    labelAssignment: LabelAssignment;
+}
+
+abstract class LabelToAllOrSelectionCommand extends Command {
+    @inject(EditorModeController)
+    @optional()
+    protected readonly editorModeController?: EditorModeController;
+
+    protected elements?: SModelElementImpl[];
+
+    constructor(
+        @inject(TYPES.Action) protected action: LabelToAllOrSelectionAction,
+        @inject(TYPES.ISnapper) protected snapper: ISnapper,
+    ) {
+        super();
+    }
+
+    protected fetchElements(context: CommandExecutionContext): SModelElementImpl[] {
+        if (this.editorModeController?.isReadOnly()) {
+            return [];
+        }
+
+        const allElements = getAllElements(context.root.children);
+        const selectedElements = allElements.filter((element) => isSelected(element));
+        return selectedElements.length === 0 ? allElements : selectedElements;
+    }
+
+    protected addLabel(context: CommandExecutionContext) {
+        if (this.editorModeController?.isReadOnly()) {
+            return context.root;
+        }
+
+        if (this.elements === undefined) {
+            this.elements = this.fetchElements(context);
+        }
+
+        this.elements.forEach((element) => {
+            if (containsDfdLabels(element)) {
+                const hasBeenAdded =
+                    element.labels.find((as) => {
+                        return (
+                            as.labelTypeId === this.action.labelAssignment.labelTypeId &&
+                            as.labelTypeValueId === this.action.labelAssignment.labelTypeValueId
+                        );
+                    }) !== undefined;
+                if (!hasBeenAdded) {
+                    element.labels.push(this.action.labelAssignment);
+                    if (element instanceof SNodeImpl) {
+                        snapPortsOfNode(element, this.snapper);
+                    }
+                }
+            }
+        });
+
+        return context.root;
+    }
+
+    protected removeLabel(context: CommandExecutionContext) {
+        if (this.editorModeController?.isReadOnly()) {
+            return context.root;
+        }
+
+        if (this.elements === undefined) {
+            this.elements = this.fetchElements(context);
+        }
+
+        this.elements.forEach((element) => {
+            if (containsDfdLabels(element)) {
+                const labels = element.labels;
+                const idx = labels.findIndex(
+                    (l) =>
+                        l.labelTypeId == this.action.labelAssignment.labelTypeId &&
+                        l.labelTypeValueId == this.action.labelAssignment.labelTypeValueId,
+                );
+                if (idx >= 0) {
+                    labels.splice(idx, 1);
+                    if (element instanceof SNodeImpl) {
+                        snapPortsOfNode(element, this.snapper);
+                    }
+                }
+            }
+        });
+
+        return context.root;
+    }
+}
+
+export interface AddLabelToAllOrSelectionAction extends LabelToAllOrSelectionAction {
+    kind: typeof AddLabelToAllOrSelectionAction.TYPE;
+}
+export namespace AddLabelToAllOrSelectionAction {
+    export const TYPE = "add-label-to-all-or-selection";
+    export function create(labelAssignment: LabelAssignment): AddLabelToAllOrSelectionAction {
+        return {
+            kind: TYPE,
+            labelAssignment,
+        };
+    }
+}
+@injectable()
+export class AddLabelToAllOrSelectionCommand extends LabelToAllOrSelectionCommand {
+    public static readonly KIND = AddLabelToAllOrSelectionAction.TYPE;
+
+    constructor(@inject(TYPES.Action) action: AddLabelAssignmentAction, @inject(TYPES.ISnapper) snapper: ISnapper) {
+        super(action, snapper);
+    }
+
+    execute(context: CommandExecutionContext): CommandReturn {
+        return this.addLabel(context);
+    }
+
+    undo(context: CommandExecutionContext): CommandReturn {
+        return this.removeLabel(context);
+    }
+
+    redo(context: CommandExecutionContext): CommandReturn {
+        return this.execute(context);
+    }
+}
+
+export interface DeleteLabelFromAllOrSelectionAction extends LabelToAllOrSelectionAction {
+    kind: typeof DeleteLabelFromAllOrSelectionAction.TYPE;
+}
+export namespace DeleteLabelFromAllOrSelectionAction {
+    export const TYPE = "delete-label-from-all-or-selection";
+    export function create(labelAssignment: LabelAssignment): DeleteLabelFromAllOrSelectionAction {
+        return {
+            kind: TYPE,
+            labelAssignment,
+        };
+    }
+}
+@injectable()
+export class DeleteLabelFromAllOrSelectionCommand extends LabelToAllOrSelectionCommand {
+    public static readonly KIND = DeleteLabelFromAllOrSelectionAction.TYPE;
+
+    constructor(
+        @inject(TYPES.Action) action: DeleteLabelFromAllOrSelectionAction,
+        @inject(TYPES.ISnapper) snapper: ISnapper,
+    ) {
+        super(action, snapper);
+    }
+
+    execute(context: CommandExecutionContext): CommandReturn {
+        return this.removeLabel(context);
+    }
+
+    undo(context: CommandExecutionContext): CommandReturn {
+        return this.addLabel(context);
+    }
+
+    redo(context: CommandExecutionContext): CommandReturn {
+        return this.execute(context);
+    }
+}
+
+function getAllElements(elements: readonly SChildElementImpl[]): SModelElementImpl[] {
+    const elementsList: SModelElementImpl[] = [];
+    for (const element of elements) {
+        elementsList.push(element);
+        if ("children" in element) {
+            elementsList.push(...getAllElements(element.children));
+        }
+    }
+    return elementsList;
 }
