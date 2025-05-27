@@ -11,12 +11,7 @@ import {
     TYPES,
 } from "sprotty";
 import { LabelAssignment, LabelType, LabelTypeRegistry, LabelTypeValue } from "./labelTypeRegistry";
-import {
-    AddLabelToAllOrSelectionAction,
-    DeleteLabelFromAllOrSelectionAction,
-    DeleteLabelTypeAction,
-    DeleteLabelTypeValueAction,
-} from "./commands";
+import { DeleteLabelTypeAction, DeleteLabelTypeValueAction } from "./commands";
 import { LABEL_ASSIGNMENT_MIME_TYPE } from "./dropListener";
 import { Action } from "sprotty-protocol";
 import { snapPortsOfNode } from "../dfdElements/portSnapper";
@@ -138,8 +133,6 @@ export class LabelTypeEditorUI extends AbstractUIExtension implements KeyListene
             inputElement?.focus();
         };
         innerContainerElement.appendChild(addButton);
-        innerContainerElement.appendChild(this.buildAddToAllListener());
-        innerContainerElement.appendChild(this.buildDeleteFromAllListener());
     }
 
     private renderLabelType(labelType: LabelType): HTMLElement {
@@ -353,41 +346,5 @@ export class LabelTypeEditorUI extends AbstractUIExtension implements KeyListene
     private onInputOnlyAlphanumeric(event: Event): void {
         const input = event.target as HTMLInputElement;
         input.value = input.value.replace(/[^a-zA-Z0-9_]/g, "");
-    }
-
-    private buildAddToAllListener() {
-        const holder = document.createElement("div");
-        holder.classList.add("label-type-add-to-all", "label-all");
-        holder.innerHTML = "Add to all/selection";
-        holder.ondragover = (e: DragEvent) => {
-            e.preventDefault(); // Necessary to allow a drop
-        };
-        holder.ondrop = (e: DragEvent) => {
-            const labelAssignmentJson = e.dataTransfer?.getData(LABEL_ASSIGNMENT_MIME_TYPE);
-            if (!labelAssignmentJson) {
-                return;
-            }
-            const labelAssignment: LabelAssignment = JSON.parse(labelAssignmentJson);
-            this.actionDispatcher.dispatch(AddLabelToAllOrSelectionAction.create(labelAssignment));
-        };
-        return holder;
-    }
-
-    private buildDeleteFromAllListener() {
-        const holder = document.createElement("div");
-        holder.classList.add("label-type-delete-from-all", "label-all");
-        holder.innerHTML = "Delete from all/selection";
-        holder.ondragover = (e: DragEvent) => {
-            e.preventDefault(); // Necessary to allow a drop
-        };
-        holder.ondrop = (e: DragEvent) => {
-            const labelAssignmentJson = e.dataTransfer?.getData(LABEL_ASSIGNMENT_MIME_TYPE);
-            if (!labelAssignmentJson) {
-                return;
-            }
-            const labelAssignment: LabelAssignment = JSON.parse(labelAssignmentJson);
-            this.actionDispatcher.dispatch(DeleteLabelFromAllOrSelectionAction.create(labelAssignment));
-        };
-        return holder;
     }
 }

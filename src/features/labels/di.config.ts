@@ -7,9 +7,7 @@ import { LabelTypeEditorUI } from "./labelTypeEditor";
 import { TYPES, configureCommand } from "sprotty";
 import {
     AddLabelAssignmentCommand,
-    AddLabelToAllOrSelectionCommand,
     DeleteLabelAssignmentCommand,
-    DeleteLabelFromAllOrSelectionCommand,
     DeleteLabelTypeCommand,
     DeleteLabelTypeValueCommand,
 } from "./commands";
@@ -34,7 +32,4 @@ export const dfdLabelModule = new ContainerModule((bind, unbind, isBound, rebind
     configureCommand(context, DeleteLabelAssignmentCommand);
     configureCommand(context, DeleteLabelTypeValueCommand);
     configureCommand(context, DeleteLabelTypeCommand);
-
-    configureCommand(context, AddLabelToAllOrSelectionCommand);
-    configureCommand(context, DeleteLabelFromAllOrSelectionCommand);
 });
