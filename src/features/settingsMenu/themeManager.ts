@@ -20,7 +20,7 @@ export class ThemeManager {
     private static SYSTEM_DEFAULT =
         window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? Theme.DARK : Theme.LIGHT;
     private themeSelect?: HTMLSelectElement;
-    private static readonly localStorageKey = "theme";
+    private static readonly localStorageKey = "dfdwebeditor:theme";
 
     constructor(
         @multiInject(SWITCHABLE) protected switchables: Switchable[],
