@@ -261,29 +261,6 @@ export class PortBehaviorValidator {
             if (typeValuePair === "") continue;
 
             const inputLabelType = typeValuePair.split(".")[0].trim();
-            const inputLabelTypeObject = this.labelTypeRegistry
-                ?.getLabelTypes()
-                .find((type) => type.name === inputLabelType);
-            if (!inputLabelTypeObject) {
-                let idx = line.indexOf(inputLabelType);
-                while (idx !== -1) {
-                    // Check that this is not a substring of another label type.
-                    if (
-                        // must start after a dot and end before a dot
-                        line[idx - 1] === "." &&
-                        line[idx + inputLabelType.length] === "."
-                    ) {
-                        inputAccessErrors.push({
-                            line: lineNumber,
-                            message: `unknown label type: ${inputLabelType}`,
-                            colStart: idx,
-                            colEnd: idx + inputLabelType.length,
-                        });
-                    }
-
-                    idx = line.indexOf(inputLabelType, idx + 1);
-                }
-            }
 
             if (typeValuePair.indexOf(".") !== -1) {
                 if (typeValuePair.split(".")[1] === null || typeValuePair.split(".")[1] === "") continue;
@@ -296,11 +273,7 @@ export class PortBehaviorValidator {
                     let idx = line.indexOf(inputLabelType);
                     while (idx !== -1) {
                         // Check that this is not a substring of another label type.
-                        if (
-                            // must start after a dot and end before a dot
-                            line[idx - 1] === "." &&
-                            line[idx + inputLabelType.length] === "."
-                        ) {
+                        if (line[idx + inputLabelType.length] === ".") {
                             inputAccessErrors.push({
                                 line: lineNumber,
                                 message: `unknown label type: ${inputLabelType}`,
