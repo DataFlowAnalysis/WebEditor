@@ -15,6 +15,7 @@ import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
 import { LoadDiagramCommand, currentFileName, postLoadActions, setFileNameInPageTitle } from "./load";
 import { SavedDiagram } from "./save";
+import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
 
 import defaultDiagramData from "./defaultDiagram.json";
@@ -50,6 +51,9 @@ export class LoadDefaultDiagramCommand extends Command {
     @inject(EditorModeController)
     @optional()
     private editorModeController?: EditorModeController;
+    @inject(ConstraintRegistry)
+    @optional()
+    private readonly constraintRegistry?: ConstraintRegistry;
 
     private oldRoot: SModelRootImpl | undefined;
     private newRoot: SModelRootImpl | undefined;
@@ -85,6 +89,18 @@ export class LoadDefaultDiagramCommand extends Command {
             }
 
             this.logger.info(this, "Default Editor Mode loaded successfully");
+        }
+
+        if (this.constraintRegistry) {
+            // Load label types
+            this.constraintRegistry.clearConstraints();
+            if (defaultDiagram?.constraints) {
+                defaultDiagram.constraints.forEach((constraint) => {
+                    this.constraintRegistry?.registerConstraint(constraint);
+                });
+
+                this.logger.info(this, "Constraints loaded successfully");
+            }
         }
 
         postLoadActions(this.newRoot, this.actionDispatcher);
