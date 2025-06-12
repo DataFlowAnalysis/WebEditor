@@ -23,7 +23,7 @@
         "sprotty-elk": "^1.4.0",
         "sprotty-protocol": "^1.4.0",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.33.1",
+        "typescript-eslint": "^8.34.0",
         "vite": "^6.3.5"
     },
     "scripts": {
