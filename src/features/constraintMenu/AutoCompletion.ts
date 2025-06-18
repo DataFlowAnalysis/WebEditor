@@ -103,7 +103,10 @@ export class AutoCompleteTree {
     /**
      * Sets the content of the tree for the next analyzing cycle
      */
-    public setContent(line: string) {
+    private setContent(line: string) {
+        if (!line) {
+            line = "";
+        }
         if (line.length == 0) {
             this.content = [];
             this.length = 0;
@@ -121,7 +124,8 @@ export class AutoCompleteTree {
      * Checks the set content for errors
      * @returns An array of errors. An empty array means that the content is valid
      */
-    public verify(): ValidationError[] {
+    public verify(line: string): ValidationError[] {
+        this.setContent(line);
         return this.verifyNode(this.roots, 0, false);
     }
 
@@ -163,7 +167,8 @@ export class AutoCompleteTree {
     /**
      * Calculates the completion options for the current content
      */
-    public getCompletion(): monaco.languages.CompletionItem[] {
+    public getCompletion(line: string): monaco.languages.CompletionItem[] {
+        this.setContent(line);
         let result: WordCompletion[] = [];
         if (this.content.length == 0) {
             for (const r of this.roots) {

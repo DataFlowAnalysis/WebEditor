@@ -1,28 +1,17 @@
 import { injectable } from "inversify";
 
-export interface Constraint {
-    id: string;
-    name: string;
-    constraint: string;
-}
-
 @injectable()
 export class ConstraintRegistry {
-    private constraints: Constraint[] = [];
+    private constraints: string = "";
     private updateCallbacks: (() => void)[] = [];
 
-    public registerConstraint(constraint: Constraint): void {
-        this.constraints.push(constraint);
-        this.constraintListChanged();
-    }
-
-    public unregisterConstraint(constraint: Constraint): void {
-        this.constraints = this.constraints.filter((c) => c.id !== constraint.id);
+    public setConstraints(constraints: string): void {
+        this.constraints = constraints;
         this.constraintListChanged();
     }
 
     public clearConstraints(): void {
-        this.constraints = [];
+        this.constraints = "";
         this.constraintListChanged();
     }
 
@@ -34,11 +23,7 @@ export class ConstraintRegistry {
         this.updateCallbacks.push(callback);
     }
 
-    public getConstraints(): Constraint[] {
+    public getConstraints(): string {
         return this.constraints;
-    }
-
-    public getConstraint(id: string): Constraint | undefined {
-        return this.constraints.find((c) => c.id === id);
     }
 }

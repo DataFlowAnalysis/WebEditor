@@ -4,7 +4,7 @@ import { Action, SModelRoot } from "sprotty-protocol";
 import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
-import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
+import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 
 /**
  * Type that contains all data related to a diagram.
@@ -13,7 +13,7 @@ import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegi
 export interface SavedDiagram {
     model: SModelRoot;
     labelTypes?: LabelType[];
-    constraints?: Constraint[];
+    constraints?: string;
     mode?: EditorMode;
 }
 

@@ -18,7 +18,7 @@ import { SavedDiagram } from "./save";
 import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { LayoutModelAction } from "../autoLayout/command";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
-import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
+import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 import { LoadingIndicator } from "../../common/loadingIndicator";
 
 export interface LoadDiagramAction extends Action {
@@ -84,8 +84,8 @@ export class LoadDiagramCommand extends Command {
     private newEditorMode: EditorMode | undefined;
     private oldFileName: string | undefined;
     private newFileName: string | undefined;
-    private oldConstrains: Constraint[] | undefined;
-    private newConstrains: Constraint[] | undefined;
+    private oldConstrains: string | undefined;
+    private newConstrains: string | undefined;
 
     /**
      * Gets the model file from the action or opens a file picker dialog if no file is provided.
@@ -217,9 +217,7 @@ export class LoadDiagramCommand extends Command {
                 this.newConstrains = newDiagram?.constraints;
                 this.constraintRegistry.clearConstraints();
                 if (newDiagram?.constraints) {
-                    newDiagram.constraints.forEach((constraint) => {
-                        this.constraintRegistry?.registerConstraint(constraint);
-                    });
+                    this.constraintRegistry.setConstraints(newDiagram.constraints);
 
                     this.logger.info(this, "Constraints loaded successfully");
                 }
@@ -282,7 +280,9 @@ export class LoadDiagramCommand extends Command {
             this.editorModeController?.setMode(this.oldEditorMode);
         }
         this.constraintRegistry?.clearConstraints();
-        this.oldConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
+        if (this.oldConstrains) {
+            this.constraintRegistry?.setConstraints(this.oldConstrains);
+        }
         setFileNameInPageTitle(this.oldFileName);
 
         this.loadingIndicator?.hideIndicator();
@@ -301,7 +301,9 @@ export class LoadDiagramCommand extends Command {
             }
         }
         this.constraintRegistry?.clearConstraints();
-        this.newConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
+        if (this.newConstrains) {
+            this.constraintRegistry?.setConstraints(this.newConstrains);
+        }
         setFileNameInPageTitle(this.newFileName);
 
         this.loadingIndicator?.hideIndicator();
