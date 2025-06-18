@@ -112,6 +112,11 @@ export function setModelSource(file: File): void {
         });
 }
 
+function getQueryFileName(): string | null {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get("file");
+}
+
 // Set empty model as starting point.
 // In contrast to the default diagram later this is not undoable which would bring the editor
 // into an invalid state where no root element is present.
@@ -121,7 +126,22 @@ modelSource
         id: "root",
         children: [],
     })
-    .then(() =>
+    .then(async () => {
+        const queryFileName = getQueryFileName();
+        let queryFile: File | null = null;
+        if (queryFileName) {
+            try {
+                const response = await fetch(queryFileName);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch file: ${response.statusText}`);
+                }
+                const blob = await response.blob();
+                queryFile = new File([blob], queryFileName, { type: blob.type });
+            } catch (error) {
+                logger.error(null, `Failed to load file from query parameter: ${queryFileName}`, error);
+            }
+        }
+
         dispatcher.dispatchAll([
             // Show the default uis after startup
             ...defaultUIElements.map((uiElement) => {
@@ -130,11 +150,11 @@ modelSource
                     visible: true,
                 });
             }),
-            // Then load the default diagram and commit the temporary model to the model source
-            LoadDefaultDiagramAction.create(),
+            // Then load the default diagram or query diagram and commit the temporary model to the model source
+            queryFile ? LoadDiagramAction.create(queryFile) : LoadDefaultDiagramAction.create(),
             CommitModelAction.create(),
-        ]),
-    )
+        ]);
+    })
     .then(() => {
         // Focus the sprotty svg container to enable keyboard shortcuts
         // because those only work if the svg container is focused.
