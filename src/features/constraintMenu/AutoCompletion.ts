@@ -167,7 +167,7 @@ export class AutoCompleteTree {
     /**
      * Calculates the completion options for the current content
      */
-    public getCompletion(line: string): monaco.languages.CompletionItem[] {
+    public getCompletion(line: string, lineNumber = 1): monaco.languages.CompletionItem[] {
         this.setContent(line);
         let result: WordCompletion[] = [];
         if (this.content.length == 0) {
@@ -177,7 +177,7 @@ export class AutoCompleteTree {
         } else {
             result = this.completeNode(this.roots, 0);
         }
-        return this.transformResults(result);
+        return this.transformResults(result, lineNumber);
     }
 
     private completeNode(nodes: AutoCompleteNode[], index: number): WordCompletion[] {
@@ -197,26 +197,26 @@ export class AutoCompleteTree {
         return result;
     }
 
-    private transformResults(comp: WordCompletion[]): monaco.languages.CompletionItem[] {
+    private transformResults(comp: WordCompletion[], lineNumber = 1): monaco.languages.CompletionItem[] {
         const result: monaco.languages.CompletionItem[] = [];
         const filtered = comp.filter(
             (c, idx) => comp.findIndex((c2) => c2.insertText === c.insertText && c2.kind === c.kind) === idx,
         );
         for (const c of filtered) {
-            const r = this.transformResult(c);
+            const r = this.transformResult(c, lineNumber);
             result.push(r);
         }
         return result;
     }
 
-    private transformResult(comp: WordCompletion): monaco.languages.CompletionItem {
+    private transformResult(comp: WordCompletion, lineNumber = 1): monaco.languages.CompletionItem {
         const wordStart = this.content.length == 0 ? 1 : this.length - this.content[this.content.length - 1].length + 1;
         return {
             insertText: comp.insertText,
             kind: comp.kind,
             label: comp.label ?? comp.insertText,
             insertTextRules: comp.insertTextRules,
-            range: new monaco.Range(1, wordStart + (comp.startOffset ?? 0), 1, this.length + 1),
+            range: new monaco.Range(lineNumber, wordStart + (comp.startOffset ?? 0), lineNumber, this.length + 1),
         };
     }
 }

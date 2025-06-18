@@ -24,7 +24,10 @@ export class MonacoEditorConstraintDslCompletionProvider implements monaco.langu
         model: monaco.editor.ITextModel,
         position: monaco.Position,
     ): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
-        const r = this.tree.getCompletion(model.getLineContent(position.lineNumber).substring(0, position.column - 1));
+        const r = this.tree.getCompletion(
+            model.getLineContent(position.lineNumber).substring(0, position.column - 1),
+            position.lineNumber,
+        );
         return {
             suggestions: r,
         };
