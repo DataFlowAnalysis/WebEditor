@@ -78,6 +78,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         wrapper.id = "constraint-menu-input";
         wrapper.appendChild(this.editorContainer);
         this.validationLabel.id = "validation-label";
+        this.validationLabel.classList.add("valid");
+        this.validationLabel.innerText = "Valid constraints";
         wrapper.appendChild(this.validationLabel);
         const keyboardShortcutLabel = document.createElement("div");
         keyboardShortcutLabel.innerHTML = "Press <kbd>CTRL</kbd>+<kbd>Space</kbd> for autocompletion";
@@ -113,6 +115,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             readOnly: this.forceReadOnly,
         });
 
+        this.editor?.setValue(this.constraintRegistry.getConstraints() || "");
+
         this.editor?.onDidChangeModelContent(() => {
             if (!this.editor) {
                 return;
@@ -125,21 +129,25 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 return;
             }
 
-            const lines = this.editor.getValue().split("\n");
-            const errors = lines.map(this.tree.verify, this.tree);
+            const content = model.getValue();
             const marker: monaco.editor.IMarkerData[] = [];
-            for (let i = 0; i < errors.length; i++) {
-                const lineErrors = errors[i];
-                marker.push(
-                    ...lineErrors.map((e) => ({
-                        severity: monaco.MarkerSeverity.Error,
-                        startLineNumber: i + 1,
-                        startColumn: e.startColumn + 1,
-                        endLineNumber: i + 1,
-                        endColumn: e.endColumn + 1,
-                        message: e.message,
-                    })),
-                );
+            // empty content gets accepted as valid as it represents no constraints
+            if (content !== "") {
+                const lines = this.editor.getValue().split("\n");
+                const errors = lines.map(this.tree.verify, this.tree);
+                for (let i = 0; i < errors.length; i++) {
+                    const lineErrors = errors[i];
+                    marker.push(
+                        ...lineErrors.map((e) => ({
+                            severity: monaco.MarkerSeverity.Error,
+                            startLineNumber: i + 1,
+                            startColumn: e.startColumn + 1,
+                            endLineNumber: i + 1,
+                            endColumn: e.endColumn + 1,
+                            message: e.message,
+                        })),
+                    );
+                }
             }
 
             this.validationLabel.innerText =
