@@ -45,6 +45,15 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         editorModeController?.onModeChange(() => {
             this.forceReadOnly = editorModeController!.isReadOnly();
         });
+        constraintRegistry.onUpdate(() => {
+            if (this.editor) {
+                const editorText = this.editor.getValue();
+                // Only update the editor if the constraints have changed
+                if (editorText !== this.constraintRegistry.getConstraints()) {
+                    this.editor.setValue(this.constraintRegistry.getConstraints() || "");
+                }
+            }
+        });
     }
 
     id(): string {

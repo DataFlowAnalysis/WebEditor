@@ -612,6 +612,6 @@
             ]
         }
     ],
-    "constraints": "data Sensitivity.Personal neverFlows vertex Location.nonEU",
+    "constraints": "- default: data Sensitivity.Personal neverFlows vertex Location.nonEU",
     "mode": "edit"
 }
