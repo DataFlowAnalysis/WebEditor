@@ -11,7 +11,7 @@ export class SettingsManager {
     private _hideEdgeLabelsCheckbox?: HTMLInputElement;
     private _simplifyNodeNames = false;
     private _simplifyNodeNamesCheckbox?: HTMLInputElement;
-    private static readonly layoutMethodLocalStorageKey = "settings";
+    private static readonly layoutMethodLocalStorageKey = "dfdwebeditor:settings";
 
     constructor(@inject(TYPES.IActionDispatcher) protected readonly dispatcher: ActionDispatcher) {
         this.layoutMethod = (localStorage.getItem(SettingsManager.layoutMethodLocalStorageKey) ??
