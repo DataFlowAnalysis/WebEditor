@@ -129,7 +129,17 @@ export namespace TreeBuilder {
         });
         dataSourceSelector.children = dataSelectors;
 
-        return [nodeSourceSelector, dataSourceSelector];
+        const nameNode: AutoCompleteNode = {
+            word: new NameWord(),
+            children: [nodeSourceSelector, dataSourceSelector],
+        };
+
+        const startNode: AutoCompleteNode = {
+            word: new ConstantWord("-"),
+            children: [nameNode],
+        };
+
+        return [startNode];
     }
 
     function getLeaves(node: AutoCompleteNode): AutoCompleteNode[] {
@@ -298,6 +308,31 @@ export namespace TreeBuilder {
                 return ['Unknown label value "' + parts[1] + '" for type "' + parts[0] + '"'];
             }
 
+            return [];
+        }
+    }
+
+    class NameWord implements AbstractWord {
+        completionOptions(word: string): WordCompletion[] {
+            if (word.length === 0) {
+                return [];
+            }
+            return [
+                {
+                    insertText: ":",
+                    kind: monaco.languages.CompletionItemKind.Keyword,
+                },
+            ];
+        }
+
+        verifyWord(word: string): string[] {
+            const name = word.split(":")[0];
+            if (name.length === 0) {
+                return ["Expected a name"];
+            }
+            if (!word.endsWith(":")) {
+                return ['Expected ":" at the end of name'];
+            }
             return [];
         }
     }
