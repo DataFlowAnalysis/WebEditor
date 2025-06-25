@@ -287,7 +287,10 @@ export class LabelTypeEditorUI extends AbstractUIExtension implements KeyListene
             // we check for the single click here, since this gets triggered before the ondblclick event
             if (valueInput.getAttribute("clicked") !== "true") {
                 event.preventDefault();
-                valueInput.blur();
+                // the blur needs to occur with a delay, as otherwise chromium browsers prevent the drag
+                setTimeout(() => {
+                    valueInput.blur();
+                }, 0);
             }
         };
 
