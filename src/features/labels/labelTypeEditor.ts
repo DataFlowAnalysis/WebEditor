@@ -77,7 +77,7 @@ export class LabelTypeEditorUI extends AbstractUIExtension implements KeyListene
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
-        containerElement.classList.add("ui-float");
+        containerElement.classList.add("ui-float", "hide-on-embed");
         containerElement.innerHTML = `
             <label for="accordion-state-label-types">
                 <div class="accordion-button cevron-left" id="accordion-state-label-title">Label Types</div>

@@ -34,6 +34,7 @@ import { settingsModule } from "./features/settingsMenu/di.config";
 import { LoadDiagramAction } from "./features/serialize/load";
 import { commandPaletteModule } from "./features/commandPalette/di.config";
 import { LoadingIndicator } from "./common/loadingIndicator";
+import { EditorModeController } from "./features/editorMode/editorModeController";
 
 const container = new Container();
 
@@ -64,11 +65,19 @@ container.load(
 );
 
 const dispatcher = container.get<ActionDispatcher>(TYPES.IActionDispatcher);
+const editorModeController = container.get<EditorModeController>(EditorModeController);
 const defaultUIElements = container.getAll<AbstractUIExtension>(EDITOR_TYPES.DefaultUIElement);
 const modelSource = container.get<LocalModelSource>(TYPES.ModelSource);
 export const logger = container.get<ILogger>(TYPES.ILogger);
 
 let modelFileName = "diagram";
+editorModeController.onModeChange((mode) => {
+    if (mode !== "embed") {
+        document.body.classList.remove("embed-mode");
+    } else {
+        document.body.classList.add("embed-mode");
+    }
+});
 
 export function setModelFileName(name: string): void {
     modelFileName = name;

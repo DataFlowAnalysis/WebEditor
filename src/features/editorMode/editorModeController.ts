@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 
-export type EditorMode = "edit" | "view";
+export type EditorMode = "edit" | "view" | "embed";
 
 /**
  * Holds the current editor mode in a central place.

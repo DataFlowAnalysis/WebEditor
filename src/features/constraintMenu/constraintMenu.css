@@ -112,3 +112,13 @@ div.constraint-menu {
     align-items: center;
     gap: 5px;
 }
+
+.embed-mode .constraint-menu {
+    visibility: hidden;
+    background-color: transparent;
+}
+
+.embed-mode #run-button {
+    width: fit-content;
+    float: right;
+}

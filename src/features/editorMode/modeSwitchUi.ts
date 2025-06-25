@@ -27,7 +27,7 @@ export class EditorModeSwitchUi extends AbstractUIExtension {
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
-        containerElement.classList.add("ui-float");
+        containerElement.classList.add("ui-float", "hide-on-embed");
         containerElement.style.visibility = "hidden";
         this.editorModeController.onModeChange((mode) => this.reRender(mode));
         this.reRender(this.editorModeController.getCurrentMode());
@@ -37,6 +37,7 @@ export class EditorModeSwitchUi extends AbstractUIExtension {
         this.containerElement.innerHTML = "";
         switch (mode) {
             case "edit":
+            case "embed":
                 this.containerElement.style.visibility = "hidden";
                 break;
             case "view":
