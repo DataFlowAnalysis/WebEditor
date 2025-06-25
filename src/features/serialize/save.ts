@@ -15,7 +15,9 @@ export interface SavedDiagram {
     labelTypes?: LabelType[];
     constraints?: Constraint[];
     mode?: EditorMode;
+    version: number;
 }
+export const CURRENT_VERSION = 1;
 
 export interface SaveDiagramAction extends Action {
     kind: typeof SaveDiagramAction.KIND;
@@ -66,6 +68,7 @@ export class SaveDiagramCommand extends Command {
             labelTypes: this.labelTypeRegistry?.getLabelTypes(),
             constraints: this.constraintRegistry?.getConstraints(),
             mode: this.editorModeController?.getCurrentMode(),
+            version: CURRENT_VERSION,
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);
         const jsonBlob = new Blob([diagramJson], { type: "application/json" });
