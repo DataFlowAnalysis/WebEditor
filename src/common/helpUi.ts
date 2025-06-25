@@ -16,7 +16,7 @@ export class HelpUI extends AbstractUIExtension {
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
-        containerElement.classList.add("ui-float");
+        containerElement.classList.add("ui-float", "hide-on-embed");
         containerElement.innerHTML = `
             <input type="checkbox" id="accordion-state-help" class="accordion-state" hidden>
             <label id="help-ui-accordion-label" for="accordion-state-help">
