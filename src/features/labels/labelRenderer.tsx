@@ -48,7 +48,7 @@ export class DfdNodeLabelRenderer {
         const radius = height / 2;
 
         const deleteLabelHandler = () => {
-            const action = DeleteLabelAssignmentAction.create(node, label);
+            const action = DeleteLabelAssignmentAction.create(label, node);
             this.actionDispatcher.dispatch(action);
         };
 
