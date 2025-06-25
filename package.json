@@ -17,7 +17,7 @@
         "inversify": "^6.2.2",
         "lint-staged": "^16.1.2",
         "monaco-editor": "^0.52.2",
-        "prettier": "^3.5.3",
+        "prettier": "^3.6.1",
         "reflect-metadata": "^0.2.2",
         "sprotty": "^1.4.0",
         "sprotty-elk": "^1.4.0",
