@@ -4,7 +4,7 @@ import { Action, SModelRoot } from "sprotty-protocol";
 import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
-import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
+import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 
 /**
  * Type that contains all data related to a diagram.
@@ -13,7 +13,7 @@ import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 export interface SavedDiagram {
     model: SModelRoot;
     labelTypes?: LabelType[];
-    constraints?: string;
+    constraints?: Constraint[];
     mode?: EditorMode;
 }
 
@@ -64,7 +64,7 @@ export class SaveDiagramCommand extends Command {
         const diagram: SavedDiagram = {
             model: modelCopy,
             labelTypes: this.labelTypeRegistry?.getLabelTypes(),
-            constraints: this.constraintRegistry?.getConstraints(),
+            constraints: this.constraintRegistry?.getConstraintList(),
             mode: this.editorModeController?.getCurrentMode(),
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);

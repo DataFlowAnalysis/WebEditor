@@ -56,7 +56,7 @@ export class SaveDFDandDDCommand extends Command {
         const diagram: SavedDiagram = {
             model: modelCopy,
             labelTypes: this.labelTypeRegistry?.getLabelTypes(),
-            constraints: this.constraintRegistry?.getConstraints(),
+            constraints: this.constraintRegistry?.getConstraintList(),
             mode: this.editorModeController?.getCurrentMode(),
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);

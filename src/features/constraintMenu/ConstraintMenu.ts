@@ -49,8 +49,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             if (this.editor) {
                 const editorText = this.editor.getValue();
                 // Only update the editor if the constraints have changed
-                if (editorText !== this.constraintRegistry.getConstraints()) {
-                    this.editor.setValue(this.constraintRegistry.getConstraints() || "");
+                if (editorText !== this.constraintRegistry.getConstraintsAsText()) {
+                    this.editor.setValue(this.constraintRegistry.getConstraintsAsText() || "");
                 }
             }
         });
@@ -124,7 +124,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             readOnly: this.forceReadOnly,
         });
 
-        this.editor?.setValue(this.constraintRegistry.getConstraints() || "");
+        this.editor?.setValue(this.constraintRegistry.getConstraintsAsText() || "");
 
         this.editor?.onDidChangeModelContent(() => {
             if (!this.editor) {

@@ -95,7 +95,7 @@ export class LoadDefaultDiagramCommand extends Command {
             // Load label types
             this.constraintRegistry.clearConstraints();
             if (defaultDiagram?.constraints) {
-                this.constraintRegistry.setConstraints(defaultDiagram.constraints);
+                this.constraintRegistry.setConstraintsFromArray(defaultDiagram.constraints);
                 this.logger.info(this, "Constraints loaded successfully");
             }
         }

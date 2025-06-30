@@ -612,6 +612,12 @@
             ]
         }
     ],
-    "constraints": "- default: data Sensitivity.Personal neverFlows vertex Location.nonEU",
+    "constraints": [
+        {
+            "id": "j4nz39",
+            "name": "Test",
+            "constraint": "data Sensitivity.Personal neverFlows vertex Location.nonEU"
+        }
+    ],
     "mode": "edit"
 }
