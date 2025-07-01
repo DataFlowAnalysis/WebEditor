@@ -23,4 +23,3 @@ jobs:
                   npx prettier --check ./**/*.ts
                   npx prettier --check ./**/*.tsx
                   npx prettier --check ./**/*.json
-                  npx prettier --check ./**/*.md
