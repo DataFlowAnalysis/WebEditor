@@ -16,7 +16,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./nodeAnnotationUi.css";
 
 export class DfdNodeAnnotationUIMouseListener extends MouseListener {
-    private stillTimeout: NodeJS.Timeout | undefined;
+    private stillTimeout: number | undefined;
     private lastPosition = { x: 0, y: 0 };
 
     constructor(@inject(TYPES.IActionDispatcher) private readonly actionDispatcher: IActionDispatcher) {
