@@ -80,16 +80,11 @@ export class LoadDFDandDDCommand extends Command {
             const dataflowFileContent = await this.readFileContent(dataflowFile);
             const dictionaryFileContent = await this.readFileContent(dictionaryFile);
 
-            // Send each file's content in separate WebSocket messages
-            sendMessage(
-                "DFD:" +
-                    this.getFileNameWithoutExtension(dataflowFile) +
-                    ":" +
-                    dataflowFileContent +
-                    "\n:DD:\n" +
-                    dictionaryFileContent,
-            );
             setModelFileName(dataflowFile.name.substring(0, dataflowFile.name.lastIndexOf(".")));
+
+            // Send each file's content in separate WebSocket messages
+            sendMessage("DFD:" + dataflowFileContent + "\n:DD:\n" + dictionaryFileContent);
+
             setFileNameInPageTitle(dataflowFile.name);
             return context.root;
         } catch (error) {
