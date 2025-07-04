@@ -7,6 +7,7 @@ import { SettingsManager } from "./SettingsManager";
 import { LayoutMethod } from "./LayoutMethod";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { ChangeEditorModeAction } from "../editorMode/command";
+import { Mode } from "./annotationManager";
 
 @injectable()
 export class SettingsUI extends AbstractUIExtension {
@@ -51,6 +52,12 @@ export class SettingsUI extends AbstractUIExtension {
                     <option value="${LayoutMethod.LINES}">Lines</option>
                     <option value="${LayoutMethod.WRAPPING}">Wrapping Lines</option>
                     <option value="${LayoutMethod.CIRCLES}">Circles</option>
+                  </select>
+                  <label for="setting-mode-option">Show Labels</label>
+                  <select name="setting-mode-option" id="setting-mode-option">
+                    <option value="${Mode.OUTGOING}">Outgoing Labels</option>
+                    <option value="${Mode.INCOMING}">Incoming Labels</option>
+                    <option value="${Mode.ALL}">All Labels</option>
                   </select>
 
                   <label for="setting-hide-edge-labels">Hide Edge Labels</label>
@@ -109,5 +116,13 @@ export class SettingsUI extends AbstractUIExtension {
         readOnlyCheckbox.addEventListener("change", () => {
             this.dispatcher.dispatch(ChangeEditorModeAction.create(readOnlyCheckbox.checked ? "view" : "edit"));
         });
+
+        const modeSelect = containerElement.querySelector("#setting-mode-option") as HTMLSelectElement;
+        modeSelect.value = Mode.OUTGOING; // or 'OUTGOING'
+    }
+
+    public getCurrentLabelMode(): Mode {
+        const modeSelect = document.getElementById("setting-mode-option") as HTMLSelectElement;
+        return modeSelect.value as Mode;
     }
 }

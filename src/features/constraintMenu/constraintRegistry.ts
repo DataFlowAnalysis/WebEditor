@@ -11,9 +11,16 @@ export interface Constraint {
 export class ConstraintRegistry {
     private constraints: Constraint[] = [];
     private updateCallbacks: (() => void)[] = [];
+    private selectedConstraints: string[] = ["ALL"];
 
     public setConstraints(constraints: string): void {
-        this.constraints = constraints.split("\r?\n").map(this.constraintFromLine);
+        const lines = constraints
+            .trim()
+            .split(/\r?\n(?=-)/)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        this.constraints = lines.map(this.constraintFromLine);
         this.constraintListChanged();
     }
 
@@ -24,6 +31,14 @@ export class ConstraintRegistry {
             constraint: c.constraint,
         }));
         this.constraintListChanged();
+    }
+
+    public setSelectedConstraints(constraints: string[]): void {
+        this.selectedConstraints = constraints;
+    }
+
+    public getSelectedConstraints(): string[] {
+        return this.selectedConstraints;
     }
 
     private constraintFromLine(line: string): Constraint {

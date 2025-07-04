@@ -1,7 +1,7 @@
-import { inject, injectable, optional } from "inversify";
+﻿import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
 import { AbstractUIExtension, IActionDispatcher, LocalModelSource, TYPES } from "sprotty";
-import { ConstraintRegistry } from "./constraintRegistry";
+import { Constraint, ConstraintRegistry } from "./constraintRegistry";
 
 // Enable hover feature that is used to show validation errors.
 // Inline completions are enabled to allow autocompletion of keywords and inputs/label types/label values.
@@ -19,6 +19,7 @@ import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { Switchable, ThemeManager } from "../settingsMenu/themeManager";
 import { AnalyzeDiagramAction } from "../serialize/analyze";
+import { ChooseConstraintAction } from "./actions";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension implements Switchable {
@@ -28,6 +29,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
     private editor?: monaco.editor.IStandaloneCodeEditor;
     private tree: AutoCompleteTree;
     private forceReadOnly: boolean;
+    private optionsMenu?: HTMLDivElement;
 
     constructor(
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
@@ -72,6 +74,10 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 </div>
             </label>
         `;
+
+        const title = containerElement.querySelector("#constraint-menu-expand-title") as HTMLElement;
+        title.appendChild(this.buildOptionsButton());
+
         const accordionContent = document.createElement("div");
         accordionContent.classList.add("accordion-content");
         const contentDiv = document.createElement("div");
@@ -224,5 +230,106 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
     switchTheme(useDark: boolean): void {
         this.editor?.updateOptions({ theme: useDark ? "vs-dark" : "vs" });
+    }
+
+    private buildOptionsButton(): HTMLElement {
+        const btn = document.createElement("button");
+        btn.id = "constraint-options-button";
+        btn.title = "Filter…";
+        btn.innerHTML = "⋮";                // or insert a font-awesome icon
+        btn.onclick = () => this.toggleOptionsMenu();
+        return btn;
+    }
+
+    /** show or hide the menu, generate checkboxes on the fly */
+    private toggleOptionsMenu(): void {
+        if (this.optionsMenu) {
+            this.optionsMenu.remove();
+            this.optionsMenu = undefined;
+            return;
+        }
+
+        // 1) create container
+        this.optionsMenu = document.createElement("div");
+        this.optionsMenu.id = "constraint-options-menu";
+
+        // 2) add the “All constraints” checkbox at the top
+        const allConstraints = document.createElement("label");
+        allConstraints.classList.add("options-item");
+
+        const allCb = document.createElement("input");
+        allCb.type = "checkbox";
+        allCb.value = "ALL";
+        // initially checked if no specific constraint is selected
+        allCb.checked = this.constraintRegistry.getSelectedConstraints().includes("ALL");
+
+        allCb.onchange = () => {
+            if (!this.optionsMenu) return;
+            if (allCb.checked) {
+                // uncheck every other constraint-checkbox
+                this.optionsMenu
+                    .querySelectorAll<HTMLInputElement>("input[type=checkbox]")
+                    .forEach(cb => {
+                        if (cb !== allCb) cb.checked = false;
+                    });
+                // dispatch with empty array to mean “all”
+                this.dispatcher.dispatch(
+                    ChooseConstraintAction.create(["ALL"])
+                );
+            } else {
+                this.dispatcher.dispatch(
+                    ChooseConstraintAction.create([])
+                );
+            }
+            
+        };
+
+        allConstraints.appendChild(allCb);
+        allConstraints.appendChild(document.createTextNode("All constraints"));
+        this.optionsMenu.appendChild(allConstraints);
+
+        // 2) pull your dynamic items (replace with your real API)
+        const items = this.constraintRegistry.getConstraintList();
+
+        // 3) for each item build a checkbox
+        items.forEach(item => {
+            const label = document.createElement("label");
+            label.classList.add("options-item");
+
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = item.name;
+            cb.checked = this.constraintRegistry.getSelectedConstraints().includes(cb.value);
+
+            cb.onchange = () => {
+                if (cb.checked) allCb.checked = false;
+
+                const selected = Array.from(
+                    this.optionsMenu!.querySelectorAll<HTMLInputElement>("input[type=checkbox]:checked")
+                ).map(cb => cb.value);
+
+                // dispatch your action with either an array or
+                // a comma-joined string—whatever your action expects
+                this.dispatcher.dispatch(
+                    ChooseConstraintAction.create(selected)
+                );
+            };
+
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(item.name));
+            this.optionsMenu!.appendChild(label);
+        });
+
+        this.editorContainer.appendChild(this.optionsMenu);
+
+        // optional: click-outside handler
+        const onClickOutside = (e: MouseEvent) => {
+            if (this.optionsMenu && !this.optionsMenu.contains(e.target as Node)
+                && !(e.target as Element).matches("#constraint-options-button")) {
+                this.toggleOptionsMenu();
+                document.removeEventListener("click", onClickOutside);
+            }
+        };
+        setTimeout(() => document.addEventListener("click", onClickOutside), 0);
     }
 }

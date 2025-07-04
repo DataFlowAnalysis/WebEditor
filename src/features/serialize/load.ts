@@ -20,6 +20,7 @@ import { LayoutModelAction } from "../autoLayout/command";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
 import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 import { LoadingIndicator } from "../../common/loadingIndicator";
+import { ChooseConstraintAction } from "../constraintMenu/actions";
 
 export interface LoadDiagramAction extends Action {
     kind: typeof LoadDiagramAction.KIND;
@@ -335,6 +336,7 @@ export async function postLoadActions(
     // fit to screen is done after auto layouting because that may change the bounds of the diagram
     // requiring another fit to screen.
     await actionDispatcher.dispatch(createDefaultFitToScreenAction(newRoot, false));
+    actionDispatcher.dispatch(ChooseConstraintAction.create(["ALL"]));
 }
 
 let initialPageTitle: string | undefined;

@@ -1,7 +1,9 @@
 import { getModelFileName, logger, setModelSource, loadingIndicator } from "../../index";
 import { SaveDFDandDD } from "./saveDFDandDD";
 
-const webSocketAdress = `wss://websocket.dataflowanalysis.org/events/`;
+//Debug
+const webSocketAdress = `ws://localhost:3000/events/`;
+//const webSocketAdress = `wss://webeditor.t-hueller.de/events/`;
 
 let ws: WebSocket;
 let wsId = 0;
@@ -33,8 +35,8 @@ function initWebSocket() {
         logger.log(ws, event.data);
 
         // Example of specific handling for certain messages:
-        if (event.data === "Error:Cycle") {
-            alert("Error analyzing model: Model terminates in cycle!");
+        if (event.data.startsWith("Error:")) {
+            alert(event.data);
             loadingIndicator.hideIndicator();
             return;
         }
@@ -43,12 +45,13 @@ function initWebSocket() {
             loadingIndicator.hideIndicator();
             return;
         }
-        if (event.data === "Shutdown") {
-            loadingIndicator.hideIndicator();
-            return;
-        }
+
+        let message = event.data;
+        const name = message.split(":")[0];
+        message = message.replace(name + ":", "");
+
         if (event.data.trim().endsWith("</datadictionary:DataDictionary>")) {
-            const saveDFDandDD = new SaveDFDandDD(event.data);
+            const saveDFDandDD = new SaveDFDandDD(message);
             saveDFDandDD.saveDiagramAsDFD();
             loadingIndicator.hideIndicator();
             return;
@@ -56,7 +59,7 @@ function initWebSocket() {
 
         // Otherwise, treat incoming data as JSON for model source:
         setModelSource(
-            new File([new Blob([event.data], { type: "application/json" })], getModelFileName() + ".json", {
+            new File([new Blob([message], { type: "application/json" })], name + ".json", {
                 type: "application/json",
             }),
         );
@@ -65,7 +68,7 @@ function initWebSocket() {
 }
 
 export function sendMessage(message: string) {
-    ws.send(wsId + ":" + message);
+    ws.send(wsId + ":" + getModelFileName() + ":" + message);
 }
 
 // Initialize immediately upon module load
