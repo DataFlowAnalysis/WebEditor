@@ -131,12 +131,12 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 return;
             }
 
-            this.constraintRegistry.setConstraints(this.editor.getValue());
-
             const model = this.editor?.getModel();
             if (!model) {
                 return;
             }
+
+            this.constraintRegistry.setConstraints(model.getLinesContent());
 
             const content = model.getLinesContent();
             const marker: monaco.editor.IMarkerData[] = [];
