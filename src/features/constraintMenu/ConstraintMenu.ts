@@ -138,31 +138,22 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 return;
             }
 
-            const content = model.getValue();
+            const content = model.getLinesContent();
             const marker: monaco.editor.IMarkerData[] = [];
+            const emptyContent = content.length == 0 || (content.length == 1 && content[0] === "");
             // empty content gets accepted as valid as it represents no constraints
-            if (content !== "") {
-                const constraintTexts = ConstraintRegistry.splitToConstraintTexts(content);
-                const errors = constraintTexts.map(
-                    (c) => ({
-                        errors: this.tree.verify(c.text),
-                        c,
-                    }),
-                    this.tree,
+            if (!emptyContent) {
+                const errors = this.tree.verify(content);
+                marker.push(
+                    ...errors.map((e) => ({
+                        severity: monaco.MarkerSeverity.Error,
+                        startLineNumber: e.line,
+                        startColumn: e.startColumn,
+                        endLineNumber: e.line,
+                        endColumn: e.endColumn,
+                        message: e.message,
+                    })),
                 );
-                for (let i = 0; i < errors.length; i++) {
-                    const lineErrors = errors[i];
-                    marker.push(
-                        ...lineErrors.errors.map((e) => ({
-                            severity: monaco.MarkerSeverity.Error,
-                            startLineNumber: e.line + lineErrors.c.line,
-                            startColumn: e.startColumn,
-                            endLineNumber: e.line + lineErrors.c.line,
-                            endColumn: e.endColumn,
-                            message: e.message,
-                        })),
-                    );
-                }
             }
 
             this.validationLabel.innerText =

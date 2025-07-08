@@ -96,114 +96,82 @@ export class NegatableWord implements AbstractWord {
 }
 
 export class AutoCompleteTree {
-    private content: Token[];
+    constructor(private roots: AutoCompleteNode[]) {}
 
-    constructor(private roots: AutoCompleteNode[]) {
-        this.content = [];
-    }
-
-    /**
-     * Sets the content of the tree for the next analyzing cycle
-     */
-    private setContent(text: string) {
-        if (!text) {
-            text = "";
-        }
-        if (text.length == 0) {
-            this.content = [];
-            return;
+    private tokenize(text: string[]): Token[] {
+        if (!text || text.length == 0) {
+            return [];
         }
 
-        let currentToken = "";
-        let currentLine = 1;
-        let currentColumn = 0;
-        this.content = [];
-        let index = 0;
-        while (index < text.length) {
-            const char = text[index];
-            if (char === "\n") {
-                if (currentToken.length > 0) {
-                    this.content.push({
-                        text: currentToken,
-                        line: currentLine,
-                        column: currentColumn - currentToken.length + 1,
-                    });
-                }
-                currentToken = "";
-                currentLine++;
-                currentColumn = 1;
-            } else if (char === " " || char === "\t") {
-                if (currentToken.length > 0) {
-                    this.content.push({
-                        text: currentToken,
-                        line: currentLine,
-                        column: currentColumn - currentToken.length + 1,
-                    });
-                }
-                currentToken = "";
-                currentColumn += 1;
-            } else {
-                currentToken += char;
-                currentColumn += 1;
+        const tokens: Token[] = [];
+        for (const [lineNumber, line] of text.entries()) {
+            const lineTokens = line.split(/\s+/).filter((t) => t.length > 0);
+            let column = 0;
+            for (const token of lineTokens) {
+                column = line.indexOf(token, column);
+                tokens.push({
+                    text: token,
+                    line: lineNumber + 1,
+                    column: column + 1,
+                });
             }
-            index++;
         }
-        if (currentToken.length > 0) {
-            this.content.push({
-                text: currentToken,
-                line: currentLine,
-                column: currentColumn - currentToken.length + 1,
-            });
-        }
-        this.content = this.content.map((c) => ({ ...c, text: c.text.trim() })).filter((c) => c.text.length > 0);
+
+        return tokens;
     }
 
     /**
      * Checks the set content for errors
      * @returns An array of errors. An empty array means that the content is valid
      */
-    public verify(line: string): ValidationError[] {
-        this.setContent(line);
-        return this.verifyNode(this.roots, 0, false);
+    public verify(lines: string[]): ValidationError[] {
+        const tokens = this.tokenize(lines);
+        return this.verifyNode(this.roots, tokens, 0, false, true);
     }
 
-    private verifyNode(nodes: AutoCompleteNode[], index: number, comesFromFinal: boolean): ValidationError[] {
-        if (comesFromFinal && this.content[index].column == 0) {
-            const checkStart = this.verifyNode(this.roots, index, true);
-            if (checkStart.length > 0) {
-                return checkStart;
-            }
-        }
-        if (index >= this.content.length) {
+    private verifyNode(
+        nodes: AutoCompleteNode[],
+        tokens: Token[],
+        index: number,
+        comesFromFinal: boolean,
+        skipStartCheck = false,
+    ): ValidationError[] {
+        if (index >= tokens.length) {
             if (nodes.length == 0 || comesFromFinal) {
                 return [];
             } else {
                 return [
                     {
                         message: "Unexpected end of line",
-                        line: this.content[index - 1].line,
-                        startColumn: this.content[index - 1].column + this.content[index - 1].text.length - 1,
-                        endColumn: this.content[index - 1].column + this.content[index - 1].text.length,
+                        line: tokens[index - 1].line,
+                        startColumn: tokens[index - 1].column + tokens[index - 1].text.length - 1,
+                        endColumn: tokens[index - 1].column + tokens[index - 1].text.length,
                     },
                 ];
+            }
+        }
+        if (!skipStartCheck && tokens[index].column == 1) {
+            const matchesAnyRoot = this.roots.some((r) => r.word.verifyWord(tokens[index].text).length === 0);
+            if (matchesAnyRoot) {
+                return this.verifyNode(this.roots, tokens, index, false, true);
             }
         }
 
         const foundErrors: ValidationError[] = [];
         let childErrors: ValidationError[] = [];
         for (const n of nodes) {
-            const v = n.word.verifyWord(this.content[index].text);
+            const v = n.word.verifyWord(tokens[index].text);
             if (v.length > 0) {
                 foundErrors.push({
                     message: v[0],
-                    startColumn: this.content[index].column,
-                    endColumn: this.content[index].column + this.content[index].text.length,
-                    line: this.content[index].line,
+                    startColumn: tokens[index].column,
+                    endColumn: tokens[index].column + tokens[index].text.length,
+                    line: tokens[index].line,
                 });
                 continue;
             }
 
-            const childResult = this.verifyNode(n.children, index + 1, n.canBeFinal || false);
+            const childResult = this.verifyNode(n.children, tokens, index + 1, n.canBeFinal || false);
             if (childResult.length == 0) {
                 return [];
             } else {
@@ -211,59 +179,83 @@ export class AutoCompleteTree {
             }
         }
         if (childErrors.length > 0) {
-            return childErrors;
+            return deduplicateErrors(childErrors);
         }
-        return foundErrors;
+        return deduplicateErrors(foundErrors);
     }
 
     /**
      * Calculates the completion options for the current content
      */
-    public getCompletion(line: string): monaco.languages.CompletionItem[] {
-        this.setContent(line);
+    public getCompletion(lines: string[]): monaco.languages.CompletionItem[] {
+        const tokens = this.tokenize(lines);
+        const endsWithWhitespace =
+            (lines.length > 0 && lines[lines.length - 1].charAt(lines[lines.length - 1].length - 1).match(/\s/)) ||
+            lines[lines.length - 1].length == 0;
+        if (endsWithWhitespace) {
+            tokens.push({
+                text: "",
+                line: lines.length,
+                column: lines[lines.length - 1].length + 1,
+            });
+        }
         let result: WordCompletion[] = [];
-        if (this.content.length == 0) {
+        if (tokens.length == 0) {
             for (const r of this.roots) {
                 result = result.concat(r.word.completionOptions(""));
             }
         } else {
-            result = this.completeNode(this.roots, 0);
+            result = this.completeNode(this.roots, tokens, 0);
         }
-        return this.transformResults(result);
+        return this.transformResults(result, tokens);
     }
 
-    private completeNode(nodes: AutoCompleteNode[], index: number): WordCompletion[] {
+    private completeNode(
+        nodes: AutoCompleteNode[],
+        tokens: Token[],
+        index: number,
+        skipStartCheck = false,
+    ): WordCompletion[] {
+        // check for new start
+
+        if (!skipStartCheck && tokens[index].column == 1) {
+            const matchesAnyRoot = this.roots.some((n) => n.word.verifyWord(tokens[index].text).length === 0);
+            if (matchesAnyRoot) {
+                return this.completeNode(this.roots, tokens, index, true);
+            }
+        }
+
         let result: WordCompletion[] = [];
-        if (index == this.content.length - 1) {
+        if (index == tokens.length - 1) {
             for (const node of nodes) {
-                result = result.concat(node.word.completionOptions(this.content[index].text));
+                result = result.concat(node.word.completionOptions(tokens[index].text));
             }
             return result;
         }
         for (const n of nodes) {
-            if (!n.word.verifyWord(this.content[index].text)) {
+            if (!n.word.verifyWord(tokens[index].text)) {
                 continue;
             }
-            result = result.concat(this.completeNode(n.children, index + 1));
+            result = result.concat(this.completeNode(n.children, tokens, index + 1));
         }
         return result;
     }
 
-    private transformResults(comp: WordCompletion[]): monaco.languages.CompletionItem[] {
+    private transformResults(comp: WordCompletion[], tokens: Token[]): monaco.languages.CompletionItem[] {
         const result: monaco.languages.CompletionItem[] = [];
         const filtered = comp.filter(
             (c, idx) => comp.findIndex((c2) => c2.insertText === c.insertText && c2.kind === c.kind) === idx,
         );
         for (const c of filtered) {
-            const r = this.transformResult(c);
+            const r = this.transformResult(c, tokens);
             result.push(r);
         }
         return result;
     }
 
-    private transformResult(comp: WordCompletion): monaco.languages.CompletionItem {
-        const wordStart = this.content.length == 0 ? 1 : this.content[this.content.length - 1].column - 1;
-        const lineNumber = this.content.length == 0 ? 1 : this.content[this.content.length - 1].line;
+    private transformResult(comp: WordCompletion, tokens: Token[]): monaco.languages.CompletionItem {
+        const wordStart = tokens.length == 0 ? 1 : tokens[tokens.length - 1].column;
+        const lineNumber = tokens.length == 0 ? 1 : tokens[tokens.length - 1].line;
         return {
             insertText: comp.insertText,
             kind: comp.kind,
@@ -277,6 +269,18 @@ export class AutoCompleteTree {
             ),
         };
     }
+}
+
+function deduplicateErrors(errors: ValidationError[]): ValidationError[] {
+    const seen = new Set<string>();
+    return errors.filter((error) => {
+        const key = `${error.line}-${error.startColumn}-${error.endColumn}-${error.message}`;
+        if (seen.has(key)) {
+            return false;
+        }
+        seen.add(key);
+        return true;
+    });
 }
 
 export interface AutoCompleteNode {
