@@ -8,8 +8,15 @@ export interface RequiredCompletionParts {
 
 export interface ValidationError {
     message: string;
+    line: number;
     startColumn: number;
     endColumn: number;
+}
+
+interface Token {
+    text: string;
+    line: number;
+    column: number;
 }
 
 export type WordCompletion = RequiredCompletionParts & Partial<monaco.languages.CompletionItem>;
@@ -89,35 +96,66 @@ export class NegatableWord implements AbstractWord {
 }
 
 export class AutoCompleteTree {
-    private content: string[];
-    /** value matches the start column of the value at the same index in content */
-    private startColumns: number[];
-    private length: number;
+    private content: Token[];
 
     constructor(private roots: AutoCompleteNode[]) {
         this.content = [];
-        this.startColumns = [];
-        this.length = 0;
     }
 
     /**
      * Sets the content of the tree for the next analyzing cycle
      */
-    private setContent(line: string) {
-        if (!line) {
-            line = "";
+    private setContent(text: string) {
+        if (!text) {
+            text = "";
         }
-        if (line.length == 0) {
+        if (text.length == 0) {
             this.content = [];
-            this.length = 0;
             return;
         }
-        this.content = line.split(" ");
-        this.startColumns = this.content.map(() => 0);
-        for (let i = 1; i < this.content.length; i++) {
-            this.startColumns[i] = this.startColumns[i - 1] + this.content[i - 1].length + 1;
+
+        let currentToken = "";
+        let currentLine = 1;
+        let currentColumn = 0;
+        this.content = [];
+        let index = 0;
+        while (index < text.length) {
+            const char = text[index];
+            if (char === "\n") {
+                if (currentToken.length > 0) {
+                    this.content.push({
+                        text: currentToken,
+                        line: currentLine,
+                        column: currentColumn - currentToken.length + 1,
+                    });
+                }
+                currentToken = "";
+                currentLine++;
+                currentColumn = 1;
+            } else if (char === " " || char === "\t") {
+                if (currentToken.length > 0) {
+                    this.content.push({
+                        text: currentToken,
+                        line: currentLine,
+                        column: currentColumn - currentToken.length + 1,
+                    });
+                }
+                currentToken = "";
+                currentColumn += 1;
+            } else {
+                currentToken += char;
+                currentColumn += 1;
+            }
+            index++;
         }
-        this.length = line.length;
+        if (currentToken.length > 0) {
+            this.content.push({
+                text: currentToken,
+                line: currentLine,
+                column: currentColumn - currentToken.length + 1,
+            });
+        }
+        this.content = this.content.map((c) => ({ ...c, text: c.text.trim() })).filter((c) => c.text.length > 0);
     }
 
     /**
@@ -130,23 +168,37 @@ export class AutoCompleteTree {
     }
 
     private verifyNode(nodes: AutoCompleteNode[], index: number, comesFromFinal: boolean): ValidationError[] {
+        if (comesFromFinal && this.content[index].column == 0) {
+            const checkStart = this.verifyNode(this.roots, index, true);
+            if (checkStart.length > 0) {
+                return checkStart;
+            }
+        }
         if (index >= this.content.length) {
             if (nodes.length == 0 || comesFromFinal) {
                 return [];
             } else {
-                return [{ message: "Unexpected end of line", startColumn: this.length - 1, endColumn: this.length }];
+                return [
+                    {
+                        message: "Unexpected end of line",
+                        line: this.content[index - 1].line,
+                        startColumn: this.content[index - 1].column + this.content[index - 1].text.length - 1,
+                        endColumn: this.content[index - 1].column + this.content[index - 1].text.length,
+                    },
+                ];
             }
         }
 
         const foundErrors: ValidationError[] = [];
         let childErrors: ValidationError[] = [];
         for (const n of nodes) {
-            const v = n.word.verifyWord(this.content[index]);
+            const v = n.word.verifyWord(this.content[index].text);
             if (v.length > 0) {
                 foundErrors.push({
                     message: v[0],
-                    startColumn: this.startColumns[index],
-                    endColumn: this.startColumns[index] + this.content[index].length,
+                    startColumn: this.content[index].column,
+                    endColumn: this.content[index].column + this.content[index].text.length,
+                    line: this.content[index].line,
                 });
                 continue;
             }
@@ -167,7 +219,7 @@ export class AutoCompleteTree {
     /**
      * Calculates the completion options for the current content
      */
-    public getCompletion(line: string, lineNumber = 1): monaco.languages.CompletionItem[] {
+    public getCompletion(line: string): monaco.languages.CompletionItem[] {
         this.setContent(line);
         let result: WordCompletion[] = [];
         if (this.content.length == 0) {
@@ -177,19 +229,19 @@ export class AutoCompleteTree {
         } else {
             result = this.completeNode(this.roots, 0);
         }
-        return this.transformResults(result, lineNumber);
+        return this.transformResults(result);
     }
 
     private completeNode(nodes: AutoCompleteNode[], index: number): WordCompletion[] {
         let result: WordCompletion[] = [];
         if (index == this.content.length - 1) {
             for (const node of nodes) {
-                result = result.concat(node.word.completionOptions(this.content[index]));
+                result = result.concat(node.word.completionOptions(this.content[index].text));
             }
             return result;
         }
         for (const n of nodes) {
-            if (!n.word.verifyWord(this.content[index])) {
+            if (!n.word.verifyWord(this.content[index].text)) {
                 continue;
             }
             result = result.concat(this.completeNode(n.children, index + 1));
@@ -197,26 +249,32 @@ export class AutoCompleteTree {
         return result;
     }
 
-    private transformResults(comp: WordCompletion[], lineNumber = 1): monaco.languages.CompletionItem[] {
+    private transformResults(comp: WordCompletion[]): monaco.languages.CompletionItem[] {
         const result: monaco.languages.CompletionItem[] = [];
         const filtered = comp.filter(
             (c, idx) => comp.findIndex((c2) => c2.insertText === c.insertText && c2.kind === c.kind) === idx,
         );
         for (const c of filtered) {
-            const r = this.transformResult(c, lineNumber);
+            const r = this.transformResult(c);
             result.push(r);
         }
         return result;
     }
 
-    private transformResult(comp: WordCompletion, lineNumber = 1): monaco.languages.CompletionItem {
-        const wordStart = this.content.length == 0 ? 1 : this.length - this.content[this.content.length - 1].length + 1;
+    private transformResult(comp: WordCompletion): monaco.languages.CompletionItem {
+        const wordStart = this.content.length == 0 ? 1 : this.content[this.content.length - 1].column - 1;
+        const lineNumber = this.content.length == 0 ? 1 : this.content[this.content.length - 1].line;
         return {
             insertText: comp.insertText,
             kind: comp.kind,
             label: comp.label ?? comp.insertText,
             insertTextRules: comp.insertTextRules,
-            range: new monaco.Range(lineNumber, wordStart + (comp.startOffset ?? 0), lineNumber, this.length + 1),
+            range: new monaco.Range(
+                lineNumber,
+                wordStart + (comp.startOffset ?? 0),
+                lineNumber,
+                wordStart + (comp.startOffset ?? 0) + comp.insertText.length,
+            ),
         };
     }
 }

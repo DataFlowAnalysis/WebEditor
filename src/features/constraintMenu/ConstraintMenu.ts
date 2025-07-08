@@ -142,17 +142,23 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             const marker: monaco.editor.IMarkerData[] = [];
             // empty content gets accepted as valid as it represents no constraints
             if (content !== "") {
-                const lines = this.editor.getValue().split(/\r?\n/gm);
-                const errors = lines.map(this.tree.verify, this.tree);
+                const constraintTexts = ConstraintRegistry.splitToConstraintTexts(content);
+                const errors = constraintTexts.map(
+                    (c) => ({
+                        errors: this.tree.verify(c.text),
+                        c,
+                    }),
+                    this.tree,
+                );
                 for (let i = 0; i < errors.length; i++) {
                     const lineErrors = errors[i];
                     marker.push(
-                        ...lineErrors.map((e) => ({
+                        ...lineErrors.errors.map((e) => ({
                             severity: monaco.MarkerSeverity.Error,
-                            startLineNumber: i + 1,
-                            startColumn: e.startColumn + 1,
-                            endLineNumber: i + 1,
-                            endColumn: e.endColumn + 1,
+                            startLineNumber: e.line + lineErrors.c.line,
+                            startColumn: e.startColumn,
+                            endLineNumber: e.line + lineErrors.c.line,
+                            endColumn: e.endColumn,
                             message: e.message,
                         })),
                     );

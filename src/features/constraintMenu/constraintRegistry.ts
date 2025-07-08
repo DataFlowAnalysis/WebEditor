@@ -13,8 +13,10 @@ export class ConstraintRegistry {
     private updateCallbacks: (() => void)[] = [];
 
     public setConstraints(constraints: string): void {
-        this.constraints = constraints.split("\r?\n").map(this.constraintFromLine);
-        this.constraintListChanged();
+        this.constraints = ConstraintRegistry.splitToConstraintTexts(constraints).map((t) =>
+            this.constraintFromText(t.text),
+        );
+        //this.constraintListChanged();
     }
 
     public setConstraintsFromArray(constraints: Constraint[]): void {
@@ -26,8 +28,8 @@ export class ConstraintRegistry {
         this.constraintListChanged();
     }
 
-    private constraintFromLine(line: string): Constraint {
-        const parts = line.split(" ");
+    private constraintFromText(text: string): Constraint {
+        const parts = text.split(" ");
         if (parts.length < 2) {
             return {
                 id: generateRandomSprottyId(),
@@ -69,5 +71,28 @@ export class ConstraintRegistry {
 
     public getConstraintList(): Constraint[] {
         return this.constraints;
+    }
+
+    public static splitToConstraintTexts(text: string): { text: string; line: number }[] {
+        if (text === "") {
+            return [];
+        }
+        const lines = text.split(/\r?\n/gm);
+        let currentConstraint = "";
+        const constraints: { text: string; line: number }[] = [];
+        let lastStart = 0;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (line.startsWith("-")) {
+                if (currentConstraint) {
+                    constraints.push({ text: currentConstraint, line: lastStart });
+                }
+                lastStart = i;
+                currentConstraint = line;
+            } else {
+                currentConstraint += `\n${line}`;
+            }
+        }
+        return currentConstraint ? [...constraints, { text: currentConstraint, line: lastStart }] : constraints;
     }
 }
