@@ -23,7 +23,7 @@ export class ChangeEditorModeCommand extends Command {
     static readonly KIND = ChangeEditorModeAction.KIND;
 
     private oldMode?: EditorMode;
-    private oldNodeAnnotations: Map<string, DfdNodeAnnotation> = new Map();
+    private oldNodeAnnotations: Map<string, DfdNodeAnnotation[]> = new Map();
 
     @inject(EditorModeController)
     private readonly controller?: EditorModeController;
@@ -65,9 +65,9 @@ export class ChangeEditorModeCommand extends Command {
 
             this.oldNodeAnnotations.clear();
             context.root.index.all().forEach((element) => {
-                if (element instanceof DfdNodeImpl && element.annotation) {
-                    this.oldNodeAnnotations.set(element.id, element.annotation);
-                    element.annotation = undefined;
+                if (element instanceof DfdNodeImpl && element.annotations) {
+                    this.oldNodeAnnotations.set(element.id, element.annotations);
+                    element.annotations = [];
                 }
             });
         }
@@ -79,7 +79,7 @@ export class ChangeEditorModeCommand extends Command {
             this.oldNodeAnnotations.forEach((annotation, id) => {
                 const element = context.root.index.getById(id);
                 if (element instanceof DfdNodeImpl) {
-                    element.annotation = annotation;
+                    element.annotations = annotation;
                 }
             });
         }

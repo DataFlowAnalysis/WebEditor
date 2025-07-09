@@ -1,7 +1,7 @@
 ﻿import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
 import { AbstractUIExtension, IActionDispatcher, LocalModelSource, TYPES } from "sprotty";
-import { Constraint, ConstraintRegistry } from "./constraintRegistry";
+import { ConstraintRegistry } from "./constraintRegistry";
 
 // Enable hover feature that is used to show validation errors.
 // Inline completions are enabled to allow autocompletion of keywords and inputs/label types/label values.
@@ -236,7 +236,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         const btn = document.createElement("button");
         btn.id = "constraint-options-button";
         btn.title = "Filter…";
-        btn.innerHTML = "⋮";                // or insert a font-awesome icon
+        btn.innerHTML = "⋮"; // or insert a font-awesome icon
         btn.onclick = () => this.toggleOptionsMenu();
         return btn;
     }
@@ -267,21 +267,14 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             if (!this.optionsMenu) return;
             if (allCb.checked) {
                 // uncheck every other constraint-checkbox
-                this.optionsMenu
-                    .querySelectorAll<HTMLInputElement>("input[type=checkbox]")
-                    .forEach(cb => {
-                        if (cb !== allCb) cb.checked = false;
-                    });
+                this.optionsMenu.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+                    if (cb !== allCb) cb.checked = false;
+                });
                 // dispatch with empty array to mean “all”
-                this.dispatcher.dispatch(
-                    ChooseConstraintAction.create(["ALL"])
-                );
+                this.dispatcher.dispatch(ChooseConstraintAction.create(["ALL"]));
             } else {
-                this.dispatcher.dispatch(
-                    ChooseConstraintAction.create([])
-                );
+                this.dispatcher.dispatch(ChooseConstraintAction.create([]));
             }
-            
         };
 
         allConstraints.appendChild(allCb);
@@ -292,7 +285,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         const items = this.constraintRegistry.getConstraintList();
 
         // 3) for each item build a checkbox
-        items.forEach(item => {
+        items.forEach((item) => {
             const label = document.createElement("label");
             label.classList.add("options-item");
 
@@ -305,14 +298,12 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 if (cb.checked) allCb.checked = false;
 
                 const selected = Array.from(
-                    this.optionsMenu!.querySelectorAll<HTMLInputElement>("input[type=checkbox]:checked")
-                ).map(cb => cb.value);
+                    this.optionsMenu!.querySelectorAll<HTMLInputElement>("input[type=checkbox]:checked"),
+                ).map((cb) => cb.value);
 
                 // dispatch your action with either an array or
                 // a comma-joined string—whatever your action expects
-                this.dispatcher.dispatch(
-                    ChooseConstraintAction.create(selected)
-                );
+                this.dispatcher.dispatch(ChooseConstraintAction.create(selected));
             };
 
             label.appendChild(cb);
@@ -324,8 +315,11 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
         // optional: click-outside handler
         const onClickOutside = (e: MouseEvent) => {
-            if (this.optionsMenu && !this.optionsMenu.contains(e.target as Node)
-                && !(e.target as Element).matches("#constraint-options-button")) {
+            if (
+                this.optionsMenu &&
+                !this.optionsMenu.contains(e.target as Node) &&
+                !(e.target as Element).matches("#constraint-options-button")
+            ) {
                 this.toggleOptionsMenu();
                 document.removeEventListener("click", onClickOutside);
             }
