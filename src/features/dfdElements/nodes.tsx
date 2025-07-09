@@ -167,7 +167,6 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
                 style["--color"] = DfdNodeImpl.HIGHLIGHTED_COLOR;
         }*/
 
-
         return style;
     }
 

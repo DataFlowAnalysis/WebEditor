@@ -1,18 +1,10 @@
 import { inject, injectable } from "inversify";
-import {
-    Command,
-    CommandExecutionContext,
-    CommandReturn,
-    TYPES,
-} from "sprotty";
+import { Command, CommandExecutionContext, CommandReturn, TYPES } from "sprotty";
 import { DfdNodeImpl } from "../dfdElements/nodes";
-import {
-    ChooseConstraintAction
-} from "./actions";
-import { getBasicType} from "sprotty-protocol";
+import { ChooseConstraintAction } from "./actions";
+import { getBasicType } from "sprotty-protocol";
 import { AnnnotationsManager } from "../settingsMenu/annotationManager";
 import { ConstraintRegistry } from "./constraintRegistry";
-
 
 @injectable()
 export class ChooseConstraintCommand extends Command {
@@ -21,7 +13,7 @@ export class ChooseConstraintCommand extends Command {
     constructor(
         @inject(TYPES.Action) private action: ChooseConstraintAction,
         @inject(AnnnotationsManager) private annnotationsManager: AnnnotationsManager,
-        @inject(ConstraintRegistry) private constraintRegistry: ConstraintRegistry
+        @inject(ConstraintRegistry) private constraintRegistry: ConstraintRegistry,
     ) {
         super();
     }
