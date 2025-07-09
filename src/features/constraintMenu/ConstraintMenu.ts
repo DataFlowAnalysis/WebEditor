@@ -137,32 +137,29 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 return;
             }
 
-            this.constraintRegistry.setConstraints(this.editor.getValue());
-
             const model = this.editor?.getModel();
             if (!model) {
                 return;
             }
 
-            const content = model.getValue();
+            this.constraintRegistry.setConstraints(model.getLinesContent());
+
+            const content = model.getLinesContent();
             const marker: monaco.editor.IMarkerData[] = [];
+            const emptyContent = content.length == 0 || (content.length == 1 && content[0] === "");
             // empty content gets accepted as valid as it represents no constraints
-            if (content !== "") {
-                const lines = this.editor.getValue().split(/\r?\n/gm);
-                const errors = lines.map(this.tree.verify, this.tree);
-                for (let i = 0; i < errors.length; i++) {
-                    const lineErrors = errors[i];
-                    marker.push(
-                        ...lineErrors.map((e) => ({
-                            severity: monaco.MarkerSeverity.Error,
-                            startLineNumber: i + 1,
-                            startColumn: e.startColumn + 1,
-                            endLineNumber: i + 1,
-                            endColumn: e.endColumn + 1,
-                            message: e.message,
-                        })),
-                    );
-                }
+            if (!emptyContent) {
+                const errors = this.tree.verify(content);
+                marker.push(
+                    ...errors.map((e) => ({
+                        severity: monaco.MarkerSeverity.Error,
+                        startLineNumber: e.line,
+                        startColumn: e.startColumn,
+                        endLineNumber: e.line,
+                        endColumn: e.endColumn,
+                        message: e.message,
+                    })),
+                );
             }
 
             this.validationLabel.innerText =

@@ -1,8 +1,6 @@
 import { injectable } from "inversify";
-import { generateRandomSprottyId } from "../../utils";
 
 export interface Constraint {
-    id: string;
     name: string;
     constraint: string;
 }
@@ -11,58 +9,17 @@ export interface Constraint {
 export class ConstraintRegistry {
     private constraints: Constraint[] = [];
     private updateCallbacks: (() => void)[] = [];
-    private selectedConstraints: string[] = ["ALL"];
 
-    public setConstraints(constraints: string): void {
-        const lines = constraints
-            .trim()
-            .split(/\r?\n(?=-)/)
-            .map((line) => line.trim())
-            .filter((line) => line.length > 0);
-
-        this.constraints = lines.map(this.constraintFromLine);
-        this.constraintListChanged();
+    public setConstraints(constraints: string[]): void {
+        this.constraints = this.splitIntoConstraintTexts(constraints).map((c) => this.mapToConstraint(c));
     }
 
     public setConstraintsFromArray(constraints: Constraint[]): void {
         this.constraints = constraints.map((c) => ({
-            id: c.id || generateRandomSprottyId(),
             name: c.name,
             constraint: c.constraint,
         }));
         this.constraintListChanged();
-    }
-
-    public setSelectedConstraints(constraints: string[]): void {
-        this.selectedConstraints = constraints;
-    }
-
-    public getSelectedConstraints(): string[] {
-        return this.selectedConstraints;
-    }
-
-    private constraintFromLine(line: string): Constraint {
-        const parts = line.split(" ");
-        if (parts.length < 2) {
-            return {
-                id: generateRandomSprottyId(),
-                name: "",
-                constraint: "",
-            };
-        }
-        const name = parts[1].endsWith(":") ? parts[1].slice(0, -1) : parts[1];
-        if (parts.length < 3) {
-            return {
-                id: generateRandomSprottyId(),
-                name: name,
-                constraint: "",
-            };
-        }
-        return {
-            id: generateRandomSprottyId(),
-            name: name,
-            constraint: parts.slice(2).join(" "),
-        };
     }
 
     public clearConstraints(): void {
@@ -84,5 +41,43 @@ export class ConstraintRegistry {
 
     public getConstraintList(): Constraint[] {
         return this.constraints;
+    }
+
+    private splitIntoConstraintTexts(text: string[]): string[] {
+        const constraints: string[] = [];
+        let currentConstraint = "";
+        for (const line of text) {
+            if (line.startsWith("- ")) {
+                if (currentConstraint !== "") {
+                    constraints.push(currentConstraint);
+                }
+                currentConstraint = line;
+            } else {
+                currentConstraint += `\n${line}`;
+            }
+        }
+        if (currentConstraint !== "") {
+            constraints.push(currentConstraint);
+        }
+        return constraints;
+    }
+
+    private mapToConstraint(constraint: string): Constraint {
+        // the brackets ensure its a capturing split
+        const parts = constraint.split(/(\s+)/);
+        // if less than 3 parts are present no name or constraint can be extracted (e.g. "- " -> ["-", " "])
+        if (parts.length < 3) {
+            return { name: "", constraint: "" };
+        }
+        let name = parts[2];
+        if (name.endsWith(":")) {
+            name = name.slice(0, -1);
+        }
+        let constraintText = "";
+        // the first 4 parts are "- ", whitespace, `${name}:`, whitespace --> Thus the constraint starts at index 4
+        for (let i = 4; i < parts.length; i++) {
+            constraintText += parts[i];
+        }
+        return { name, constraint: constraintText };
     }
 }
