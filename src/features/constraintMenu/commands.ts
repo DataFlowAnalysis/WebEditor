@@ -50,7 +50,6 @@ export class ChooseConstraintCommand extends Command {
                     }
                 });
             });
-            console.log("Node" + node.text + "Was adjusted:  " + wasAdjusted);
             if (!wasAdjusted) node.setColor("#1D1C22");
         });
 
