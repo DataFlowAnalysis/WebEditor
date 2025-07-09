@@ -9,6 +9,7 @@ export interface Constraint {
 export class ConstraintRegistry {
     private constraints: Constraint[] = [];
     private updateCallbacks: (() => void)[] = [];
+    private selectedConstraints: string[] = [];
 
     public setConstraints(constraints: string[]): void {
         this.constraints = this.splitIntoConstraintTexts(constraints).map((c) => this.mapToConstraint(c));
@@ -20,6 +21,14 @@ export class ConstraintRegistry {
             constraint: c.constraint,
         }));
         this.constraintListChanged();
+    }
+
+    public setSelectedConstraints(constraints: string[]): void {
+        this.selectedConstraints = constraints;
+    }
+
+    public getSelectedConstraints(): string[] {
+        return this.selectedConstraints;
     }
 
     public clearConstraints(): void {
