@@ -52,6 +52,10 @@ div.constraint-menu {
     overflow: visible;
 }
 
+#constraint-menu-input .overflow-guard {
+    overflow: hidden;
+}
+
 #validation-label {
     height: 1rem;
     color: var(--color-error);
