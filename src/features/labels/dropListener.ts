@@ -55,6 +55,6 @@ export class DfdLabelMouseDropListener extends MouseListener {
 
         const labelAssignment = JSON.parse(labelAssignmentJson) as LabelAssignment;
         this.logger.info(this, "Adding label assignment to element", dfdLabelElement, labelAssignment);
-        return [AddLabelAssignmentAction.create(dfdLabelElement, labelAssignment), CommitModelAction.create()];
+        return [AddLabelAssignmentAction.create(labelAssignment, dfdLabelElement), CommitModelAction.create()];
     }
 }
