@@ -12,13 +12,6 @@ div.constraint-menu {
     padding-right: 85px;
 }
 
-#constraint-menu-content {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto 16px;
-    gap: 10px;
-}
-
 #run-button-container {
     position: absolute;
     right: 6px;
@@ -52,14 +45,15 @@ div.constraint-menu {
 }
 
 #constraint-menu-input {
-    grid-row-start: 1;
-    grid-row-end: 3;
-    grid-column-start: 1;
     min-width: 300px;
 }
 
 #constraint-menu-input * {
     overflow: visible;
+}
+
+#constraint-menu-input .overflow-guard {
+    overflow: hidden;
 }
 
 #validation-label {
