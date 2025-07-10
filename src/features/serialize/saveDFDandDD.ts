@@ -61,7 +61,7 @@ export class SaveDFDandDDCommand extends Command {
             version: CURRENT_VERSION,
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);
-        sendMessage("Json2DFD:" + getModelFileName() + ":" + diagramJson);
+        sendMessage("Json2DFD:" + diagramJson);
         return context.root;
     }
 
