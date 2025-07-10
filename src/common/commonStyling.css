@@ -4,6 +4,10 @@
     background-color: var(--color-primary);
 }
 
+.embed-mode .hide-on-embed {
+    display: none;
+}
+
 /* Styling for keyboard symbols.
    Copied from the example at https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd
    with adapted colors */

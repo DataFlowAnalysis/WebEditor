@@ -63,7 +63,7 @@ export class ToolPaletteUI extends AbstractUIExtension implements IActionHandler
      * This is called by the sprotty base class after creating the container element.
      */
     protected initializeContents(containerElement: HTMLElement): void {
-        containerElement.classList.add("ui-float");
+        containerElement.classList.add("ui-float", "hide-on-embed");
         document.addEventListener("keydown", (event) => {
             if (matchesKeystroke(event, "Escape")) {
                 this.disableTools();

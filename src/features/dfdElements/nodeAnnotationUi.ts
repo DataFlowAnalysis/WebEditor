@@ -111,7 +111,7 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
     }
 
     protected override initializeContents(containerElement: HTMLElement): void {
-        containerElement.classList.add("ui-float");
+        containerElement.classList.add("ui-float", "hide-on-embed");
         containerElement.appendChild(this.annotationParagraph);
 
         document.addEventListener("mousemove", (event) => {
