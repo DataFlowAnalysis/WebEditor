@@ -4,6 +4,8 @@ import {
     CommandExecutionContext,
     CommandReturn,
     ISnapper,
+    isSelected,
+    SChildElementImpl,
     SModelElementImpl,
     SNodeImpl,
     SParentElementImpl,
@@ -15,16 +17,108 @@ import { LabelAssignment, LabelTypeRegistry } from "./labelTypeRegistry";
 import { snapPortsOfNode } from "../dfdElements/portSnapper";
 import { EditorModeController } from "../editorMode/editorModeController";
 
-export interface AddLabelAssignmentAction extends Action {
-    kind: typeof AddLabelAssignmentAction.TYPE;
-    element: ContainsDfdLabels & SNodeImpl;
+interface LabelAction extends Action {
+    element?: ContainsDfdLabels & SNodeImpl;
     labelAssignment: LabelAssignment;
+}
+abstract class LabelCommand extends Command {
+    @inject(EditorModeController)
+    @optional()
+    protected readonly editorModeController?: EditorModeController;
+
+    protected elements?: SModelElementImpl[];
+
+    constructor(
+        @inject(TYPES.Action) protected action: LabelAction,
+        @inject(TYPES.ISnapper) protected snapper: ISnapper,
+    ) {
+        super();
+    }
+
+    protected fetchElements(context: CommandExecutionContext): SModelElementImpl[] {
+        if (this.editorModeController?.isReadOnly()) {
+            return [];
+        }
+
+        const allElements = getAllElements(context.root.children);
+        const selectedElements = allElements.filter((element) => isSelected(element));
+
+        const selectionHasElement =
+            selectedElements.find((element) => element.id === this.action.element?.id) !== undefined;
+        if (selectionHasElement) {
+            return selectedElements;
+        }
+        return this.action.element ? [this.action.element] : selectedElements;
+    }
+
+    protected addLabel(context: CommandExecutionContext) {
+        if (this.editorModeController?.isReadOnly()) {
+            return context.root;
+        }
+
+        if (this.elements === undefined) {
+            this.elements = this.fetchElements(context);
+        }
+
+        this.elements.forEach((element) => {
+            if (containsDfdLabels(element)) {
+                const hasBeenAdded =
+                    element.labels.find((as) => {
+                        return (
+                            as.labelTypeId === this.action.labelAssignment.labelTypeId &&
+                            as.labelTypeValueId === this.action.labelAssignment.labelTypeValueId
+                        );
+                    }) !== undefined;
+                if (!hasBeenAdded) {
+                    element.labels.push(this.action.labelAssignment);
+                    if (element instanceof SNodeImpl) {
+                        snapPortsOfNode(element, this.snapper);
+                    }
+                }
+            }
+        });
+
+        return context.root;
+    }
+
+    protected removeLabel(context: CommandExecutionContext) {
+        if (this.editorModeController?.isReadOnly()) {
+            return context.root;
+        }
+
+        if (this.elements === undefined) {
+            this.elements = this.fetchElements(context);
+        }
+
+        this.elements.forEach((element) => {
+            if (containsDfdLabels(element)) {
+                const labels = element.labels;
+                const idx = labels.findIndex(
+                    (l) =>
+                        l.labelTypeId == this.action.labelAssignment.labelTypeId &&
+                        l.labelTypeValueId == this.action.labelAssignment.labelTypeValueId,
+                );
+                if (idx >= 0) {
+                    labels.splice(idx, 1);
+                    if (element instanceof SNodeImpl) {
+                        snapPortsOfNode(element, this.snapper);
+                    }
+                }
+            }
+        });
+
+        return context.root;
+    }
+}
+
+export interface AddLabelAssignmentAction extends LabelAction {
+    kind: typeof AddLabelAssignmentAction.TYPE;
 }
 export namespace AddLabelAssignmentAction {
     export const TYPE = "add-label-assignment";
     export function create(
-        element: ContainsDfdLabels & SNodeImpl,
         labelAssignment: LabelAssignment,
+        element?: ContainsDfdLabels & SNodeImpl,
     ): AddLabelAssignmentAction {
         return {
             kind: TYPE,
@@ -35,56 +129,19 @@ export namespace AddLabelAssignmentAction {
 }
 
 @injectable()
-export class AddLabelAssignmentCommand extends Command {
+export class AddLabelAssignmentCommand extends LabelCommand {
     public static readonly KIND = AddLabelAssignmentAction.TYPE;
-    private hasBeenAdded = false;
 
-    @inject(EditorModeController)
-    @optional()
-    private readonly editorModeController?: EditorModeController;
-
-    constructor(
-        @inject(TYPES.Action) private action: AddLabelAssignmentAction,
-        @inject(TYPES.ISnapper) private snapper: ISnapper,
-    ) {
-        super();
+    constructor(@inject(TYPES.Action) action: AddLabelAssignmentAction, @inject(TYPES.ISnapper) snapper: ISnapper) {
+        super(action, snapper);
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        if (this.editorModeController?.isReadOnly()) {
-            return context.root;
-        }
-
-        // Check whether the element already has a label with the same type and value assigned
-        this.hasBeenAdded =
-            this.action.element.labels.find((as) => {
-                return (
-                    as.labelTypeId === this.action.labelAssignment.labelTypeId &&
-                    as.labelTypeValueId === this.action.labelAssignment.labelTypeValueId
-                );
-            }) === undefined;
-
-        if (this.hasBeenAdded) {
-            this.action.element.labels.push(this.action.labelAssignment);
-        }
-
-        snapPortsOfNode(this.action.element, this.snapper);
-        return context.root;
+        return this.addLabel(context);
     }
 
     undo(context: CommandExecutionContext): CommandReturn {
-        if (this.editorModeController?.isReadOnly()) {
-            return context.root;
-        }
-
-        const labels = this.action.element.labels;
-        const idx = labels.indexOf(this.action.labelAssignment);
-        if (idx >= 0 && this.hasBeenAdded) {
-            labels.splice(idx, 1);
-        }
-
-        snapPortsOfNode(this.action.element, this.snapper);
-        return context.root;
+        return this.removeLabel(context);
     }
 
     redo(context: CommandExecutionContext): CommandReturn {
@@ -92,16 +149,14 @@ export class AddLabelAssignmentCommand extends Command {
     }
 }
 
-export interface DeleteLabelAssignmentAction extends Action {
+export interface DeleteLabelAssignmentAction extends LabelAction {
     kind: typeof DeleteLabelAssignmentAction.TYPE;
-    element: ContainsDfdLabels & SNodeImpl;
-    labelAssignment: LabelAssignment;
 }
 export namespace DeleteLabelAssignmentAction {
     export const TYPE = "delete-label-assignment";
     export function create(
-        element: ContainsDfdLabels & SNodeImpl,
         labelAssignment: LabelAssignment,
+        element?: ContainsDfdLabels & SNodeImpl,
     ): DeleteLabelAssignmentAction {
         return {
             kind: TYPE,
@@ -112,46 +167,19 @@ export namespace DeleteLabelAssignmentAction {
 }
 
 @injectable()
-export class DeleteLabelAssignmentCommand extends Command {
+export class DeleteLabelAssignmentCommand extends LabelCommand {
     public static readonly KIND = DeleteLabelAssignmentAction.TYPE;
 
-    @inject(EditorModeController)
-    @optional()
-    private readonly editorModeController?: EditorModeController;
-
-    constructor(
-        @inject(TYPES.Action) private action: DeleteLabelAssignmentAction,
-        @inject(TYPES.ISnapper) private snapper: ISnapper,
-    ) {
-        super();
+    constructor(@inject(TYPES.Action) action: DeleteLabelAssignmentAction, @inject(TYPES.ISnapper) snapper: ISnapper) {
+        super(action, snapper);
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        if (this.editorModeController?.isReadOnly()) {
-            return context.root;
-        }
-
-        const labels = this.action.element.labels;
-
-        const idx = labels.indexOf(this.action.labelAssignment);
-        if (idx >= 0) {
-            labels.splice(idx, 1);
-        }
-
-        snapPortsOfNode(this.action.element, this.snapper);
-        return context.root;
+        return this.removeLabel(context);
     }
 
     undo(context: CommandExecutionContext): CommandReturn {
-        if (this.editorModeController?.isReadOnly()) {
-            return context.root;
-        }
-
-        const labels = this.action.element.labels;
-        labels.push(this.action.labelAssignment);
-
-        snapPortsOfNode(this.action.element, this.snapper);
-        return context.root;
+        return this.addLabel(context);
     }
 
     redo(context: CommandExecutionContext): CommandReturn {
@@ -313,4 +341,15 @@ export class DeleteLabelTypeCommand extends Command {
     redo(context: CommandExecutionContext): CommandReturn {
         return this.execute(context);
     }
+}
+
+function getAllElements(elements: readonly SChildElementImpl[]): SModelElementImpl[] {
+    const elementsList: SModelElementImpl[] = [];
+    for (const element of elements) {
+        elementsList.push(element);
+        if ("children" in element) {
+            elementsList.push(...getAllElements(element.children));
+        }
+    }
+    return elementsList;
 }

@@ -209,7 +209,7 @@
                             "height": -1
                         },
                         "strokeWidth": 0,
-                        "selected": true,
+                        "selected": false,
                         "hoverFeedback": false,
                         "opacity": 1,
                         "behavior": "forward items",
@@ -618,5 +618,6 @@
             "constraint": "data Sensitivity.Personal neverFlows vertex Location.nonEU"
         }
     ],
-    "mode": "edit"
+    "mode": "edit",
+    "version": 1
 }

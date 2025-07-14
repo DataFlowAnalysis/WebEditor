@@ -6,7 +6,7 @@ import { DynamicChildrenProcessor } from "../dfdElements/dynamicChildren";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { sendMessage } from "./webSocketHandler";
 import { ConstraintRegistry } from "../constraintMenu/constraintRegistry";
-import { SavedDiagram } from "./save";
+import { CURRENT_VERSION, SavedDiagram } from "./save";
 import { LoadingIndicator } from "../../common/loadingIndicator";
 
 export interface AnalyzeDiagramAction extends Action {
@@ -62,6 +62,7 @@ export class AnalyzeDiagramCommand extends Command {
             labelTypes: this.labelTypeRegistry?.getLabelTypes(),
             constraints: this.constraintRegistry?.getConstraintList(),
             mode: this.editorModeController?.getCurrentMode(),
+            version: CURRENT_VERSION,
         };
         const diagramJson = JSON.stringify(diagram, undefined, 4);
         sendMessage("Json:" + diagramJson);
