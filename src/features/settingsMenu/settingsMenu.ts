@@ -118,7 +118,7 @@ export class SettingsUI extends AbstractUIExtension {
         });
 
         const modeSelect = containerElement.querySelector("#setting-mode-option") as HTMLSelectElement;
-        modeSelect.value = Mode.OUTGOING; // or 'OUTGOING'
+        modeSelect.value = Mode.INCOMING;
     }
 
     public getCurrentLabelMode(): Mode {
