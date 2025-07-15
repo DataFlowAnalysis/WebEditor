@@ -11,12 +11,14 @@ import {
     SimplifyNodeNamesCommand,
 } from "./commands";
 import { SettingsManager } from "./SettingsManager";
+import { AnnnotationsManager } from "./annotationManager";
 
 export const settingsModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(SettingsManager).toSelf().inSingletonScope();
     bind(NodeNameReplacementRegistry).toSelf().inSingletonScope();
     bind(ThemeManager).toSelf().inSingletonScope();
     bind(SettingsUI).toSelf().inSingletonScope();
+    bind(AnnnotationsManager).toSelf().inSingletonScope();
     bind(TYPES.IUIExtension).toService(SettingsUI);
     bind(EDITOR_TYPES.DefaultUIElement).toService(SettingsUI);
     const context = { bind, unbind, isBound, rebind };

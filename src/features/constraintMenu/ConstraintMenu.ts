@@ -1,8 +1,7 @@
-import { inject, injectable, optional } from "inversify";
+﻿import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
 import { AbstractUIExtension, IActionDispatcher, LocalModelSource, TYPES } from "sprotty";
-import { calculateTextSize, generateRandomSprottyId } from "../../utils";
-import { Constraint, ConstraintRegistry } from "./constraintRegistry";
+import { ConstraintRegistry } from "./constraintRegistry";
 
 // Enable hover feature that is used to show validation errors.
 // Inline completions are enabled to allow autocompletion of keywords and inputs/label types/label values.
@@ -20,16 +19,17 @@ import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { Switchable, ThemeManager } from "../settingsMenu/themeManager";
 import { AnalyzeDiagramAction } from "../serialize/analyze";
+import { ChooseConstraintAction } from "./actions";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension implements Switchable {
     static readonly ID = "constraint-menu";
-    private selectedConstraint: Constraint | undefined;
     private editorContainer: HTMLDivElement = document.createElement("div") as HTMLDivElement;
     private validationLabel: HTMLDivElement = document.createElement("div") as HTMLDivElement;
     private editor?: monaco.editor.IStandaloneCodeEditor;
     private tree: AutoCompleteTree;
     private forceReadOnly: boolean;
+    private optionsMenu?: HTMLDivElement;
 
     constructor(
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
@@ -46,6 +46,15 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         this.forceReadOnly = editorModeController?.getCurrentMode() !== "edit";
         editorModeController?.onModeChange(() => {
             this.forceReadOnly = editorModeController!.isReadOnly();
+        });
+        constraintRegistry.onUpdate(() => {
+            if (this.editor) {
+                const editorText = this.editor.getValue();
+                // Only update the editor if the constraints have changed
+                if (editorText !== this.constraintRegistry.getConstraintsAsText()) {
+                    this.editor.setValue(this.constraintRegistry.getConstraintsAsText() || "");
+                }
+            }
         });
     }
 
@@ -65,21 +74,18 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 </div>
             </label>
         `;
+
+        const title = containerElement.querySelector("#constraint-menu-expand-title") as HTMLElement;
+        title.appendChild(this.buildOptionsButton());
+
         const accordionContent = document.createElement("div");
         accordionContent.classList.add("accordion-content");
         const contentDiv = document.createElement("div");
         contentDiv.id = "constraint-menu-content";
         accordionContent.appendChild(contentDiv);
         contentDiv.appendChild(this.buildConstraintInputWrapper());
-        contentDiv.appendChild(this.buildConstraintListWrapper());
         containerElement.appendChild(this.buildRunButton());
         containerElement.appendChild(accordionContent);
-
-        this.constraintRegistry.onUpdate(() => {
-            this.rerenderConstraintList();
-            const selected = this.constraintRegistry.getConstraints().find((c) => c.id === this.selectedConstraint?.id);
-            this.selectConstraintListItem(selected);
-        });
     }
 
     private buildConstraintInputWrapper(): HTMLElement {
@@ -87,6 +93,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         wrapper.id = "constraint-menu-input";
         wrapper.appendChild(this.editorContainer);
         this.validationLabel.id = "validation-label";
+        this.validationLabel.classList.add("valid");
+        this.validationLabel.innerText = "Valid constraints";
         wrapper.appendChild(this.validationLabel);
         const keyboardShortcutLabel = document.createElement("div");
         keyboardShortcutLabel.innerHTML = "Press <kbd>CTRL</kbd>+<kbd>Space</kbd> for autocompletion";
@@ -118,185 +126,50 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 // avoid can not scroll page when hover monaco
                 alwaysConsumeMouseWheel: false,
             },
-            lineNumbers: "off",
-            readOnly: this.constraintRegistry.getConstraints().length === 0 || this.forceReadOnly,
+            lineNumbers: "on",
+            readOnly: this.forceReadOnly,
         });
 
-        this.editor?.setValue(
-            this.constraintRegistry.getConstraints()[0]?.constraint ?? "Select or create a constraint to edit",
-        );
+        this.editor?.setValue(this.constraintRegistry.getConstraintsAsText() || "");
 
         this.editor?.onDidChangeModelContent(() => {
-            if (this.selectedConstraint) {
-                this.selectedConstraint.constraint = this.editor?.getValue() ?? "";
+            if (!this.editor) {
+                return;
             }
-
-            this.tree.setContent(this.editor?.getValue() ?? "");
-            const result = this.tree.verify();
-            this.validationLabel.innerText =
-                result.length == 0 ? "Valid constraint" : `Invalid constraint: ${result.length} errors`;
-            this.validationLabel.classList.toggle("valid", result.length == 0);
 
             const model = this.editor?.getModel();
             if (!model) {
                 return;
             }
-            const marker: monaco.editor.IMarkerData[] = result.map((e) => ({
-                severity: monaco.MarkerSeverity.Error,
-                startLineNumber: 1,
-                startColumn: e.startColumn + 1,
-                endLineNumber: 1,
-                endColumn: e.endColumn + 1,
-                message: e.message,
-            }));
+
+            this.constraintRegistry.setConstraints(model.getLinesContent());
+
+            const content = model.getLinesContent();
+            const marker: monaco.editor.IMarkerData[] = [];
+            const emptyContent = content.length == 0 || (content.length == 1 && content[0] === "");
+            // empty content gets accepted as valid as it represents no constraints
+            if (!emptyContent) {
+                const errors = this.tree.verify(content);
+                marker.push(
+                    ...errors.map((e) => ({
+                        severity: monaco.MarkerSeverity.Error,
+                        startLineNumber: e.line,
+                        startColumn: e.startColumn,
+                        endLineNumber: e.line,
+                        endColumn: e.endColumn,
+                        message: e.message,
+                    })),
+                );
+            }
+
+            this.validationLabel.innerText =
+                marker.length == 0 ? "Valid constraints" : `Invalid constraints: ${marker.length} errors`;
+            this.validationLabel.classList.toggle("valid", marker.length == 0);
+
             monaco.editor.setModelMarkers(model, "constraint", marker);
         });
 
-        this.editor.onDidChangeCursorPosition((e) => {
-            // Monaco tells us the line number after cursor position changed
-            if (e.position.lineNumber > 1) {
-                // Trim editor value
-                this.editor?.setValue(this.editor.getValue().trim());
-                // Bring back the cursor to the end of the first line
-                this.editor?.setPosition({
-                    ...e.position,
-                    // Setting column to Infinity would mean the end of the line
-                    column: Infinity,
-                    lineNumber: 1,
-                });
-            }
-        });
-
         return wrapper;
-    }
-
-    private buildConstraintListWrapper(): HTMLElement {
-        const wrapper = document.createElement("div");
-        wrapper.id = "constraint-menu-list";
-
-        this.rerenderConstraintList(wrapper);
-
-        return wrapper;
-    }
-
-    private buildConstraintListItem(constraint: Constraint): HTMLElement {
-        const valueElement = document.createElement("div");
-        valueElement.classList.add("constrain-label");
-
-        valueElement.onclick = () => {
-            const elements = document.getElementsByClassName("constraint-label");
-            for (let i = 0; i < elements.length; i++) {
-                elements[i].classList.toggle("selected", elements[i] === valueElement);
-            }
-            this.selectConstraintListItem(constraint);
-        };
-
-        const valueInput = document.createElement("input");
-        valueInput.id = "constraint-input-" + constraint.id;
-        valueInput.value = constraint.name;
-        valueInput.placeholder = "Name";
-        this.dynamicallySetInputSize(valueInput);
-        valueInput.onchange = () => {
-            constraint.name = valueInput.value;
-            this.constraintRegistry.constraintListChanged();
-        };
-        valueInput.onkeydown = (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                valueInput.blur();
-                this.selectConstraintListItem(constraint);
-                this.editor?.focus();
-            }
-        };
-
-        valueElement.appendChild(valueInput);
-
-        const deleteButton = document.createElement("button");
-        deleteButton.innerHTML = '<span class="codicon codicon-trash"></span>';
-        deleteButton.onclick = (e) => {
-            e.stopPropagation();
-            if (this.selectedConstraint?.id === constraint.id) {
-                this.selectConstraintListItem(undefined);
-            }
-            this.constraintRegistry.unregisterConstraint(constraint);
-            this.rerenderConstraintList();
-        };
-        valueElement.appendChild(deleteButton);
-        return valueElement;
-    }
-
-    private selectConstraintListItem(constraint?: Constraint): void {
-        this.selectedConstraint = constraint;
-        this.editor?.setValue(constraint?.constraint ?? "Select or create a constraint to edit");
-        this.editor?.updateOptions({ readOnly: constraint === undefined || this.forceReadOnly });
-        if (!constraint) {
-            this.validationLabel.innerText = "";
-        }
-    }
-
-    private rerenderConstraintList(list?: HTMLElement): void {
-        if (!list) {
-            list = document.getElementById("constraint-menu-list") ?? undefined;
-        }
-        if (!list) return;
-        const width = list.clientWidth;
-        list.style.minWidth = width + "px";
-        list.innerHTML = "";
-        this.constraintRegistry.getConstraints().forEach((constraint) => {
-            list!.appendChild(this.buildConstraintListItem(constraint));
-        });
-
-        const addButton = document.createElement("button");
-        addButton.classList.add("constraint-add");
-        addButton.innerHTML = '<span class="codicon codicon-add"></span> Constraint';
-        addButton.onclick = () => {
-            if (this.forceReadOnly) {
-                return;
-            }
-            if (!list) {
-                return;
-            }
-
-            const constraint: Constraint = {
-                id: generateRandomSprottyId(),
-                name: "",
-                constraint: "",
-            };
-            this.constraintRegistry.registerConstraint(constraint);
-
-            this.selectConstraintListItem(constraint);
-
-            // Select the text input element of the new value to allow entering the value
-            const input = document.getElementById("constraint-input-" + constraint.id) as HTMLInputElement;
-            input.focus();
-        };
-        list.appendChild(addButton);
-        list.style.minWidth = "initial";
-    }
-
-    /**
-     * Sets and dynamically updates the size property of the passed input element.
-     * When the text is zero the width is set to the placeholder length to make place for it.
-     * When the text is changed the size gets updated with the keyup event.
-     * @param inputElement the html dom input element to set the size property for
-     */
-    private dynamicallySetInputSize(inputElement: HTMLInputElement): void {
-        const handleResize = () => {
-            const displayText = inputElement.value || inputElement.placeholder;
-            const { width } = calculateTextSize(displayText, window.getComputedStyle(inputElement).font);
-
-            // Values have higher padding for the rounded border
-            const widthPadding = 8;
-            const finalWidth = width + widthPadding;
-
-            inputElement.style.width = finalWidth + "px";
-        };
-
-        inputElement.onkeyup = handleResize;
-
-        // The inputElement is not added to the DOM yet, so we cannot set the size now.
-        // Wait for next JS tick, after which the element has been added to the DOM and we can set the initial size
-        setTimeout(handleResize, 0);
     }
 
     private buildRunButton(): HTMLElement {
@@ -354,5 +227,100 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
     switchTheme(useDark: boolean): void {
         this.editor?.updateOptions({ theme: useDark ? "vs-dark" : "vs" });
+    }
+
+    private buildOptionsButton(): HTMLElement {
+        const btn = document.createElement("button");
+        btn.id = "constraint-options-button";
+        btn.title = "Filter…";
+        btn.innerHTML = "⋮"; // or insert a font-awesome icon
+        btn.onclick = () => this.toggleOptionsMenu();
+        return btn;
+    }
+
+    /** show or hide the menu, generate checkboxes on the fly */
+    private toggleOptionsMenu(): void {
+        if (this.optionsMenu) {
+            this.optionsMenu.remove();
+            this.optionsMenu = undefined;
+            return;
+        }
+
+        // 1) create container
+        this.optionsMenu = document.createElement("div");
+        this.optionsMenu.id = "constraint-options-menu";
+
+        // 2) add the “All constraints” checkbox at the top
+        const allConstraints = document.createElement("label");
+        allConstraints.classList.add("options-item");
+
+        const allCb = document.createElement("input");
+        allCb.type = "checkbox";
+        allCb.value = "ALL";
+        // initially checked if no specific constraint is selected
+        allCb.checked = this.constraintRegistry.getSelectedConstraints().includes("ALL");
+
+        allCb.onchange = () => {
+            if (!this.optionsMenu) return;
+            if (allCb.checked) {
+                // uncheck every other constraint-checkbox
+                this.optionsMenu.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+                    if (cb !== allCb) cb.checked = false;
+                });
+                // dispatch with empty array to mean “all”
+                this.dispatcher.dispatch(ChooseConstraintAction.create(["ALL"]));
+            } else {
+                this.dispatcher.dispatch(ChooseConstraintAction.create([]));
+            }
+        };
+
+        allConstraints.appendChild(allCb);
+        allConstraints.appendChild(document.createTextNode("All constraints"));
+        this.optionsMenu.appendChild(allConstraints);
+
+        // 2) pull your dynamic items (replace with your real API)
+        const items = this.constraintRegistry.getConstraintList();
+
+        // 3) for each item build a checkbox
+        items.forEach((item) => {
+            const label = document.createElement("label");
+            label.classList.add("options-item");
+
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = item.name;
+            cb.checked = this.constraintRegistry.getSelectedConstraints().includes(cb.value);
+
+            cb.onchange = () => {
+                if (cb.checked) allCb.checked = false;
+
+                const selected = Array.from(
+                    this.optionsMenu!.querySelectorAll<HTMLInputElement>("input[type=checkbox]:checked"),
+                ).map((cb) => cb.value);
+
+                // dispatch your action with either an array or
+                // a comma-joined string—whatever your action expects
+                this.dispatcher.dispatch(ChooseConstraintAction.create(selected));
+            };
+
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(item.name));
+            this.optionsMenu!.appendChild(label);
+        });
+
+        this.editorContainer.appendChild(this.optionsMenu);
+
+        // optional: click-outside handler
+        const onClickOutside = (e: MouseEvent) => {
+            if (
+                this.optionsMenu &&
+                !this.optionsMenu.contains(e.target as Node) &&
+                !(e.target as Element).matches("#constraint-options-button")
+            ) {
+                this.toggleOptionsMenu();
+                document.removeEventListener("click", onClickOutside);
+            }
+        };
+        setTimeout(() => document.addEventListener("click", onClickOutside), 0);
     }
 }

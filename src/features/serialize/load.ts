@@ -20,6 +20,7 @@ import { LayoutModelAction } from "../autoLayout/command";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
 import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 import { LoadingIndicator } from "../../common/loadingIndicator";
+import { ChooseConstraintAction } from "../constraintMenu/actions";
 
 export interface LoadDiagramAction extends Action {
     kind: typeof LoadDiagramAction.KIND;
@@ -213,13 +214,11 @@ export class LoadDiagramCommand extends Command {
 
             if (this.constraintRegistry) {
                 // Load label types
-                this.oldConstrains = this.constraintRegistry.getConstraints();
+                this.oldConstrains = this.constraintRegistry.getConstraintList();
                 this.newConstrains = newDiagram?.constraints;
                 this.constraintRegistry.clearConstraints();
                 if (newDiagram?.constraints) {
-                    newDiagram.constraints.forEach((constraint) => {
-                        this.constraintRegistry?.registerConstraint(constraint);
-                    });
+                    this.constraintRegistry.setConstraintsFromArray(newDiagram.constraints);
 
                     this.logger.info(this, "Constraints loaded successfully");
                 }
@@ -282,7 +281,9 @@ export class LoadDiagramCommand extends Command {
             this.editorModeController?.setMode(this.oldEditorMode);
         }
         this.constraintRegistry?.clearConstraints();
-        this.oldConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
+        if (this.oldConstrains) {
+            this.constraintRegistry?.setConstraintsFromArray(this.oldConstrains);
+        }
         setFileNameInPageTitle(this.oldFileName);
 
         this.loadingIndicator?.hideIndicator();
@@ -301,7 +302,9 @@ export class LoadDiagramCommand extends Command {
             }
         }
         this.constraintRegistry?.clearConstraints();
-        this.newConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
+        if (this.newConstrains) {
+            this.constraintRegistry?.setConstraintsFromArray(this.newConstrains);
+        }
         setFileNameInPageTitle(this.newFileName);
 
         this.loadingIndicator?.hideIndicator();
@@ -333,6 +336,7 @@ export async function postLoadActions(
     // fit to screen is done after auto layouting because that may change the bounds of the diagram
     // requiring another fit to screen.
     await actionDispatcher.dispatch(createDefaultFitToScreenAction(newRoot, false));
+    actionDispatcher.dispatch(ChooseConstraintAction.create(["ALL"]));
 }
 
 let initialPageTitle: string | undefined;
