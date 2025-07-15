@@ -59,14 +59,14 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         containerElement.classList.add("ui-float");
         containerElement.innerHTML = `
             <input type="checkbox" id="expand-state-constraint" class="accordion-state" hidden>
-            <label id="constraint-menu-expand-label" for="expand-state-constraint">
+            <label id="constraint-menu-expand-label" for="expand-state-constraint" class="hide-on-embed">
                 <div class="accordion-button cevron-left flip-arrow" id="constraint-menu-expand-title">
                     Constraints
                 </div>
             </label>
         `;
         const accordionContent = document.createElement("div");
-        accordionContent.classList.add("accordion-content");
+        accordionContent.classList.add("accordion-content", "hide-on-embed");
         const contentDiv = document.createElement("div");
         contentDiv.id = "constraint-menu-content";
         accordionContent.appendChild(contentDiv);
@@ -305,7 +305,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
         const button = document.createElement("button");
         button.id = "run-button";
-        button.innerHTML = "Run";
+        button.innerHTML = `<span class="hide-on-embed">Run</span>`;
         button.onclick = () => {
             this.dispatcher.dispatch(AnalyzeDiagramAction.create());
         };
