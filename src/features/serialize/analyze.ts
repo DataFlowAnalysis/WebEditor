@@ -60,7 +60,7 @@ export class AnalyzeDiagramCommand extends Command {
         const diagram: SavedDiagram = {
             model: modelCopy,
             labelTypes: this.labelTypeRegistry?.getLabelTypes(),
-            constraints: this.constraintRegistry?.getConstraints(),
+            constraints: this.constraintRegistry?.getConstraintList(),
             mode: this.editorModeController?.getCurrentMode(),
             version: CURRENT_VERSION,
         };
