@@ -104,16 +104,20 @@ export class SaveDFDandDD {
      * Method to save both XML files by creating Blob objects and triggering downloads.
      */
     public saveDiagramAsDFD(): void {
-        this.saveFile(this.dfdString, ".dataflowdiagram");
-        this.saveFile(this.ddString, ".datadictionary");
+        const name = window.prompt("Enter file name:", getModelFileName());
+        this.saveFile(this.dfdString, ".dataflowdiagram", name);
+        this.saveFile(this.ddString, ".datadictionary", name);
     }
 
-    private saveFile(file: string, ending: string) {
+    private saveFile(file: string, ending: string, name?: string | null): void {
         const blob = new Blob([file], { type: "application/xml" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", getModelFileName() + ending);
+        if (!name) {
+            name = getModelFileName();
+        }
+        link.setAttribute("download", name + ending);
         document.body.appendChild(link); // Append link to the body
         link.click(); // Programmatically click to trigger download
         URL.revokeObjectURL(url); // Revoke the URL after download
