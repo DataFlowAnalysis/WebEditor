@@ -24,8 +24,15 @@ export class MonacoEditorConstraintDslCompletionProvider implements monaco.langu
         model: monaco.editor.ITextModel,
         position: monaco.Position,
     ): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
-        this.tree.setContent(model.getLineContent(position.lineNumber).substring(0, position.column - 1));
-        const r = this.tree.getCompletion();
+        const allLines = model.getLinesContent();
+        const includedLines: string[] = [];
+        for (let i = 0; i < position.lineNumber - 1; i++) {
+            includedLines.push(allLines[i]);
+        }
+        const currentLine = allLines[position.lineNumber - 1].substring(0, position.column - 1);
+        includedLines.push(currentLine);
+
+        const r = this.tree.getCompletion(includedLines);
         return {
             suggestions: r,
         };
@@ -127,7 +134,17 @@ export namespace TreeBuilder {
         });
         dataSourceSelector.children = dataSelectors;
 
-        return [nodeSourceSelector, dataSourceSelector];
+        const nameNode: AutoCompleteNode = {
+            word: new NameWord(),
+            children: [nodeSourceSelector, dataSourceSelector],
+        };
+
+        const startNode: AutoCompleteNode = {
+            word: new ConstantWord("-"),
+            children: [nameNode],
+        };
+
+        return [startNode];
     }
 
     function getLeaves(node: AutoCompleteNode): AutoCompleteNode[] {
@@ -296,6 +313,31 @@ export namespace TreeBuilder {
                 return ['Unknown label value "' + parts[1] + '" for type "' + parts[0] + '"'];
             }
 
+            return [];
+        }
+    }
+
+    class NameWord implements AbstractWord {
+        completionOptions(word: string): WordCompletion[] {
+            if (word.length === 0) {
+                return [];
+            }
+            return [
+                {
+                    insertText: ":",
+                    kind: monaco.languages.CompletionItemKind.Keyword,
+                },
+            ];
+        }
+
+        verifyWord(word: string): string[] {
+            const name = word.split(":")[0];
+            if (name.length === 0) {
+                return ["Expected a name"];
+            }
+            if (!word.endsWith(":")) {
+                return ['Expected ":" at the end of name'];
+            }
             return [];
         }
     }

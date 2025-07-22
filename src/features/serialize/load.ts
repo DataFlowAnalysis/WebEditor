@@ -213,13 +213,11 @@ export class LoadDiagramCommand extends Command {
 
             if (this.constraintRegistry) {
                 // Load label types
-                this.oldConstrains = this.constraintRegistry.getConstraints();
+                this.oldConstrains = this.constraintRegistry.getConstraintList();
                 this.newConstrains = newDiagram?.constraints;
                 this.constraintRegistry.clearConstraints();
                 if (newDiagram?.constraints) {
-                    newDiagram.constraints.forEach((constraint) => {
-                        this.constraintRegistry?.registerConstraint(constraint);
-                    });
+                    this.constraintRegistry.setConstraintsFromArray(newDiagram.constraints);
 
                     this.logger.info(this, "Constraints loaded successfully");
                 }
@@ -282,7 +280,9 @@ export class LoadDiagramCommand extends Command {
             this.editorModeController?.setMode(this.oldEditorMode);
         }
         this.constraintRegistry?.clearConstraints();
-        this.oldConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
+        if (this.oldConstrains) {
+            this.constraintRegistry?.setConstraintsFromArray(this.oldConstrains);
+        }
         setFileNameInPageTitle(this.oldFileName);
 
         this.loadingIndicator?.hideIndicator();
@@ -301,7 +301,9 @@ export class LoadDiagramCommand extends Command {
             }
         }
         this.constraintRegistry?.clearConstraints();
-        this.newConstrains?.forEach((constraint) => this.constraintRegistry?.registerConstraint(constraint));
+        if (this.newConstrains) {
+            this.constraintRegistry?.setConstraintsFromArray(this.newConstrains);
+        }
         setFileNameInPageTitle(this.newFileName);
 
         this.loadingIndicator?.hideIndicator();
