@@ -51,6 +51,11 @@ export class PortAwareSnapper implements ISnapper {
     private snapPort(position: Point, element: SPortImpl): Point {
         const parentElement = element.parent;
 
+        if (parentElement instanceof SPortImpl) {
+            // Parent is not a node, so we cannot snap the port to the node edges
+            return position;
+        }
+
         if (!isBoundsAware(parentElement)) {
             // Cannot get the parent size, just return the original position and don't snap
             return position;
