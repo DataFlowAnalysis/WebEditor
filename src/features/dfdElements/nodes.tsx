@@ -154,19 +154,6 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
 
         if (this.color) style["--color"] = this.color;
 
-        /*
-        if (this.annotations!) {
-            for (const a of this.annotations) {
-                if (a.message.startsWith("Constraint")) {
-                    style["--color"] = a.color!;
-                    this.color = a.color!;
-                    return style;
-                }
-            }
-            if (this.annotations!.length > 0)
-                style["--color"] = DfdNodeImpl.HIGHLIGHTED_COLOR;
-        }*/
-
         return style;
     }
 
