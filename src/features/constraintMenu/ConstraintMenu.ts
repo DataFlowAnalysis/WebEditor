@@ -31,7 +31,6 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
     private forceReadOnly: boolean;
     private optionsMenu?: HTMLDivElement;
     private ignoreCheckboxChange = false;
-    private hasOpenedOptionsMenu = false;
 
     constructor(
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
