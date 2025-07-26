@@ -25,26 +25,30 @@ export interface DfdNode extends SNode {
     text: string;
     labels: LabelAssignment[];
     ports: SPort[];
-    annotation?: DfdNodeAnnotation;
+    annotations?: DfdNodeAnnotation[];
 }
 
 export interface DfdNodeAnnotation {
     message: string;
     color?: string;
     icon?: string;
+    tfg?: number;
 }
 
 export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEditableLabel {
     static readonly DEFAULT_FEATURES = [...SNodeImpl.DEFAULT_FEATURES, withEditLabelFeature, containsDfdLabelFeature];
     static readonly DEFAULT_WIDTH = 50;
     static readonly WIDTH_PADDING = 12;
+    static readonly NODE_COLOR = "var(--color-primary)";
+    static readonly HIGHLIGHTED_COLOR = "var(--color-highlighted)";
 
     text: string = "";
+    color?: string;
     labels: LabelAssignment[] = [];
     ports: SPort[] = [];
     hideLabels: boolean = false;
     minimumWidth: number = DfdNodeImpl.DEFAULT_WIDTH;
-    annotation?: DfdNodeAnnotation;
+    annotations: DfdNodeAnnotation[] = [];
 
     override setChildren(schema: DfdNode): void {
         const children: SModelElement[] = [
@@ -90,12 +94,11 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
             return this.minimumWidth + DfdNodeImpl.WIDTH_PADDING;
         }
         const textWidth = calculateTextSize(this.text).width;
-        const editableLabelWidth = this.editableLabel ? calculateTextSize(this.editableLabel.text).width : 0;
         const labelWidths = this.labels.map(
             (labelAssignment) => DfdNodeLabelRenderer.computeLabelContent(labelAssignment)[1],
         );
 
-        const neededWidth = Math.max(...labelWidths, textWidth, editableLabelWidth, DfdNodeImpl.DEFAULT_WIDTH);
+        const neededWidth = Math.max(...labelWidths, textWidth, DfdNodeImpl.DEFAULT_WIDTH);
         return neededWidth + DfdNodeImpl.WIDTH_PADDING;
     }
 
@@ -149,11 +152,15 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
             opacity: this.opacity.toString(),
         };
 
-        if (this.annotation?.color) {
-            style["--color"] = this.annotation.color;
-        }
+        style["--border"] = "#FFFFFF";
+
+        if (this.color) style["--color"] = this.color;
 
         return style;
+    }
+
+    public setColor(color: string, override: boolean = true) {
+        if (override || this.color === DfdNodeImpl.NODE_COLOR) this.color = color;
     }
 }
 

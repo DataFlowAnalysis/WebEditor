@@ -106,3 +106,40 @@ div.constraint-menu {
     align-items: center;
     gap: 5px;
 }
+
+#constraint-options-button {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: transparent;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: var(--color-foreground);
+    padding: 2px;
+}
+
+#constraint-options-menu {
+    position: absolute;
+    top: 30px; /* just under the header */
+    right: 6px;
+    background: var(--color-background);
+    border: 1px solid var(--color-foreground);
+    border-radius: 4px;
+    padding: 8px;
+    z-index: 100;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+#constraint-options-menu .options-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 0.9em;
+    color: var(--color-foreground);
+}
+
+#constraint-options-menu .options-item:last-child {
+    margin-bottom: 0;
+}

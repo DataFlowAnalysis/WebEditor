@@ -20,6 +20,7 @@ import { LayoutModelAction } from "../autoLayout/command";
 import { EditorMode, EditorModeController } from "../editorMode/editorModeController";
 import { Constraint, ConstraintRegistry } from "../constraintMenu/constraintRegistry";
 import { LoadingIndicator } from "../../common/loadingIndicator";
+import { ChooseConstraintAction } from "../constraintMenu/actions";
 
 export interface LoadDiagramAction extends Action {
     kind: typeof LoadDiagramAction.KIND;
@@ -224,6 +225,13 @@ export class LoadDiagramCommand extends Command {
             }
 
             postLoadActions(this.newRoot, this.actionDispatcher);
+
+            if (this.constraintRegistry) {
+                this.constraintRegistry.setAllConstraintsAsSelected();
+                this.actionDispatcher.dispatch(
+                    ChooseConstraintAction.create(this.constraintRegistry!.getConstraintList().map((c) => c.name)),
+                );
+            }
 
             this.oldFileName = currentFileName;
             this.newFileName = file.name;

@@ -1,4 +1,4 @@
-import { inject, injectable, optional } from "inversify";
+﻿import { inject, injectable, optional } from "inversify";
 import "./constraintMenu.css";
 import { AbstractUIExtension, IActionDispatcher, LocalModelSource, TYPES } from "sprotty";
 import { ConstraintRegistry } from "./constraintRegistry";
@@ -19,6 +19,7 @@ import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { Switchable, ThemeManager } from "../settingsMenu/themeManager";
 import { AnalyzeDiagramAction } from "../serialize/analyze";
+import { ChooseConstraintAction } from "./actions";
 
 @injectable()
 export class ConstraintMenu extends AbstractUIExtension implements Switchable {
@@ -28,6 +29,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
     private editor?: monaco.editor.IStandaloneCodeEditor;
     private tree: AutoCompleteTree;
     private forceReadOnly: boolean;
+    private optionsMenu?: HTMLDivElement;
+    private ignoreCheckboxChange = false;
 
     constructor(
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
@@ -72,6 +75,10 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
                 </div>
             </label>
         `;
+
+        const title = containerElement.querySelector("#constraint-menu-expand-title") as HTMLElement;
+        title.appendChild(this.buildOptionsButton());
+
         const accordionContent = document.createElement("div");
         accordionContent.classList.add("accordion-content");
         const contentDiv = document.createElement("div");
@@ -221,5 +228,112 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
     switchTheme(useDark: boolean): void {
         this.editor?.updateOptions({ theme: useDark ? "vs-dark" : "vs" });
+    }
+
+    private buildOptionsButton(): HTMLElement {
+        const btn = document.createElement("button");
+        btn.id = "constraint-options-button";
+        btn.title = "Filter…";
+        btn.innerHTML = '<span class="codicon codicon-kebab-vertical"></span>';
+        btn.onclick = () => this.toggleOptionsMenu();
+        return btn;
+    }
+
+    /** show or hide the menu, generate checkboxes on the fly */
+    private toggleOptionsMenu(): void {
+        if (this.optionsMenu) {
+            this.optionsMenu.remove();
+            this.optionsMenu = undefined;
+            return;
+        }
+
+        // 1) create container
+        this.optionsMenu = document.createElement("div");
+        this.optionsMenu.id = "constraint-options-menu";
+
+        // 2) add the “All constraints” checkbox at the top
+        const allConstraints = document.createElement("label");
+        allConstraints.classList.add("options-item");
+
+        const allCb = document.createElement("input");
+        allCb.type = "checkbox";
+        allCb.value = "ALL";
+        allCb.checked = this.constraintRegistry
+            .getConstraintList()
+            .map((c) => c.name)
+            .every((c) => this.constraintRegistry.getSelectedConstraints().includes(c));
+
+        allCb.onchange = () => {
+            if (!this.optionsMenu) return;
+
+            this.ignoreCheckboxChange = true;
+            try {
+                if (allCb.checked) {
+                    this.optionsMenu.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+                        if (cb !== allCb) cb.checked = true;
+                    });
+                    this.dispatcher.dispatch(
+                        ChooseConstraintAction.create(this.constraintRegistry.getConstraintList().map((c) => c.name)),
+                    );
+                } else {
+                    this.optionsMenu.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+                        if (cb !== allCb) cb.checked = false;
+                    });
+                    this.dispatcher.dispatch(ChooseConstraintAction.create([]));
+                }
+            } finally {
+                this.ignoreCheckboxChange = false;
+            }
+        };
+
+        allConstraints.appendChild(allCb);
+        allConstraints.appendChild(document.createTextNode("All constraints"));
+        this.optionsMenu.appendChild(allConstraints);
+
+        // 2) pull your dynamic items
+        const items = this.constraintRegistry.getConstraintList();
+
+        // 3) for each item build a checkbox
+        items.forEach((item) => {
+            const label = document.createElement("label");
+            label.classList.add("options-item");
+
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = item.name;
+            cb.checked = this.constraintRegistry.getSelectedConstraints().includes(cb.value);
+
+            cb.onchange = () => {
+                if (this.ignoreCheckboxChange) return;
+
+                const checkboxes = this.optionsMenu!.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+                const individualCheckboxes = Array.from(checkboxes).filter((cb) => cb !== allCb);
+                const selected = individualCheckboxes.filter((cb) => cb.checked).map((cb) => cb.value);
+
+                allCb.checked = individualCheckboxes.every((cb) => cb.checked);
+
+                this.dispatcher.dispatch(ChooseConstraintAction.create(selected));
+            };
+
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(item.name));
+            this.optionsMenu!.appendChild(label);
+        });
+
+        this.editorContainer.appendChild(this.optionsMenu);
+
+        // optional: click-outside handler
+        const onClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+            if (!this.optionsMenu || this.optionsMenu.contains(target)) return;
+
+            const button = document.getElementById("constraint-options-button");
+            if (button && button.contains(target)) return;
+
+            this.optionsMenu.remove();
+            this.optionsMenu = undefined;
+            document.removeEventListener("click", onClickOutside);
+        };
+        document.addEventListener("click", onClickOutside);
     }
 }

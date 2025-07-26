@@ -14,6 +14,8 @@ import { DfdNodeImpl } from "./nodes";
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./nodeAnnotationUi.css";
+import { SettingsManager } from "../settingsMenu/SettingsManager";
+import { Mode } from "../settingsMenu/annotationManager";
 
 export class DfdNodeAnnotationUIMouseListener extends MouseListener {
     private stillTimeout: number | undefined;
@@ -70,7 +72,7 @@ export class DfdNodeAnnotationUIMouseListener extends MouseListener {
     }
 
     private showPopup(target: DfdNodeImpl): void {
-        if (!target.annotation) {
+        if (!target.annotations) {
             // no annotation. No need to show the popup.
             return;
         }
@@ -98,6 +100,7 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
     constructor(
         @inject(DfdNodeAnnotationUIMouseListener)
         private readonly mouseListener: DfdNodeAnnotationUIMouseListener,
+        @inject(SettingsManager) private settings: SettingsManager,
     ) {
         super();
     }
@@ -152,7 +155,7 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
         }
 
         // Clear previous content
-        this.annotationParagraph.innerHTML = "";
+        this.annotationParagraph.innerText = "";
 
         // Set position
         // 2 offset to ensure the mouse is inside the popup when showing it.
@@ -178,18 +181,38 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
         containerElement.style.maxHeight = `${Math.max(screenHeight - annotationPosition.y - 50, 50)}px`;
 
         // Set content
-        if (!node.annotation) {
+        if (!node.annotations || node.annotations.length == 0) {
             this.annotationParagraph.innerText = "No errors";
             return;
         }
 
-        const { message, icon } = node.annotation;
-        this.annotationParagraph.innerHTML = message;
+        this.annotationParagraph.innerHTML = "";
 
-        if (icon) {
-            const iconI = document.createElement("i");
-            iconI.classList.add("fa", `fa-${icon}`);
-            this.annotationParagraph.prepend(iconI);
-        }
+        const mode = this.settings.getCurrentLabelMode();
+
+        node.annotations.forEach((a) => {
+            if (
+                ((mode === Mode.INCOMING || mode === Mode.ALL) && a.message.trim().startsWith("Incoming")) ||
+                ((mode === Mode.OUTGOING || mode === Mode.ALL) && a.message.trim().startsWith("Propagated")) ||
+                a.message.startsWith("Constraint")
+            ) {
+                const line = document.createElement("div");
+                line.style.display = "flex";
+                line.style.alignItems = "center";
+                line.style.gap = "6px"; // some spacing between icon and text
+
+                if (a.icon) {
+                    const iconI = document.createElement("i");
+                    iconI.classList.add("fa", `fa-${a.icon}`);
+                    line.appendChild(iconI);
+                }
+
+                const textSpan = document.createElement("span");
+                textSpan.innerText = a.message;
+                line.appendChild(textSpan);
+
+                this.annotationParagraph.appendChild(line);
+            }
+        });
     }
 }

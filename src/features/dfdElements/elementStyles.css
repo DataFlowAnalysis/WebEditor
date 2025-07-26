@@ -14,12 +14,12 @@
        Used as a highlighter to mark nodes with errors.
        This is essentially a "optional parameter" to this css rule.
        See https://stackoverflow.com/questions/17893823/how-to-pass-parameters-to-css-classes */
-    stroke: var(--color, var(--color-foreground));
+    stroke: var(--color-foreground);
     stroke-width: 1;
     /* Background fill of the node.
        When --color is unset this is just --color-primary.
        If this node is annotated and --color is set, it will be included in the color mix. */
-    fill: color-mix(in srgb, var(--color-primary), var(--color, transparent) 25%);
+    fill: color-mix(in srgb, var(--color-primary), var(--color, transparent) 40%);
 }
 
 .sprotty-node .node-label text {
