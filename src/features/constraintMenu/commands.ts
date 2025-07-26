@@ -31,7 +31,7 @@ export class ChooseConstraintCommand extends Command {
         const nodes = context.root.children.filter((node) => getBasicType(node) === "node") as DfdNodeImpl[];
         if (names.length === 0) {
             nodes.forEach((node) => {
-                node.setColor("#1D1C22");
+                node.setColor("var(--color-primary)");
             });
             return context.root;
         }
@@ -56,14 +56,14 @@ export class ChooseConstraintCommand extends Command {
                     }
                 });
             });
-            if (!wasAdjusted) node.setColor("#1D1C22");
+            if (!wasAdjusted) node.setColor("var(--color-primary)");
         });
 
         nodes.forEach((node) => {
             const inTFG = node.annotations!.filter((annotation) =>
                 this.annnotationsManager.getSelectedTfgs().has(annotation.tfg!),
             );
-            if (inTFG.length > 0) node.setColor("#77777A", false);
+            if (inTFG.length > 0) node.setColor("var(--color-highlighted)", false);
         });
 
         return context.root;
