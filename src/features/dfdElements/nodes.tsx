@@ -152,6 +152,8 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
             opacity: this.opacity.toString(),
         };
 
+        style["--border"] = "#FFFFFF";
+
         if (this.color) style["--color"] = this.color;
 
         /*

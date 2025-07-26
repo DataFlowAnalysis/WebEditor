@@ -9,7 +9,7 @@ export interface Constraint {
 export class ConstraintRegistry {
     private constraints: Constraint[] = [];
     private updateCallbacks: (() => void)[] = [];
-    private selectedConstraints: string[] = [];
+    private selectedConstraints: string[] = this.constraints.map((c) => c.name);
 
     public setConstraints(constraints: string[]): void {
         this.constraints = this.splitIntoConstraintTexts(constraints).map((c) => this.mapToConstraint(c));
@@ -50,6 +50,16 @@ export class ConstraintRegistry {
 
     public getConstraintList(): Constraint[] {
         return this.constraints;
+    }
+
+    public selectedContainsAllConstraints(): boolean {
+        return this.getConstraintList()
+            .map((c) => c.name)
+            .every((c) => this.getSelectedConstraints().includes(c));
+    }
+
+    public setAllConstraintsAsSelected(): void {
+        this.selectedConstraints = this.constraints.map((c) => c.name);
     }
 
     private splitIntoConstraintTexts(text: string[]): string[] {

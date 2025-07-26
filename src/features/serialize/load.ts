@@ -336,7 +336,7 @@ export async function postLoadActions(
     // fit to screen is done after auto layouting because that may change the bounds of the diagram
     // requiring another fit to screen.
     await actionDispatcher.dispatch(createDefaultFitToScreenAction(newRoot, false));
-    actionDispatcher.dispatch(ChooseConstraintAction.create(["ALL"]));
+    actionDispatcher.dispatch(ChooseConstraintAction.create(["INITIAL_CONSTRAINT_STATE"]));
 }
 
 let initialPageTitle: string | undefined;

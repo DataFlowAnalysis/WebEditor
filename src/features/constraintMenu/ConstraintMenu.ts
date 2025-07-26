@@ -30,6 +30,8 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
     private tree: AutoCompleteTree;
     private forceReadOnly: boolean;
     private optionsMenu?: HTMLDivElement;
+    private ignoreCheckboxChange = false;
+    private hasOpenedOptionsMenu = false;
 
     constructor(
         @inject(ConstraintRegistry) private readonly constraintRegistry: ConstraintRegistry,
@@ -233,7 +235,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         const btn = document.createElement("button");
         btn.id = "constraint-options-button";
         btn.title = "Filter…";
-        btn.innerHTML = "⋮"; // or insert a font-awesome icon
+        btn.innerHTML = '<span class="codicon codicon-kebab-vertical"></span>';
         btn.onclick = () => this.toggleOptionsMenu();
         return btn;
     }
@@ -257,20 +259,31 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         const allCb = document.createElement("input");
         allCb.type = "checkbox";
         allCb.value = "ALL";
-        // initially checked if no specific constraint is selected
-        allCb.checked = this.constraintRegistry.getSelectedConstraints().includes("ALL");
+        allCb.checked = this.constraintRegistry
+            .getConstraintList()
+            .map((c) => c.name)
+            .every((c) => this.constraintRegistry.getSelectedConstraints().includes(c));
 
         allCb.onchange = () => {
             if (!this.optionsMenu) return;
-            if (allCb.checked) {
-                // uncheck every other constraint-checkbox
-                this.optionsMenu.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
-                    if (cb !== allCb) cb.checked = false;
-                });
-                // dispatch with empty array to mean “all”
-                this.dispatcher.dispatch(ChooseConstraintAction.create(["ALL"]));
-            } else {
-                this.dispatcher.dispatch(ChooseConstraintAction.create([]));
+
+            this.ignoreCheckboxChange = true;
+            try {
+                if (allCb.checked) {
+                    this.optionsMenu.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+                        if (cb !== allCb) cb.checked = true;
+                    });
+                    this.dispatcher.dispatch(
+                        ChooseConstraintAction.create(this.constraintRegistry.getConstraintList().map((c) => c.name)),
+                    );
+                } else {
+                    this.optionsMenu.querySelectorAll<HTMLInputElement>("input[type=checkbox]").forEach((cb) => {
+                        if (cb !== allCb) cb.checked = false;
+                    });
+                    this.dispatcher.dispatch(ChooseConstraintAction.create([]));
+                }
+            } finally {
+                this.ignoreCheckboxChange = false;
             }
         };
 
@@ -278,7 +291,7 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
         allConstraints.appendChild(document.createTextNode("All constraints"));
         this.optionsMenu.appendChild(allConstraints);
 
-        // 2) pull your dynamic items (replace with your real API)
+        // 2) pull your dynamic items
         const items = this.constraintRegistry.getConstraintList();
 
         // 3) for each item build a checkbox
@@ -292,14 +305,14 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
             cb.checked = this.constraintRegistry.getSelectedConstraints().includes(cb.value);
 
             cb.onchange = () => {
-                if (cb.checked) allCb.checked = false;
+                if (this.ignoreCheckboxChange) return;
 
-                const selected = Array.from(
-                    this.optionsMenu!.querySelectorAll<HTMLInputElement>("input[type=checkbox]:checked"),
-                ).map((cb) => cb.value);
+                const checkboxes = this.optionsMenu!.querySelectorAll<HTMLInputElement>("input[type=checkbox]");
+                const individualCheckboxes = Array.from(checkboxes).filter((cb) => cb !== allCb);
+                const selected = individualCheckboxes.filter((cb) => cb.checked).map((cb) => cb.value);
 
-                // dispatch your action with either an array or
-                // a comma-joined string—whatever your action expects
+                allCb.checked = individualCheckboxes.every((cb) => cb.checked);
+
                 this.dispatcher.dispatch(ChooseConstraintAction.create(selected));
             };
 
@@ -312,15 +325,16 @@ export class ConstraintMenu extends AbstractUIExtension implements Switchable {
 
         // optional: click-outside handler
         const onClickOutside = (e: MouseEvent) => {
-            if (
-                this.optionsMenu &&
-                !this.optionsMenu.contains(e.target as Node) &&
-                !(e.target as Element).matches("#constraint-options-button")
-            ) {
-                this.toggleOptionsMenu();
-                document.removeEventListener("click", onClickOutside);
-            }
+            const target = e.target as Node;
+            if (!this.optionsMenu || this.optionsMenu.contains(target)) return;
+
+            const button = document.getElementById("constraint-options-button");
+            if (button && button.contains(target)) return;
+
+            this.optionsMenu.remove();
+            this.optionsMenu = undefined;
+            document.removeEventListener("click", onClickOutside);
         };
-        setTimeout(() => document.addEventListener("click", onClickOutside), 0);
+        document.addEventListener("click", onClickOutside);
     }
 }
