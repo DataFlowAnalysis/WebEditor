@@ -39,8 +39,8 @@ export abstract class DfdNodeImpl extends DynamicChildrenNode implements WithEdi
     static readonly DEFAULT_FEATURES = [...SNodeImpl.DEFAULT_FEATURES, withEditLabelFeature, containsDfdLabelFeature];
     static readonly DEFAULT_WIDTH = 50;
     static readonly WIDTH_PADDING = 12;
-    static readonly NODE_COLOR = "#1D1C22";
-    static readonly HIGHLIGHTED_COLOR = "#77777A";
+    static readonly NODE_COLOR = "var(--color-primary)";
+    static readonly HIGHLIGHTED_COLOR = "var(--color-highlighted)";
 
     text: string = "";
     color?: string;
