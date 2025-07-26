@@ -117,12 +117,7 @@ export class SettingsUI extends AbstractUIExtension {
             this.dispatcher.dispatch(ChangeEditorModeAction.create(readOnlyCheckbox.checked ? "view" : "edit"));
         });
 
-        const modeSelect = containerElement.querySelector("#setting-mode-option") as HTMLSelectElement;
-        modeSelect.value = Mode.INCOMING;
-    }
-
-    public getCurrentLabelMode(): Mode {
-        const modeSelect = document.getElementById("setting-mode-option") as HTMLSelectElement;
-        return modeSelect.value as Mode;
+        const labelModeSelector = containerElement.querySelector("#setting-mode-option") as HTMLSelectElement;
+        this.settings.bindLabelModeSelector(labelModeSelector);
     }
 }

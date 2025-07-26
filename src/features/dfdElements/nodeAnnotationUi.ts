@@ -14,7 +14,7 @@ import { DfdNodeImpl } from "./nodes";
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./nodeAnnotationUi.css";
-import { SettingsUI } from "../settingsMenu/settingsMenu";
+import { SettingsManager } from "../settingsMenu/SettingsManager";
 import { Mode } from "../settingsMenu/annotationManager";
 
 export class DfdNodeAnnotationUIMouseListener extends MouseListener {
@@ -100,7 +100,7 @@ export class DfdNodeAnnotationUI extends AbstractUIExtension {
     constructor(
         @inject(DfdNodeAnnotationUIMouseListener)
         private readonly mouseListener: DfdNodeAnnotationUIMouseListener,
-        @inject(SettingsUI) private settings: SettingsUI,
+        @inject(SettingsManager) private settings: SettingsManager,
     ) {
         super();
     }

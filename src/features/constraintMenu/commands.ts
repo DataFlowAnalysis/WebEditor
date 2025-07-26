@@ -20,10 +20,16 @@ export class ChooseConstraintCommand extends Command {
 
     execute(context: CommandExecutionContext): CommandReturn {
         this.annnotationsManager.clearTfgs();
-        const names = this.action.names;
+        let names = this.action.names;
         this.constraintRegistry.setSelectedConstraints(names);
+
+        if (names.includes("INITIAL_CONSTRAINT_STATE")) {
+            this.constraintRegistry.setAllConstraintsAsSelected();
+            names = this.constraintRegistry.getSelectedConstraints();
+        }
+
         const nodes = context.root.children.filter((node) => getBasicType(node) === "node") as DfdNodeImpl[];
-        if (names.includes("NO")) {
+        if (names.length === 0) {
             nodes.forEach((node) => {
                 node.setColor("#1D1C22");
             });
@@ -33,7 +39,7 @@ export class ChooseConstraintCommand extends Command {
         nodes.forEach((node) => {
             const annotations = node.annotations!;
             let wasAdjusted = false;
-            if (names.includes("ALL")) {
+            if (this.constraintRegistry.selectedContainsAllConstraints()) {
                 annotations.forEach((annotation) => {
                     if (annotation.message.startsWith("Constraint")) {
                         wasAdjusted = true;
@@ -43,7 +49,7 @@ export class ChooseConstraintCommand extends Command {
             }
             names.forEach((name) => {
                 annotations.forEach((annotation) => {
-                    if (annotation.message.startsWith("Constraint " + name)) {
+                    if (annotation.message.startsWith("Constraint ") && annotation.message.split(" ")[1] === name) {
                         node.setColor(annotation.color!);
                         wasAdjusted = true;
                         this.annnotationsManager.addTfg(annotation.tfg!);
@@ -53,14 +59,12 @@ export class ChooseConstraintCommand extends Command {
             if (!wasAdjusted) node.setColor("#1D1C22");
         });
 
-        if (!names.includes("ALL") && names.length > 0) {
-            nodes.forEach((node) => {
-                const inTFG = node.annotations!.filter((annotation) =>
-                    this.annnotationsManager.getSelectedTfgs().has(annotation.tfg!),
-                );
-                if (inTFG.length > 0) node.setColor("#77777A", false);
-            });
-        }
+        nodes.forEach((node) => {
+            const inTFG = node.annotations!.filter((annotation) =>
+                this.annnotationsManager.getSelectedTfgs().has(annotation.tfg!),
+            );
+            if (inTFG.length > 0) node.setColor("#77777A", false);
+        });
 
         return context.root;
     }
