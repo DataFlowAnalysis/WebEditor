@@ -226,6 +226,13 @@ export class LoadDiagramCommand extends Command {
 
             postLoadActions(this.newRoot, this.actionDispatcher);
 
+            if (this.constraintRegistry) {
+                this.constraintRegistry.setAllConstraintsAsSelected();
+                this.actionDispatcher.dispatch(
+                    ChooseConstraintAction.create(this.constraintRegistry!.getConstraintList().map((c) => c.name)),
+                );
+            }
+
             this.oldFileName = currentFileName;
             this.newFileName = file.name;
             setFileNameInPageTitle(file.name);
@@ -336,7 +343,6 @@ export async function postLoadActions(
     // fit to screen is done after auto layouting because that may change the bounds of the diagram
     // requiring another fit to screen.
     await actionDispatcher.dispatch(createDefaultFitToScreenAction(newRoot, false));
-    actionDispatcher.dispatch(ChooseConstraintAction.create(["INITIAL_CONSTRAINT_STATE"]));
 }
 
 let initialPageTitle: string | undefined;

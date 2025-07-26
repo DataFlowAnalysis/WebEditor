@@ -20,13 +20,8 @@ export class ChooseConstraintCommand extends Command {
 
     execute(context: CommandExecutionContext): CommandReturn {
         this.annnotationsManager.clearTfgs();
-        let names = this.action.names;
+        const names = this.action.names;
         this.constraintRegistry.setSelectedConstraints(names);
-
-        if (names.includes("INITIAL_CONSTRAINT_STATE")) {
-            this.constraintRegistry.setAllConstraintsAsSelected();
-            names = this.constraintRegistry.getSelectedConstraints();
-        }
 
         const nodes = context.root.children.filter((node) => getBasicType(node) === "node") as DfdNodeImpl[];
         if (names.length === 0) {
