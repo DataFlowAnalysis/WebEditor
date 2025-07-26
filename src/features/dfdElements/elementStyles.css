@@ -14,7 +14,7 @@
        Used as a highlighter to mark nodes with errors.
        This is essentially a "optional parameter" to this css rule.
        See https://stackoverflow.com/questions/17893823/how-to-pass-parameters-to-css-classes */
-    stroke: var(--color, var(--color-foreground));
+    stroke: var(--color-foreground);
     stroke-width: 1;
     /* Background fill of the node.
        When --color is unset this is just --color-primary.
