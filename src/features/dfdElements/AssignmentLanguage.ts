@@ -133,7 +133,7 @@ export namespace TreeBuilder {
             word: new ConstantWord("from"),
             children: [
                 {
-                    word: new InputWord(model),
+                    word: new InputListWord(model),
                     children: [],
                 },
             ],
@@ -221,17 +221,11 @@ class LabelWord implements ReplaceableAbstractWord {
                 return [];
             }
 
-            const possibleValues: WordCompletion[] = type.values.map((l) => ({
+            return type.values.map((l) => ({
                 insertText: l.text,
                 kind: monaco.languages.CompletionItemKind.Enum,
                 startOffset: parts[0].length + 1,
             }));
-            possibleValues.push({
-                insertText: "$" + type.name,
-                kind: monaco.languages.CompletionItemKind.Variable,
-                startOffset: parts[0].length + 1,
-            });
-            return possibleValues;
         }
 
         return [];
@@ -333,8 +327,20 @@ class InputListWord implements ReplaceableAbstractWord {
         this.inputWord = new InputWord(model);
     }
 
-    completionOptions(): WordCompletion[] {
-        return this.inputWord.completionOptions();
+    completionOptions(word: string): WordCompletion[] {
+        const parts = word.split(",");
+        // remove last one as we are completing that one
+        if (parts.length > 1) {
+            parts.pop();
+        }
+        const startOffset = parts.reduce((acc, part) => acc + part.length + 1, 0); // +1 for the commas
+        return this.inputWord
+            .completionOptions()
+            .filter((c) => !parts.includes(c.insertText))
+            .map((c) => ({
+                ...c,
+                startOffset: startOffset + (c.startOffset ?? 0),
+            }));
     }
 
     verifyWord(word: string): string[] {
@@ -363,13 +369,17 @@ class InputLabelWord implements ReplaceableAbstractWord {
     }
 
     completionOptions(word: string): WordCompletion[] {
-        const parts = word.split(".");
+        const parts = this.getParts(word);
         if (parts[1] === undefined) {
-            return this.inputWord.completionOptions();
-        } else if (parts.length === 2) {
+            return this.inputWord.completionOptions().map((c) => ({
+                ...c,
+                insertText: c.insertText,
+            }));
+        } else if (parts.length >= 2) {
             return this.labelWord.completionOptions(parts[1]).map((c) => ({
                 ...c,
-                insertText: parts[0] + "." + c.insertText,
+                insertText: c.insertText,
+                startOffset: (c.startOffset ?? 0) + parts[0].length + 1, // +1 for the dot
             }));
         }
         return [];

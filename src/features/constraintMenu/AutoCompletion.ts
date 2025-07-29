@@ -233,7 +233,7 @@ export class AutoCompleteTree {
             return result;
         }
         for (const n of nodes) {
-            if (!n.word.verifyWord(tokens[index].text)) {
+            if (n.word.verifyWord(tokens[index].text).length > 0) {
                 continue;
             }
             result = result.concat(this.completeNode(n.children, tokens, index + 1));

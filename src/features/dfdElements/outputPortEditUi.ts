@@ -101,6 +101,9 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
     private port: DfdOutputPortImpl | undefined;
     private editor?: monaco.editor.IStandaloneCodeEditor;
     private tree?: ReplaceAutoCompleteTree;
+    private completionProvider?: monaco.IDisposable;
+
+    private static readonly DFD_LANGUAGE_NAME = "dfd-behavior";
 
     constructor(
         @inject(TYPES.IActionDispatcher) private actionDispatcher: ActionDispatcher,
@@ -145,15 +148,13 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
         this.validationLabel.classList.add("validation-label");
 
         // Initialize the monaco editor and setup the language for highlighting and autocomplete.
-        const dfdLanguageName = "dfd-behavior";
-        monaco.languages.register({ id: dfdLanguageName });
-        monaco.languages.setMonarchTokensProvider(dfdLanguageName, assignemntLanguageMonarchDefinition);
-        if (this.tree) {
-            monaco.languages.registerCompletionItemProvider(
-                dfdLanguageName,
-                new MonacoEditorAssignmentLanguageCompletionProvider(this.tree),
-            );
-        }
+
+        monaco.languages.register({ id: OutputPortEditUI.DFD_LANGUAGE_NAME });
+        monaco.languages.setMonarchTokensProvider(
+            OutputPortEditUI.DFD_LANGUAGE_NAME,
+            assignemntLanguageMonarchDefinition,
+        );
+        this.registerCompletionProvider();
 
         const monacoTheme = (ThemeManager?.useDarkMode ?? true) ? "vs-dark" : "vs";
         this.editor = monaco.editor.create(this.editorContainer, {
@@ -166,7 +167,7 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             wordBasedSuggestions: "off", // Does not really work for our use case
             scrollBeyondLastLine: false, // Not needed
             theme: monacoTheme,
-            language: dfdLanguageName,
+            language: OutputPortEditUI.DFD_LANGUAGE_NAME,
         });
 
         this.configureHandlers(containerElement);
@@ -213,7 +214,9 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
         });
 
         // Run behavior validation when the behavior text changes.
-        this.editor?.onDidChangeModelContent(() => {});
+        this.editor?.onDidChangeModelContent(() => {
+            this.validateBehavior();
+        });
 
         // When the content size of the editor changes, resize the editor accordingly.
         this.editor?.onDidContentSizeChange(() => {
@@ -320,6 +323,8 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
         // Validation of loaded behavior text.
         this.validateBehavior();
 
+        this.registerCompletionProvider();
+
         // Wait for the next event loop tick to focus the port edit UI.
         // The user may have clicked more times before the show click was processed
         // (showing the UI takes some time due to finding the element in the graph, etc.).
@@ -328,6 +333,17 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
         setTimeout(() => {
             this.editor?.focus();
         }, 0); // 0ms => next event loop tick
+    }
+
+    private registerCompletionProvider() {
+        if (!this.tree) {
+            return;
+        }
+        this.completionProvider?.dispose();
+        this.completionProvider = monaco.languages.registerCompletionItemProvider(
+            OutputPortEditUI.DFD_LANGUAGE_NAME,
+            new MonacoEditorAssignmentLanguageCompletionProvider(this.tree),
+        );
     }
 
     /**
