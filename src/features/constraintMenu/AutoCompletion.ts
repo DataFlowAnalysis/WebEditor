@@ -96,7 +96,7 @@ export class NegatableWord implements AbstractWord {
 }
 
 export class AutoCompleteTree {
-    constructor(private roots: AutoCompleteNode[]) {}
+    constructor(protected roots: AutoCompleteNode<AbstractWord>[]) {}
 
     private tokenize(text: string[]): Token[] {
         if (!text || text.length == 0) {
@@ -283,9 +283,9 @@ function deduplicateErrors(errors: ValidationError[]): ValidationError[] {
     });
 }
 
-export interface AutoCompleteNode {
-    word: AbstractWord;
-    children: AutoCompleteNode[];
+export interface AutoCompleteNode<W extends AbstractWord = AbstractWord> {
+    word: W;
+    children: AutoCompleteNode<W>[];
     canBeFinal?: boolean;
     viewAsLeaf?: boolean;
 }
