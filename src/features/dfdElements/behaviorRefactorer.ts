@@ -98,7 +98,7 @@ export class DFDBehaviorRefactorer {
     private renameLabelsForPort(port: DfdOutputPortImpl, labelChanges: LabelChange[], tree: ReplaceAutoCompleteTree) {
         let lines = port.behavior.split(/\n/);
         for (const change of labelChanges) {
-            lines = tree.replace(lines, change.oldLabel, change.newLabel);
+            lines = tree.replace(lines, { old: change.oldLabel, replacement: change.newLabel, type: "Label" });
         }
         port.behavior = lines.join("\n");
     }
@@ -151,7 +151,7 @@ export class DFDBehaviorRefactorer {
         tree: ReplaceAutoCompleteTree,
     ): string {
         const lines = port.behavior.split("\n");
-        const newLines = tree.replace(lines, oldInputName, newInputName);
+        const newLines = tree.replace(lines, { old: oldInputName, replacement: newInputName, type: "Input" });
         return newLines.join("\n");
     }
 }

@@ -76,8 +76,14 @@ export const assignemntLanguageMonarchDefinition: monaco.languages.IMonarchLangu
     },
 };
 
+interface ReplacementData {
+    old: string;
+    replacement: string;
+    type: string;
+}
+
 interface ReplaceableAbstractWord extends AbstractWord {
-    replaceWord(text: string, old: string, replacement: string): string;
+    replaceWord(text: string, replacement: ReplacementData): string;
 }
 
 type WordOrReplacableWord = ReplaceableAbstractWord | AbstractWord;
@@ -87,9 +93,9 @@ export class ReplaceAutoCompleteTree extends AutoCompleteTree {
         super(roots);
     }
 
-    public replace(lines: string[], old: string, replacement: string): string[] {
+    public replace(lines: string[], replacement: ReplacementData): string[] {
         const tokens = this.tokenize(lines);
-        const replaced = this.replaceToken(this.roots, tokens, 0, old, replacement);
+        const replaced = this.replaceToken(this.roots, tokens, 0, replacement);
         const newLines: string[] = [];
         let currentLine = "";
         for (let i = 0; i < tokens.length; i++) {
@@ -109,8 +115,7 @@ export class ReplaceAutoCompleteTree extends AutoCompleteTree {
         nodes: AutoCompleteNode<WordOrReplacableWord>[],
         tokens: Token[],
         index: number,
-        old: string,
-        replacement: string,
+        replacement: ReplacementData,
         skipStartCheck = false,
     ): string[] {
         if (index >= tokens.length) {
@@ -120,13 +125,13 @@ export class ReplaceAutoCompleteTree extends AutoCompleteTree {
         if (!skipStartCheck && tokens[index].column == 1) {
             const matchesAnyRoot = this.roots.some((n) => n.word.verifyWord(tokens[index].text).length === 0);
             if (matchesAnyRoot) {
-                return this.replaceToken(this.roots, tokens, index, old, replacement, true);
+                return this.replaceToken(this.roots, tokens, index, replacement, true);
             }
         }
         let text = tokens[index].text;
         for (const n of nodes) {
             if ((n.word as ReplaceableAbstractWord).replaceWord) {
-                text = (n.word as ReplaceableAbstractWord).replaceWord(text, old, replacement);
+                text = (n.word as ReplaceableAbstractWord).replaceWord(text, replacement);
             }
         }
         return [
@@ -135,7 +140,6 @@ export class ReplaceAutoCompleteTree extends AutoCompleteTree {
                 nodes.flatMap((n) => n.children),
                 tokens,
                 index + 1,
-                old,
                 replacement,
             ),
         ];
@@ -314,9 +318,9 @@ class LabelWord implements ReplaceableAbstractWord {
         return [];
     }
 
-    replaceWord(text: string, old: string, replacement: string) {
-        if (text == old) {
-            return replacement;
+    replaceWord(text: string, replacement: ReplacementData) {
+        if (replacement.type == "Label" && text == replacement.old) {
+            return replacement.replacement;
         }
         return text;
     }
@@ -348,9 +352,9 @@ class LabelListWord implements ReplaceableAbstractWord {
         return errors;
     }
 
-    replaceWord(text: string, old: string, replacement: string) {
+    replaceWord(text: string, replacement: ReplacementData) {
         const parts = text.split(",");
-        const newParts = parts.map((part) => this.labelWord.replaceWord(part, old, replacement));
+        const newParts = parts.map((part) => this.labelWord.replaceWord(part, replacement));
         return newParts.join(",");
     }
 }
@@ -372,9 +376,9 @@ class InputWord extends InputAwareWord implements ReplaceableAbstractWord {
         return [`Unknown input "${word}"`];
     }
 
-    replaceWord(text: string, old: string, replacement: string) {
-        if (text == old) {
-            return replacement;
+    replaceWord(text: string, replacement: ReplacementData) {
+        if (replacement.type == "Input" && text == replacement.old) {
+            return replacement.replacement;
         }
         return text;
     }
@@ -411,9 +415,9 @@ class InputListWord implements ReplaceableAbstractWord {
         return errors;
     }
 
-    replaceWord(text: string, old: string, replacement: string) {
+    replaceWord(text: string, replacement: ReplacementData) {
         const parts = text.split(",");
-        const newParts = parts.map((part) => this.inputWord.replaceWord(part, old, replacement));
+        const newParts = parts.map((part) => this.inputWord.replaceWord(part, replacement));
         return newParts.join(",");
     }
 }
@@ -457,12 +461,12 @@ class InputLabelWord implements ReplaceableAbstractWord {
         return [...inputErrors, ...labelErrors];
     }
 
-    replaceWord(text: string, old: string, replacement: string) {
+    replaceWord(text: string, replacement: ReplacementData) {
         const [input, label] = this.getParts(text);
-        if (input === old) {
-            return replacement + (label ? "." + label : "");
-        } else if (label === old) {
-            return input + "." + replacement;
+        if (replacement.type == "Input" && input === replacement.old) {
+            return replacement.replacement + (label ? "." + label : "");
+        } else if (replacement.type == "Label" && label === replacement.old) {
+            return input + "." + replacement.replacement;
         }
         return text;
     }
