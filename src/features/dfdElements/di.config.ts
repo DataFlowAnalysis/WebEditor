@@ -18,7 +18,6 @@ import { FilledBackgroundLabelView, DfdPositionalLabelView } from "./labels";
 import { AlwaysSnapPortsMoveMouseListener, ReSnapPortsAfterLabelChangeCommand, PortAwareSnapper } from "./portSnapper";
 import { OutputPortEditUIMouseListener, OutputPortEditUI, SetDfdOutputPortBehaviorCommand } from "./outputPortEditUi";
 import { DfdEditLabelValidator, DfdEditLabelValidatorDecorator } from "./editLabelValidator";
-import { PortBehaviorValidator } from "./outputPortBehaviorValidation";
 import { DfdNodeAnnotationUI, DfdNodeAnnotationUIMouseListener } from "./nodeAnnotationUi";
 import { DFDBehaviorRefactorer, RefactorInputNameInDFDBehaviorCommand } from "./behaviorRefactorer";
 
@@ -31,8 +30,6 @@ export const dfdElementsModule = new ContainerModule((bind, unbind, isBound, reb
     rebind(TYPES.ISnapper).to(PortAwareSnapper).inSingletonScope();
     bind(TYPES.MouseListener).to(AlwaysSnapPortsMoveMouseListener).inSingletonScope();
     configureCommand(context, ReSnapPortsAfterLabelChangeCommand);
-
-    bind(PortBehaviorValidator).toSelf().inSingletonScope();
 
     bind(OutputPortEditUI).toSelf().inSingletonScope();
     bind(TYPES.IUIExtension).toService(OutputPortEditUI);
