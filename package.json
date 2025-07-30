@@ -10,7 +10,7 @@
         "@eslint/eslintrc": "^3.3.1",
         "@eslint/js": "^9.31.0",
         "@fortawesome/fontawesome-free": "^6.7.2",
-        "@vscode/codicons": "^0.0.36",
+        "@vscode/codicons": "^0.0.38",
         "eslint": "^9.31.0",
         "eslint-config-prettier": "^10.1.8",
         "husky": "^9.1.7",
