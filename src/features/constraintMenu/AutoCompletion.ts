@@ -205,6 +205,7 @@ export class AutoCompleteTree {
                 column: lines[lines.length - 1].length + 1,
             });
         }
+
         let result: WordCompletion[] = [];
         if (tokens.length == 0) {
             for (const r of this.roots) {
@@ -220,13 +221,16 @@ export class AutoCompleteTree {
         nodes: AutoCompleteNode[],
         tokens: Token[],
         index: number,
+        cameFromFinal = false,
         skipStartCheck = false,
     ): WordCompletion[] {
         // check for new start
         if (!skipStartCheck && tokens[index].column == 1) {
             const matchesAnyRoot = this.roots.some((n) => n.word.verifyWord(tokens[index].text).length === 0);
             if (matchesAnyRoot) {
-                return this.completeNode(this.roots, tokens, index, true);
+                return this.completeNode(this.roots, tokens, index, cameFromFinal, true);
+            } else if (cameFromFinal || nodes.length == 0) {
+                return this.completeNode([...this.roots, ...nodes], tokens, index, cameFromFinal, true);
             }
         }
 
@@ -241,7 +245,7 @@ export class AutoCompleteTree {
             if (n.word.verifyWord(tokens[index].text).length > 0) {
                 continue;
             }
-            result = result.concat(this.completeNode(n.children, tokens, index + 1));
+            result = result.concat(this.completeNode(n.children, tokens, index + 1, n.canBeFinal || false));
         }
         return result;
     }
