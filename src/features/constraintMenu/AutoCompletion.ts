@@ -13,10 +13,11 @@ export interface ValidationError {
     endColumn: number;
 }
 
-interface Token {
+export interface Token {
     text: string;
     line: number;
     column: number;
+    whiteSpaceAfter?: string;
 }
 
 export type WordCompletion = RequiredCompletionParts & Partial<monaco.languages.CompletionItem>;
@@ -98,22 +99,27 @@ export class NegatableWord implements AbstractWord {
 export class AutoCompleteTree {
     constructor(protected roots: AutoCompleteNode<AbstractWord>[]) {}
 
-    private tokenize(text: string[]): Token[] {
+    protected tokenize(text: string[]): Token[] {
         if (!text || text.length == 0) {
             return [];
         }
 
         const tokens: Token[] = [];
         for (const [lineNumber, line] of text.entries()) {
-            const lineTokens = line.split(/\s+/).filter((t) => t.length > 0);
+            const lineTokens = line.split(/(\s+)/);
             let column = 0;
-            for (const token of lineTokens) {
-                column = line.indexOf(token, column);
-                tokens.push({
-                    text: token,
-                    line: lineNumber + 1,
-                    column: column + 1,
-                });
+            for (let i = 0; i < lineTokens.length; i += 2) {
+                const token = lineTokens[i];
+                if (token.length > 0) {
+                    tokens.push({
+                        text: token,
+                        line: lineNumber + 1,
+                        column: column + 1,
+                        whiteSpaceAfter: lineTokens[i + 1],
+                    });
+                }
+                column += token.length;
+                column += lineTokens[i + 1] ? lineTokens[i + 1].length : 0; // Add whitespace length
             }
         }
 
@@ -217,7 +223,6 @@ export class AutoCompleteTree {
         skipStartCheck = false,
     ): WordCompletion[] {
         // check for new start
-
         if (!skipStartCheck && tokens[index].column == 1) {
             const matchesAnyRoot = this.roots.some((n) => n.word.verifyWord(tokens[index].text).length === 0);
             if (matchesAnyRoot) {

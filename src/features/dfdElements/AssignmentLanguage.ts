@@ -4,6 +4,7 @@ import {
     AutoCompleteNode,
     AutoCompleteTree,
     ConstantWord,
+    Token,
     WordCompletion,
 } from "../constraintMenu/AutoCompletion";
 import { SModelElementImpl, SModelRootImpl, SParentElementImpl, SPortImpl } from "sprotty";
@@ -76,7 +77,7 @@ export const assignemntLanguageMonarchDefinition: monaco.languages.IMonarchLangu
 };
 
 interface ReplaceableAbstractWord extends AbstractWord {
-    replaceWord: (text: string, old: string, replacement: string) => string;
+    replaceWord(text: string, old: string, replacement: string): string;
 }
 
 type WordOrReplacableWord = ReplaceableAbstractWord | AbstractWord;
@@ -84,6 +85,60 @@ type WordOrReplacableWord = ReplaceableAbstractWord | AbstractWord;
 export class ReplaceAutoCompleteTree extends AutoCompleteTree {
     constructor(protected roots: AutoCompleteNode<WordOrReplacableWord>[]) {
         super(roots);
+    }
+
+    public replace(lines: string[], old: string, replacement: string): string[] {
+        const tokens = this.tokenize(lines);
+        const replaced = this.replaceToken(this.roots, tokens, 0, old, replacement);
+        const newLines: string[] = [];
+        let currentLine = "";
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            const newText = replaced[i];
+            currentLine += newText;
+            currentLine += token.whiteSpaceAfter || "";
+            if (i == tokens.length - 1 || tokens[i + 1].line !== token.line) {
+                newLines.push(currentLine);
+                currentLine = "";
+            }
+        }
+        return newLines;
+    }
+
+    private replaceToken(
+        nodes: AutoCompleteNode<WordOrReplacableWord>[],
+        tokens: Token[],
+        index: number,
+        old: string,
+        replacement: string,
+        skipStartCheck = false,
+    ): string[] {
+        if (index >= tokens.length) {
+            return [];
+        }
+        // check for new start
+        if (!skipStartCheck && tokens[index].column == 1) {
+            const matchesAnyRoot = this.roots.some((n) => n.word.verifyWord(tokens[index].text).length === 0);
+            if (matchesAnyRoot) {
+                return this.replaceToken(this.roots, tokens, index, old, replacement, true);
+            }
+        }
+        let text = tokens[index].text;
+        for (const n of nodes) {
+            if ((n.word as ReplaceableAbstractWord).replaceWord) {
+                text = (n.word as ReplaceableAbstractWord).replaceWord(text, old, replacement);
+            }
+        }
+        return [
+            text,
+            ...this.replaceToken(
+                nodes.flatMap((n) => n.children),
+                tokens,
+                index + 1,
+                old,
+                replacement,
+            ),
+        ];
     }
 }
 
@@ -277,7 +332,11 @@ class LabelListWord implements ReplaceableAbstractWord {
     completionOptions(word: string): WordCompletion[] {
         const parts = word.split(",");
         const lastPart = parts[parts.length - 1];
-        return this.labelWord.completionOptions(lastPart);
+        const prefixLength = parts.slice(0, -1).reduce((acc, part) => acc + part.length + 1, 0); // +1 for the commas
+        return this.labelWord.completionOptions(lastPart).map((c) => ({
+            ...c,
+            startOffset: prefixLength + (c.startOffset ?? 0),
+        }));
     }
 
     verifyWord(word: string): string[] {
@@ -298,7 +357,8 @@ class LabelListWord implements ReplaceableAbstractWord {
 
 class InputWord extends InputAwareWord implements ReplaceableAbstractWord {
     completionOptions(): WordCompletion[] {
-        return this.getAvailableInputs().map((input) => ({
+        const inputs = this.getAvailableInputs();
+        return inputs.map((input) => ({
             insertText: input,
             kind: monaco.languages.CompletionItemKind.Variable,
         }));
@@ -313,9 +373,8 @@ class InputWord extends InputAwareWord implements ReplaceableAbstractWord {
     }
 
     replaceWord(text: string, old: string, replacement: string) {
-        const availableInputs = this.getAvailableInputs();
-        if (availableInputs.includes(old)) {
-            return text.replace(old, replacement);
+        if (text == old) {
+            return replacement;
         }
         return text;
     }
