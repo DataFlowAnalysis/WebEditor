@@ -1,5 +1,5 @@
-import { inject, injectable, optional } from "inversify";
-import { LabelType, LabelTypeRegistry, LabelTypeValue } from "../labels/labelTypeRegistry";
+import { inject, injectable } from "inversify";
+import { LabelType, LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import {
     Command,
     CommandExecutionContext,
@@ -10,22 +10,18 @@ import {
     SEdgeImpl,
     SLabelImpl,
     SModelElementImpl,
+    SModelRootImpl,
     SParentElementImpl,
     TYPES,
 } from "sprotty";
 import { DfdInputPortImpl, DfdOutputPortImpl } from "./ports";
 import { ApplyLabelEditAction } from "sprotty-protocol";
 import { DfdNodeImpl } from "./nodes";
+import { ReplaceAutoCompleteTree, TreeBuilder } from "./AssignmentLanguage";
 
-interface LabelTypeChange {
-    oldLabelType: LabelType;
-    newLabelType: LabelType;
-}
-
-interface LabelTypeValueChange {
-    labelType: LabelType;
-    oldLabelValue: LabelTypeValue;
-    newLabelValue: LabelTypeValue;
+interface LabelChange {
+    oldLabel: string;
+    newLabel: string;
 }
 
 /**
@@ -38,7 +34,7 @@ export class DFDBehaviorRefactorer {
     private previousLabelTypes: LabelType[] = [];
 
     constructor(
-        @optional() @inject(LabelTypeRegistry) private readonly registry: LabelTypeRegistry | undefined,
+        @inject(LabelTypeRegistry) private readonly registry: LabelTypeRegistry,
         @inject(TYPES.ILogger) private readonly logger: ILogger,
         @inject(TYPES.ICommandStack) private readonly commandStack: ICommandStack,
     ) {
@@ -54,54 +50,57 @@ export class DFDBehaviorRefactorer {
 
     private async handleLabelUpdate(): Promise<void> {
         this.logger.log(this, "Handling label type registry update");
-        const currentLabelTypes = this.registry?.getLabelTypes() ?? [];
+        const currentLabelTypes = this.registry.getLabelTypes() ?? [];
 
-        const changedLabelTypes: LabelTypeChange[] = currentLabelTypes.flatMap((currentLabelType) => {
-            const previousLabelType = this.previousLabelTypes.find(
-                (previousLabelType) => previousLabelType.id === currentLabelType.id,
-            );
-            if (previousLabelType && previousLabelType.name !== currentLabelType.name) {
-                return [{ oldLabelType: previousLabelType, newLabelType: currentLabelType }];
+        const changedLabels: LabelChange[] = [];
+        for (const newLabel of currentLabelTypes) {
+            const oldLabel = this.previousLabelTypes.find((label) => label.id === newLabel.id);
+            if (!oldLabel) {
+                continue;
             }
-            return [];
-        });
-
-        const changedLabelValues: LabelTypeValueChange[] = currentLabelTypes.flatMap((currentLabelType) => {
-            const previousLabelType = this.previousLabelTypes.find(
-                (previousLabelType) => previousLabelType.id === currentLabelType.id,
-            );
-            if (!previousLabelType) {
-                return [];
-            }
-
-            return currentLabelType.values
-                .flatMap((newLabelValue) => {
-                    const oldLabelValue = previousLabelType.values.find(
-                        (oldLabelValue) => oldLabelValue.id === newLabelValue.id,
-                    );
-                    if (!oldLabelValue) {
-                        return [];
+            if (oldLabel.name !== newLabel.name) {
+                for (const newValue of newLabel.values) {
+                    const oldValue = oldLabel.values.find((value) => value.id === newValue.id);
+                    if (!oldValue) {
+                        continue;
                     }
+                    changedLabels.push({
+                        oldLabel: `${oldLabel.name}.${oldValue.text}`,
+                        newLabel: `${newLabel.name}.${newValue.text}`,
+                    });
+                }
+            }
+            for (const newValue of newLabel.values) {
+                const oldValue = oldLabel.values.find((value) => value.id === newValue.id);
+                if (!oldValue) {
+                    continue;
+                }
+                if (oldValue.text !== newValue.text) {
+                    changedLabels.push({
+                        oldLabel: `${newLabel.name}.${oldValue.text}`,
+                        newLabel: `${newLabel.name}.${newValue.text}`,
+                    });
+                }
+            }
+        }
 
-                    return [[oldLabelValue, newLabelValue]];
-                })
-                .filter(([oldLabelValue, newLabelValue]) => oldLabelValue.text !== newLabelValue?.text)
-                .map(([oldLabelValue, newLabelValue]) => ({
-                    labelType: currentLabelType,
-                    oldLabelValue,
-                    newLabelValue,
-                }));
-        });
-
-        this.logger.log(this, "Changed label types", changedLabelTypes);
-        this.logger.log(this, "Changed label values", changedLabelValues);
+        this.logger.log(this, "Changed labels", changedLabels);
 
         const model = await this.commandStack.executeAll([]);
+        const tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(model, this.registry));
         this.traverseDfdOutputPorts(model, (port) => {
-            this.processLabelRenameForPort(port, changedLabelTypes, changedLabelValues);
+            this.renameLabelsForPort(port, changedLabels, tree);
         });
 
         this.previousLabelTypes = structuredClone(currentLabelTypes);
+    }
+
+    private renameLabelsForPort(port: DfdOutputPortImpl, labelChanges: LabelChange[], tree: ReplaceAutoCompleteTree) {
+        let lines = port.behavior.split(/\n/);
+        for (const change of labelChanges) {
+            lines = tree.replace(lines, { old: change.oldLabel, replacement: change.newLabel, type: "Label" });
+        }
+        port.behavior = lines.join("\n");
     }
 
     private traverseDfdOutputPorts(element: SModelElementImpl, cb: (port: DfdOutputPortImpl) => void) {
@@ -114,56 +113,12 @@ export class DFDBehaviorRefactorer {
         }
     }
 
-    private processLabelRenameForPort(
-        port: DfdOutputPortImpl,
-        changedLabelTypes: LabelTypeChange[],
-        changedLabelValues: LabelTypeValueChange[],
-    ): void {
-        const behaviorLines = port.behavior.split("\n");
-        const newBehaviorLines = behaviorLines.map((line) => {
-            if (!line.startsWith("set")) {
-                return line;
-            }
-
-            // replace the old label type with the new one using a regex (\.?oldLabelType\.)
-            // and ensure before it is a non alphanumeric character.
-            // Otherwise it could replace a substring when a type has the same ending as another type.
-            // Also ensure after it is a dot because after a label type there is always a dot to access the value of the label.
-            let newLine = line;
-            changedLabelTypes.forEach((changedLabelType) => {
-                newLine = newLine.replace(
-                    // eslint-disable-next-line no-useless-escape
-                    new RegExp(`([^a-zA-Z0-9_])${changedLabelType.oldLabelType.name}(\.)`, "g"),
-                    `$1${changedLabelType.newLabelType.name}$2`,
-                );
-            });
-
-            // replace the old label value with the new one using a regex (oldLabelType\.oldLabelValue)
-            // and ensure before and after it is a non alphanumeric character or the end of the line.
-            // Otherwise it could replace a substring when a value has the same beginning as another value
-            // or the type has the same ending as another type
-            changedLabelValues.forEach((changedLabelValue) => {
-                newLine = newLine.replace(
-                    new RegExp(
-                        // eslint-disable-next-line no-useless-escape
-                        `([^a-zA-Z0-9_])${changedLabelValue.labelType.name}\.${changedLabelValue.oldLabelValue.text}([^a-zA-Z0-9_]|$)`,
-                        "g",
-                    ),
-                    `$1${changedLabelValue.labelType.name}.${changedLabelValue.newLabelValue.text}$2`,
-                );
-            });
-
-            return newLine;
-        });
-
-        port.behavior = newBehaviorLines.join("\n");
-    }
-
     processInputLabelRename(
         label: SLabelImpl,
         port: DfdInputPortImpl,
         oldLabelText: string,
         newLabelText: string,
+        root: SModelRootImpl,
     ): Map<string, string> {
         label.text = oldLabelText;
         const oldInputName = port.getName();
@@ -176,41 +131,27 @@ export class DFDBehaviorRefactorer {
             return behaviorChanges;
         }
 
+        const tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(root, this.registry));
+
         node.children.forEach((child) => {
             if (!(child instanceof DfdOutputPortImpl)) {
                 return;
             }
 
-            behaviorChanges.set(child.id, this.processInputRenameForPort(child, oldInputName, newInputName));
+            behaviorChanges.set(child.id, this.processInputRenameForPort(child, oldInputName, newInputName, tree));
         });
 
         return behaviorChanges;
     }
 
-    private processInputRenameForPort(port: DfdOutputPortImpl, oldInputName: string, newInputName: string): string {
+    private processInputRenameForPort(
+        port: DfdOutputPortImpl,
+        oldInputName: string,
+        newInputName: string,
+        tree: ReplaceAutoCompleteTree,
+    ): string {
         const lines = port.behavior.split("\n");
-        const newLines = lines.map((line) => {
-            if (line.startsWith("forward")) {
-                const inputString = line.substring("forward".length);
-                // Update all inputs. Must be surrounded by non-alphanumeric characters to avoid replacing substrings of other inputs.
-                const updatedInputs = inputString.replace(
-                    new RegExp(`([^a-zA-Z0-9])${oldInputName}([^a-zA-Z0-9]|$)`, "g"),
-                    `$1${newInputName}$2`,
-                );
-                return `forward ${updatedInputs.trim()}`;
-            } else if (line.startsWith("set")) {
-                // Before the input name there is always a space. After it must be a dot to access the label type
-                // inside the input. We can use these two constraints to identify the input name
-                // and only change inputs with that name. Label types/values with the same name are not replaced
-                // because of these constraints.
-                // eslint-disable-next-line no-useless-escape
-                return line.replace(new RegExp(`( )${oldInputName}(\.)`, "g"), `$1${newInputName}$2`);
-            } else {
-                // Idk what to do with this line, just return it as is
-                return line;
-            }
-        });
-
+        const newLines = tree.replace(lines, { old: oldInputName, replacement: newInputName, type: "Input" });
         return newLines.join("\n");
     }
 }
@@ -268,6 +209,7 @@ export class RefactorInputNameInDFDBehaviorCommand extends Command {
             port,
             oldInputName,
             newInputName,
+            context.root,
         );
         behaviorChanges.forEach((updatedBehavior, id) => {
             const port = context.root.index.getById(id);
