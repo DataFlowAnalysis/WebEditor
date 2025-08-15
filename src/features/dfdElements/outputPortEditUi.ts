@@ -21,7 +21,6 @@ import { matchesKeystroke } from "sprotty/lib/utils/keyboard";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { DfdOutputPortImpl } from "./ports";
 import { DfdNodeImpl } from "./nodes";
-import { PortBehaviorValidator } from "./outputPortBehaviorValidation";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { EditorModeController } from "../editorMode/editorModeController";
 import { DFDBehaviorRefactorer } from "./behaviorRefactorer";
@@ -33,6 +32,12 @@ import "monaco-editor/esm/vs/editor/contrib/inlineCompletions/browser/inlineComp
 
 import "./outputPortEditUi.css";
 import { ThemeManager, Switchable } from "../settingsMenu/themeManager";
+import {
+    assignemntLanguageMonarchDefinition,
+    MonacoEditorAssignmentLanguageCompletionProvider,
+    ReplaceAutoCompleteTree,
+    TreeBuilder,
+} from "./AssignmentLanguage";
 
 /**
  * Detects when a dfd output port is double clicked and shows the OutputPortEditUI
@@ -82,276 +87,6 @@ export class OutputPortEditUIMouseListener extends MouseListener {
     }
 }
 
-// More information and playground website for testing: https://microsoft.github.io/monaco-editor/monarch.html
-const startOfLineKeywords = ["forward", "assign", "set", "unset"];
-const statementKeywords = ["forward", "assign", "set", "unset", "if", "from"];
-const constantsKeywords = ["TRUE", "FALSE"];
-const dfdBehaviorLanguageMonarchDefinition: monaco.languages.IMonarchLanguage = {
-    keywords: [...statementKeywords, ...constantsKeywords],
-
-    operators: ["=", "||", "&&", "!"],
-
-    symbols: /[=><!~?:&|+\-*/^%]+/,
-
-    tokenizer: {
-        root: [
-            // keywords and identifiers
-            [
-                /[a-zA-Z_|$][\w$]*/,
-                {
-                    cases: {
-                        "@keywords": "keyword",
-                        "@default": "identifier",
-                    },
-                },
-            ],
-
-            // whitespace and comments
-            [/[ \t\r\n]+/, "white"],
-            [/\/\/.*$/, "comment"],
-            [/#.*$/, "comment"],
-
-            [
-                /@symbols/,
-                {
-                    cases: {
-                        "@operators": "operator",
-                        "@default": "",
-                    },
-                },
-            ],
-        ],
-    },
-};
-
-class MonacoEditorDfdBehaviorCompletionProvider implements monaco.languages.CompletionItemProvider {
-    constructor(
-        private readonly ui: OutputPortEditUI,
-        private readonly labelTypeRegistry?: LabelTypeRegistry,
-    ) {}
-
-    // Auto open completions after typing a dot. Useful for the set statement where
-    // components are delimited by dots.
-    triggerCharacters = [".", ";", " ", ","];
-
-    provideCompletionItems(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-    ): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
-        // The first word of each line/statement is the statement type keyword
-        const statementType = model.getWordAtPosition({ column: 1, lineNumber: position.lineNumber });
-
-        // If we're currently at the first word of the statement, suggest the statement start keywords
-        // This also the case when the current line is empty.
-        const isAtFirstWord =
-            position.column >= (statementType?.startColumn ?? 1) && position.column <= (statementType?.endColumn ?? 1);
-        if (isAtFirstWord) {
-            // Start of line: suggest statement start keywords
-            return {
-                suggestions: this.getKeywordCompletions(model, position, startOfLineKeywords, true),
-            };
-        }
-
-        const parent = this.ui.getCurrentEditingPort()?.parent;
-        if (!(parent instanceof DfdNodeImpl)) {
-            return {
-                suggestions: [],
-            };
-        }
-
-        const lastWord =
-            model.getLineContent(position.lineNumber).substring(0, position.column).trimEnd().split(" ").pop() || "";
-        const availableInputs = parent.getAvailableInputs().filter((input) => input !== undefined) as string[];
-        if (lastWord.endsWith(",") || lastWord.endsWith(".") || lastWord == statementType?.word) {
-            // Suggestions per statement type
-            switch (statementType?.word) {
-                case "assign":
-                    return {
-                        suggestions: this.getOutLabelCompletions(model, position),
-                    };
-                case "forward":
-                    return {
-                        suggestions: this.getInputCompletions(model, position, availableInputs),
-                    };
-                case "set":
-                    return {
-                        suggestions: this.getOutLabelCompletions(model, position),
-                    };
-                case "unset":
-                    return {
-                        suggestions: this.getOutLabelCompletions(model, position),
-                    };
-            }
-        } else if (statementType?.word === "assign") {
-            const line = model.getLineContent(position.lineNumber).substring(0, position.column);
-            const hasFromKeyword = line.includes("from");
-            const hasIfKeyword = line.includes("if");
-            if (lastWord == "from") {
-                return {
-                    suggestions: this.getInputCompletions(model, position, availableInputs),
-                };
-            } else if (lastWord == "if" || ["|", "&", "(", "!"].includes(lastWord[lastWord.length - 1])) {
-                return {
-                    suggestions: [
-                        ...this.getConstantsCompletions(model, position),
-                        ...this.getOutLabelCompletions(model, position),
-                    ],
-                };
-            } else if (!hasIfKeyword) {
-                return {
-                    suggestions: this.getKeywordCompletions(model, position, ["if"]),
-                };
-            } else if (!hasFromKeyword && hasIfKeyword) {
-                return {
-                    suggestions: this.getKeywordCompletions(model, position, ["from"]),
-                };
-            }
-        }
-
-        // Unknown statement type, cannot suggest anything
-        return {
-            suggestions: [],
-        };
-    }
-
-    private getKeywordCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-        keywords: string[],
-        replaceLine: boolean = false,
-    ): monaco.languages.CompletionItem[] {
-        const range = replaceLine
-            ? new monaco.Range(position.lineNumber, 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber))
-            : new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
-        return keywords.map((keyword) => ({
-            label: keyword,
-            kind: monaco.languages.CompletionItemKind.Keyword,
-            insertText: keyword,
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, // Treat insertText as a snippet
-            range: range,
-        }));
-    }
-
-    private getOutLabelCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-    ): monaco.languages.CompletionItem[] {
-        const line = model.getLineContent(position.lineNumber);
-
-        // Find the start of the current expression (Type or value)
-        let currentExpressionStart = position.column - 1;
-        while (currentExpressionStart > 0) {
-            const currentChar = line[currentExpressionStart - 1]; // column is 1-based, array is 0-based
-            if (currentChar !== "." && !currentChar.match(/[A-Za-z0-9_]/)) {
-                break;
-            }
-            currentExpressionStart--;
-        }
-
-        const currentExpression = line.substring(currentExpressionStart, position.column);
-        const expressionParts = currentExpression.split(".");
-
-        switch (expressionParts.length) {
-            case 1:
-                // If there's only one part, we're completing the `Type`
-                return this.getLabelTypeCompletions(model, position);
-            case 2: {
-                // If there's already a dot, we complete the `value` for the specific `Type`
-                const labelTypeName = expressionParts[0];
-                return this.getLabelValueCompletions(model, position, labelTypeName);
-            }
-        }
-
-        return [];
-    }
-
-    private getInputCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-        availableInputs: string[],
-    ): monaco.languages.CompletionItem[] {
-        const currentWord = model.getWordUntilPosition(position);
-
-        return availableInputs.map((input) => ({
-            label: input,
-            kind: monaco.languages.CompletionItemKind.Variable,
-            insertText: input,
-            range: new monaco.Range(
-                position.lineNumber,
-                currentWord.startColumn,
-                position.lineNumber,
-                currentWord.endColumn,
-            ),
-        }));
-    }
-
-    private getConstantsCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-    ): monaco.languages.CompletionItem[] {
-        const currentWord = model.getWordUntilPosition(position);
-
-        return constantsKeywords.map((constant) => ({
-            label: constant,
-            kind: monaco.languages.CompletionItemKind.Constant,
-            insertText: constant,
-            range: new monaco.Range(
-                position.lineNumber,
-                currentWord.startColumn,
-                position.lineNumber,
-                currentWord.endColumn,
-            ),
-        }));
-    }
-
-    private getLabelTypeCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-    ): monaco.languages.CompletionItem[] {
-        const availableLabelTypes = this.labelTypeRegistry?.getLabelTypes() ?? [];
-        const currentWord = model.getWordUntilPosition(position);
-
-        return availableLabelTypes.map((labelType) => ({
-            label: labelType.name,
-            kind: monaco.languages.CompletionItemKind.Class,
-            insertText: labelType.name,
-            range: new monaco.Range(
-                position.lineNumber,
-                currentWord.startColumn,
-                position.lineNumber,
-                currentWord.endColumn,
-            ),
-        }));
-    }
-
-    private getLabelValueCompletions(
-        model: monaco.editor.ITextModel,
-        position: monaco.Position,
-        labelTypeName: string,
-    ): monaco.languages.CompletionItem[] {
-        const labelType = this.labelTypeRegistry
-            ?.getLabelTypes()
-            .find((labelType) => labelType.name === labelTypeName.trim());
-        if (!labelType) {
-            return [];
-        }
-
-        const currentWord = model.getWordUntilPosition(position);
-
-        return labelType.values.map((labelValue) => ({
-            label: labelValue.text,
-            kind: monaco.languages.CompletionItemKind.Enum,
-            insertText: labelValue.text,
-            range: new monaco.Range(
-                position.lineNumber,
-                currentWord.startColumn,
-                position.lineNumber,
-                currentWord.endColumn,
-            ),
-        }));
-    }
-}
-
 /**
  * UI that allows editing the behavior text of a dfd output port (DfdOutputPortImpl).
  */
@@ -365,14 +100,16 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
 
     private port: DfdOutputPortImpl | undefined;
     private editor?: monaco.editor.IStandaloneCodeEditor;
+    private tree?: ReplaceAutoCompleteTree;
+    private completionProvider?: monaco.IDisposable;
+
+    private static readonly DFD_LANGUAGE_NAME = "dfd-behavior";
 
     constructor(
         @inject(TYPES.IActionDispatcher) private actionDispatcher: ActionDispatcher,
         @inject(TYPES.ViewerOptions) private viewerOptions: ViewerOptions,
         @inject(TYPES.DOMHelper) private domHelper: DOMHelper,
         @inject(MouseTool) private mouseTool: MouseTool,
-        @inject(PortBehaviorValidator) private validator: PortBehaviorValidator,
-
         // Load label type registry watcher that handles changes to the behavior of
         // output ports when label types are changed.
         // It has to be loaded somewhere for inversify to create it and start watching.
@@ -380,7 +117,7 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
         // @ts-expect-error TS6133: 'labelTypeRegistry' is declared but its value is never read.
         @inject(DFDBehaviorRefactorer) private readonly _labelTypeChangeWatcher: DFDBehaviorRefactorer,
 
-        @inject(LabelTypeRegistry) @optional() private readonly labelTypeRegistry?: LabelTypeRegistry,
+        @inject(LabelTypeRegistry) private readonly labelTypeRegistry: LabelTypeRegistry,
         @inject(EditorModeController)
         @optional()
         private editorModeController?: EditorModeController,
@@ -411,13 +148,13 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
         this.validationLabel.classList.add("validation-label");
 
         // Initialize the monaco editor and setup the language for highlighting and autocomplete.
-        const dfdLanguageName = "dfd-behavior";
-        monaco.languages.register({ id: dfdLanguageName });
-        monaco.languages.setMonarchTokensProvider(dfdLanguageName, dfdBehaviorLanguageMonarchDefinition);
-        monaco.languages.registerCompletionItemProvider(
-            dfdLanguageName,
-            new MonacoEditorDfdBehaviorCompletionProvider(this, this.labelTypeRegistry),
+
+        monaco.languages.register({ id: OutputPortEditUI.DFD_LANGUAGE_NAME });
+        monaco.languages.setMonarchTokensProvider(
+            OutputPortEditUI.DFD_LANGUAGE_NAME,
+            assignemntLanguageMonarchDefinition,
         );
+        this.registerCompletionProvider();
 
         const monacoTheme = (ThemeManager?.useDarkMode ?? true) ? "vs-dark" : "vs";
         this.editor = monaco.editor.create(this.editorContainer, {
@@ -430,7 +167,7 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             wordBasedSuggestions: "off", // Does not really work for our use case
             scrollBeyondLastLine: false, // Not needed
             theme: monacoTheme,
-            language: dfdLanguageName,
+            language: OutputPortEditUI.DFD_LANGUAGE_NAME,
         });
 
         this.configureHandlers(containerElement);
@@ -581,8 +318,12 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             readOnly: this.editorModeController?.isReadOnly() ?? false,
         });
 
+        this.tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(root, this.labelTypeRegistry));
+
         // Validation of loaded behavior text.
         this.validateBehavior();
+
+        this.registerCompletionProvider();
 
         // Wait for the next event loop tick to focus the port edit UI.
         // The user may have clicked more times before the show click was processed
@@ -592,6 +333,17 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
         setTimeout(() => {
             this.editor?.focus();
         }, 0); // 0ms => next event loop tick
+    }
+
+    private registerCompletionProvider() {
+        if (!this.tree) {
+            return;
+        }
+        this.completionProvider?.dispose();
+        this.completionProvider = monaco.languages.registerCompletionItemProvider(
+            OutputPortEditUI.DFD_LANGUAGE_NAME,
+            new MonacoEditorAssignmentLanguageCompletionProvider(this.tree),
+        );
     }
 
     /**
@@ -612,36 +364,49 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             return;
         }
 
-        const behaviorText = this.editor?.getValue() ?? "";
-        const results = this.validator.validate(behaviorText, this.port);
-        if (results.length === 0) {
-            // Everything fine
-            this.validationLabel.innerText = "Behavior is valid";
+        if (!this.editor) {
+            return;
+        }
+        if (!this.tree) {
+            return;
+        }
+
+        const model = this.editor?.getModel();
+        if (!model) {
+            return;
+        }
+
+        const content = model.getLinesContent();
+        const marker: monaco.editor.IMarkerData[] = [];
+        const emptyContent = content.length == 0 || (content.length == 1 && content[0] === "");
+        // empty content gets accepted as valid as it represents no constraints
+        if (!emptyContent) {
+            const errors = this.tree.verify(content);
+            marker.push(
+                ...errors.map((e) => ({
+                    severity: monaco.MarkerSeverity.Error,
+                    startLineNumber: e.line,
+                    startColumn: e.startColumn,
+                    endLineNumber: e.line,
+                    endColumn: e.endColumn,
+                    message: e.message,
+                })),
+            );
+        }
+
+        if (marker.length == 0) {
+            this.validationLabel.innerText = "Assignments are valid";
             this.validationLabel.classList.remove("validation-error");
             this.validationLabel.classList.add("validation-success");
         } else {
-            // Some error
-            this.validationLabel.innerText = `Behavior is invalid: ${results.length} error${
-                results.length === 1 ? "" : "s"
+            this.validationLabel.innerText = `Assignments are invalid: ${marker.length} error${
+                marker.length === 1 ? "" : "s"
             }.`;
             this.validationLabel.classList.remove("validation-success");
             this.validationLabel.classList.add("validation-error");
         }
 
-        // Add markers for each error to monaco (if any)
-        const markers: monaco.editor.IMarkerData[] = results.map((result) => ({
-            severity: monaco.MarkerSeverity.Error,
-            message: result.message,
-            startLineNumber: result.line + 1,
-            startColumn: (result.colStart ?? 0) + 1,
-            endLineNumber: result.line + 1,
-            endColumn: (result.colEnd ?? 0) + 1,
-        }));
-
-        const model = this.editor?.getModel();
-        if (model) {
-            monaco.editor.setModelMarkers(model, "owner", markers);
-        }
+        monaco.editor.setModelMarkers(model, "assignment", marker);
     }
 
     /**
