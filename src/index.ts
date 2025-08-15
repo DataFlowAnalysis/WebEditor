@@ -34,6 +34,7 @@ import { settingsModule } from "./features/settingsMenu/di.config";
 import { LoadDiagramAction } from "./features/serialize/load";
 import { commandPaletteModule } from "./features/commandPalette/di.config";
 import { LoadingIndicator } from "./common/loadingIndicator";
+import { LabelTypeRegistry } from "./features/labels/labelTypeRegistry";
 
 const container = new Container();
 
@@ -77,6 +78,7 @@ export function setModelFileName(name: string): void {
 export function getModelFileName(): string {
     return modelFileName;
 }
+export const labelTypeRegistry = container.get<LabelTypeRegistry>(LabelTypeRegistry);
 
 export function setModelSource(file: File): void {
     modelSource
