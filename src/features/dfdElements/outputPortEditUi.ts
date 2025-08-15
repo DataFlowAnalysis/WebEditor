@@ -318,7 +318,7 @@ export class OutputPortEditUI extends AbstractUIExtension implements Switchable 
             readOnly: this.editorModeController?.isReadOnly() ?? false,
         });
 
-        this.tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(root, this.labelTypeRegistry));
+        this.tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(this.labelTypeRegistry, this.port));
 
         // Validation of loaded behavior text.
         this.validateBehavior();

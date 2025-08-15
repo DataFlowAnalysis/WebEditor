@@ -7,7 +7,7 @@ import {
     Token,
     WordCompletion,
 } from "../constraintMenu/AutoCompletion";
-import { SModelElementImpl, SModelRootImpl, SParentElementImpl, SPortImpl } from "sprotty";
+import { SModelElementImpl, SParentElementImpl, SPortImpl } from "sprotty";
 import { LabelTypeRegistry } from "../labels/labelTypeRegistry";
 import { DfdNodeImpl } from "./nodes";
 
@@ -148,14 +148,14 @@ export class ReplaceAutoCompleteTree extends AutoCompleteTree {
 
 export namespace TreeBuilder {
     export function buildTree(
-        model: SModelRootImpl,
         labelTypeRegistry: LabelTypeRegistry,
+        port?: SPortImpl,
     ): AutoCompleteNode<WordOrReplacableWord>[] {
         return [
             buildSetOrUnsetStatement(labelTypeRegistry, "set"),
             buildSetOrUnsetStatement(labelTypeRegistry, "unset"),
-            buildForwardStatement(model),
-            buildAssignStatement(labelTypeRegistry, model),
+            buildForwardStatement(port),
+            buildAssignStatement(labelTypeRegistry, port),
         ];
     }
 
@@ -173,9 +173,9 @@ export namespace TreeBuilder {
         };
     }
 
-    function buildForwardStatement(model: SModelRootImpl) {
+    function buildForwardStatement(port?: SPortImpl) {
         const inputNode: AutoCompleteNode = {
-            word: new InputListWord(model),
+            word: new InputListWord(port),
             children: [],
         };
         return {
@@ -186,20 +186,20 @@ export namespace TreeBuilder {
 
     function buildAssignStatement(
         labelTypeRegistry: LabelTypeRegistry,
-        model: SModelRootImpl,
+        port?: SPortImpl,
     ): AutoCompleteNode<WordOrReplacableWord> {
         const fromNode: AutoCompleteNode = {
             word: new ConstantWord("from"),
             children: [
                 {
-                    word: new InputListWord(model),
+                    word: new InputListWord(port),
                     children: [],
                 },
             ],
         };
         const ifNode: AutoCompleteNode = {
             word: new ConstantWord("if"),
-            children: buildCondition(model, labelTypeRegistry, fromNode),
+            children: buildCondition(labelTypeRegistry, fromNode, port),
         };
         return {
             word: new ConstantWord("assign"),
@@ -212,7 +212,7 @@ export namespace TreeBuilder {
         };
     }
 
-    function buildCondition(model: SModelRootImpl, labelTypeRegistry: LabelTypeRegistry, nextNode: AutoCompleteNode) {
+    function buildCondition(labelTypeRegistry: LabelTypeRegistry, nextNode: AutoCompleteNode, port?: SPortImpl) {
         const connectors: AutoCompleteNode[] = ["&&", "||"].map((o) => ({
             word: new ConstantWord(o),
             children: [],
@@ -221,7 +221,7 @@ export namespace TreeBuilder {
         const expressors: AutoCompleteNode[] = [
             new ConstantWord("TRUE"),
             new ConstantWord("FALSE"),
-            new InputLabelWord(model, labelTypeRegistry),
+            new InputLabelWord(labelTypeRegistry, port),
         ].map((e) => ({
             word: e,
             children: [...connectors, nextNode],
@@ -236,20 +236,14 @@ export namespace TreeBuilder {
 }
 
 abstract class InputAwareWord {
-    constructor(private model: SModelRootImpl) {}
+    constructor(private port?: SPortImpl) {}
 
     protected getAvailableInputs(): string[] {
-        const selectedPorts = this.getSelectedPorts(this.model);
-        if (selectedPorts.length === 0) {
-            return [];
-        }
-        return selectedPorts.flatMap((port) => {
-            const parent = port.parent;
-            if (!(parent instanceof DfdNodeImpl)) {
-                return [];
-            }
+        const parent = this.port?.parent;
+        if (parent && parent instanceof DfdNodeImpl) {
             return parent.getAvailableInputs().filter((input) => input !== undefined) as string[];
-        });
+        }
+        return [];
     }
 
     private getSelectedPorts(node: SModelElementImpl): SPortImpl[] {
@@ -386,8 +380,8 @@ class InputWord extends InputAwareWord implements ReplaceableAbstractWord {
 
 class InputListWord implements ReplaceableAbstractWord {
     private inputWord: InputWord;
-    constructor(model: SModelRootImpl) {
-        this.inputWord = new InputWord(model);
+    constructor(port?: SPortImpl) {
+        this.inputWord = new InputWord(port);
     }
 
     completionOptions(word: string): WordCompletion[] {
@@ -426,8 +420,8 @@ class InputLabelWord implements ReplaceableAbstractWord {
     private inputWord: InputWord;
     private labelWord: LabelWord;
 
-    constructor(model: SModelRootImpl, labelTypeRegistry: LabelTypeRegistry) {
-        this.inputWord = new InputWord(model);
+    constructor(labelTypeRegistry: LabelTypeRegistry, port?: SPortImpl) {
+        this.inputWord = new InputWord(port);
         this.labelWord = new LabelWord(labelTypeRegistry);
     }
 
