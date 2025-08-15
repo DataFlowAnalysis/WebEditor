@@ -36,6 +36,11 @@ export class DfdEditLabelValidator implements IEditLabelValidator {
             return { severity: "error", message: "Input name cannot contain spaces" };
         }
 
+        // Labels on edges are not allowed to commas in them
+        if (value.includes(",")) {
+            return { severity: "error", message: "Input name cannot contain commas" };
+        }
+
         // Labels on edges are not allowed to be empty
         if (value.length == 0) {
             return { severity: "error", message: "Input name cannot be empty" };
