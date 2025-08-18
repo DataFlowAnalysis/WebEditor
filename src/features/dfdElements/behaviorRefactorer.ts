@@ -10,7 +10,6 @@ import {
     SEdgeImpl,
     SLabelImpl,
     SModelElementImpl,
-    SModelRootImpl,
     SParentElementImpl,
     TYPES,
 } from "sprotty";
@@ -87,8 +86,8 @@ export class DFDBehaviorRefactorer {
         this.logger.log(this, "Changed labels", changedLabels);
 
         const model = await this.commandStack.executeAll([]);
-        const tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(model, this.registry));
         this.traverseDfdOutputPorts(model, (port) => {
+            const tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(this.registry, port));
             this.renameLabelsForPort(port, changedLabels, tree);
         });
 
@@ -118,7 +117,6 @@ export class DFDBehaviorRefactorer {
         port: DfdInputPortImpl,
         oldLabelText: string,
         newLabelText: string,
-        root: SModelRootImpl,
     ): Map<string, string> {
         label.text = oldLabelText;
         const oldInputName = port.getName();
@@ -131,7 +129,7 @@ export class DFDBehaviorRefactorer {
             return behaviorChanges;
         }
 
-        const tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(root, this.registry));
+        const tree = new ReplaceAutoCompleteTree(TreeBuilder.buildTree(this.registry, port));
 
         node.children.forEach((child) => {
             if (!(child instanceof DfdOutputPortImpl)) {
@@ -209,7 +207,6 @@ export class RefactorInputNameInDFDBehaviorCommand extends Command {
             port,
             oldInputName,
             newInputName,
-            context.root,
         );
         behaviorChanges.forEach((updatedBehavior, id) => {
             const port = context.root.index.getById(id);

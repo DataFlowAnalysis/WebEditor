@@ -72,8 +72,8 @@
 /* Ports */
 
 .sprotty-port rect {
-    stroke: var(--color-foreground);
-    fill: color-mix(in srgb, var(--color-primary), var(--color-background) 25%);
+    stroke: var(--port-border, var(--color-foreground));
+    fill: color-mix(in srgb, var(--port-color, var(--color-primary)), var(--color-background) 25%);
     stroke-width: 0.5;
 }
 
