@@ -1,4 +1,4 @@
-import ElkConstructor, { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk.bundled";
+import ElkConstructor, { ElkExtendedEdge, ElkLabel, ElkNode } from "elkjs/lib/elk.bundled";
 import { injectable, inject } from "inversify";
 import {
     DefaultLayoutConfigurator,
@@ -9,10 +9,11 @@ import {
     ILayoutPostprocessor,
 } from "sprotty-elk";
 import { SChildElementImpl, SShapeElementImpl, isBoundsAware } from "sprotty";
-import { SShapeElement, SModelIndex, SEdge } from "sprotty-protocol";
+import { SShapeElement, SModelIndex, SEdge, SLabel } from "sprotty-protocol";
 import { ElkShape, LayoutOptions } from "elkjs";
 import { SettingsManager } from "../settingsMenu/SettingsManager";
 import { LayoutMethod } from "../settingsMenu/LayoutMethod";
+import { calculateTextSize } from "../../utils";
 
 export class DfdLayoutConfigurator extends DefaultLayoutConfigurator {
     constructor(@inject(SettingsManager) protected readonly settings: SettingsManager) {
@@ -104,6 +105,17 @@ export class DfdElkLayoutEngine extends ElkLayoutEngine {
         return elkEdge;
     }
 
+    protected override transformLabel(slabel: SLabel, index: SModelIndex): ElkLabel {
+        const e = super.transformLabel(slabel, index);
+        if (this.settings.layoutMethod === LayoutMethod.WRAPPING) {
+            return e;
+        }
+        const size = calculateTextSize(slabel.text ?? "");
+        e.height = size.height;
+        e.width = size.width;
+        return e;
+    }
+
     protected override applyShape(sshape: SShapeElement, elkShape: ElkShape, index: SModelIndex): void {
         // Check if this is a port, if yes we want to center it on the node edge instead of putting it right next to the node at the edge
         if (this.getBasicType(sshape) === "port") {
@@ -155,6 +167,15 @@ export class DfdElkLayoutEngine extends ElkLayoutEngine {
         }
 
         super.applyShape(sshape, elkShape, index);
+
+        const parent = index.getParent(sshape.id);
+        const parentType = parent ? this.getBasicType(parent) : "unknown";
+        if (this.getBasicType(sshape) === "label" && parentType == "edge") {
+            sshape.size = {
+                width: -1,
+                height: -1,
+            };
+        }
     }
 
     protected applyEdge(sedge: SEdge, elkEdge: ElkExtendedEdge, index: SModelIndex): void {
