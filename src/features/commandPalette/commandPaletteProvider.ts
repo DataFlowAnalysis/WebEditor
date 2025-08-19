@@ -13,6 +13,8 @@ import { LoadDFDandDDAction } from "../serialize/loadDFDandDD";
 import { LoadPalladioAction } from "../serialize/loadPalladio";
 import { SaveImageAction } from "../serialize/image";
 import { SettingsManager } from "../settingsMenu/SettingsManager";
+import { Action } from "sprotty-protocol";
+import { LayoutMethod } from "../settingsMenu/LayoutMethod";
 
 /**
  * Provides possible actions for the command palette.
@@ -51,11 +53,33 @@ export class ServerCommandPaletteActionProvider implements ICommandPaletteAction
 
             new LabeledAction("Load default diagram", [LoadDefaultDiagramAction.create(), commitAction], "clear-all"),
             new LabeledAction("Fit to Screen", [fitToScreenAction], "screen-normal"),
-            new LabeledAction(
+            new FolderAction(
+                "Layout diagram (Method: " + this.settings.layoutMethod + ")",
+                [
+                    new LabeledAction(
+                        "Layout diagram (Method: Lines)",
+                        [LayoutModelAction.create(LayoutMethod.LINES), commitAction, fitToScreenAction],
+                        "grabber",
+                    ),
+                    new LabeledAction(
+                        "Layout diagram (Method: Wrapping Lines)",
+                        [LayoutModelAction.create(LayoutMethod.WRAPPING), commitAction, fitToScreenAction],
+                        "word-wrap",
+                    ),
+                    new LabeledAction(
+                        "Layout diagram (Method: Circles)",
+                        [LayoutModelAction.create(LayoutMethod.CIRCLES), commitAction, fitToScreenAction],
+                        "circle-large",
+                    ),
+                ],
+                "layout",
+                [LayoutModelAction.create(), commitAction, fitToScreenAction],
+            ),
+            /*new LabeledAction(
                 "Layout diagram (Method: " + this.settings.layoutMethod + ")",
                 [LayoutModelAction.create(), commitAction, fitToScreenAction],
                 "layout",
-            ),
+            ),*/
         ];
     }
 }
@@ -65,7 +89,8 @@ export class FolderAction extends LabeledAction {
         label: string,
         readonly children: LabeledAction[],
         icon?: string,
+        actions: Action[] = [],
     ) {
-        super(label, [], icon);
+        super(label, actions, icon);
     }
 }
