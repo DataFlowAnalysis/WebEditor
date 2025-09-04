@@ -14,7 +14,7 @@
         "eslint": "^9.32.0",
         "eslint-config-prettier": "^10.1.8",
         "husky": "^9.1.7",
-        "inversify": "^6.2.2",
+        "inversify": "^7.9.1",
         "lint-staged": "^16.1.5",
         "monaco-editor": "^0.52.2",
         "prettier": "^3.6.2",
